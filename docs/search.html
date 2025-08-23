@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>検索/フィルタ – 壊れゆく日本Archives</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand-title" href="./index.html">壊れゆく日本Archives</a>
+    </header>
+    <main class="container">
+      <h1 class="title">検索/フィルタ</h1>
+      <form class="card" style="padding:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label class="radio">テーマ
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>すべて</option>
+              <option>伝統/文化</option>
+              <option>地域コミュニティ</option>
+              <option>家族/教育</option>
+              <option>環境/風景</option>
+              <option>産業/商店街</option>
+              <option>治安/マナー</option>
+              <option>公共空間/インフラ</option>
+              <option>メディア/表現</option>
+              <option>政治/制度</option>
+              <option>価値観/習慣</option>
+              <option>特集</option>
+            </select>
+          </label>
+          <label class="radio">都道府県
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>すべて</option>
+              <option>東京</option>
+              <option>大阪</option>
+              <option>神奈川</option>
+              <option>北海道</option>
+              <option>福岡</option>
+            </select>
+          </label>
+          <label class="radio">期間
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>24時間</option>
+              <option>7日間</option>
+              <option>30日間</option>
+              <option>全期間</option>
+            </select>
+          </label>
+          <label class="radio">メディア
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>すべて</option>
+              <option>リンク</option>
+              <option>画像</option>
+              <option>動画</option>
+            </select>
+          </label>
+        </div>
+        <div class="modal-actions" style="margin-top:12px">
+          <a class="btn" href="./index.html">キャンセル</a>
+          <a class="btn primary" href="./index.html">適用</a>
+        </div>
+      </form>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+

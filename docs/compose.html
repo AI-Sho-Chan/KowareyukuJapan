@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>投稿作成 – 壊れゆく日本Archives</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand-title" href="./index.html">壊れゆく日本Archives</a>
+      <p class="brand-copy">見過ごさない。記録する。伝える。</p>
+    </header>
+    <main class="container">
+      <h1 class="title">投稿作成</h1>
+      <form class="card" id="compose-form" style="padding:12px">
+        <fieldset style="border:none;margin:0;padding:0">
+          <legend class="meta">リンクまたはメディア</legend>
+          <label class="radio" style="margin-top:4px">
+            <input type="radio" name="mode" value="url" checked /> URLで投稿
+          </label>
+          <div id="url-block" style="margin:8px 0 12px">
+            <input type="url" name="url" placeholder="https://..." style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff" />
+            <p class="meta" style="margin-top:6px">可能ならOGP/oEmbedでプレビューされます</p>
+          </div>
+
+          <label class="radio">
+            <input type="radio" name="mode" value="file" /> 画像/動画で投稿
+          </label>
+          <div id="file-block" style="margin:8px 0 12px;display:none">
+            <input type="file" name="file" accept="image/*,video/*" />
+            <p class="meta" style="margin-top:6px">自作品のみ。自動で圧縮とサムネイル生成を行います</p>
+          </div>
+        </fieldset>
+
+        <label class="radio" style="margin-top:8px">コメント（50字）
+          <textarea name="comment" id="comment" rows="3" data-char-limit="50" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff"></textarea>
+          <div class="meta"><span id="comment-count">0</span>/50</div>
+        </label>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <label class="radio">テーマ
+            <select name="theme" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>伝統/文化</option>
+              <option>地域コミュニティ</option>
+              <option>家族/教育</option>
+              <option>環境/風景</option>
+              <option>産業/商店街</option>
+              <option>治安/マナー</option>
+              <option>公共空間/インフラ</option>
+              <option>メディア/表現</option>
+              <option>政治/制度</option>
+              <option>価値観/習慣</option>
+              <option>特集: 外国人による犯罪・迷惑行為</option>
+            </select>
+          </label>
+          <label class="radio">都道府県
+            <select name="pref" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option value="">未選択</option>
+              <option>北海道</option>
+              <option>青森</option>
+              <option>岩手</option>
+              <option>宮城</option>
+              <option>秋田</option>
+              <option>山形</option>
+              <option>福島</option>
+              <option>茨城</option>
+              <option>栃木</option>
+              <option>群馬</option>
+              <option>埼玉</option>
+              <option>千葉</option>
+              <option>東京</option>
+              <option>神奈川</option>
+              <option>新潟</option>
+              <option>富山</option>
+              <option>石川</option>
+              <option>福井</option>
+              <option>山梨</option>
+              <option>長野</option>
+              <option>岐阜</option>
+              <option>静岡</option>
+              <option>愛知</option>
+              <option>三重</option>
+              <option>滋賀</option>
+              <option>京都</option>
+              <option>大阪</option>
+              <option>兵庫</option>
+              <option>奈良</option>
+              <option>和歌山</option>
+              <option>鳥取</option>
+              <option>島根</option>
+              <option>岡山</option>
+              <option>広島</option>
+              <option>山口</option>
+              <option>徳島</option>
+              <option>香川</option>
+              <option>愛媛</option>
+              <option>高知</option>
+              <option>福岡</option>
+              <option>佐賀</option>
+              <option>長崎</option>
+              <option>熊本</option>
+              <option>大分</option>
+              <option>宮崎</option>
+              <option>鹿児島</option>
+              <option>沖縄</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="modal-actions" style="margin-top:14px">
+          <a class="btn" href="./index.html">キャンセル</a>
+          <button type="submit" class="btn primary">投稿</button>
+        </div>
+      </form>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+

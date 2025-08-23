@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>設定 – 壊れゆく日本Archives</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand-title" href="./index.html">壊れゆく日本Archives</a>
+    </header>
+    <main class="container">
+      <h1 class="title">設定</h1>
+      <section class="card" style="padding:12px">
+        <h2 class="title" style="font-size:16px">ハンドルネーム</h2>
+        <div style="display:flex;gap:8px">
+          <input type="text" placeholder="@handle" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff" />
+          <button class="btn">保存</button>
+        </div>
+        <p class="meta">2〜20文字、記号連続不可。30日に1回まで変更可。</p>
+      </section>
+
+      <section class="card" style="padding:12px">
+        <h2 class="title" style="font-size:16px">通知設定</h2>
+        <label class="radio"><input type="checkbox" checked /> Web Push（共感マイルストーン/削除依頼）</label>
+        <label class="radio"><input type="checkbox" /> メール（週次ダイジェスト）</label>
+        <label class="radio"><input type="checkbox" /> LINE（週次ダイジェスト）</label>
+      </section>
+
+      <section class="card" style="padding:12px">
+        <h2 class="title" style="font-size:16px">任意プロフィール</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label class="radio">年齢
+            <input type="number" min="0" max="120" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff" />
+          </label>
+          <label class="radio">性別
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>未設定</option>
+              <option>男性</option>
+              <option>女性</option>
+              <option>その他/回答しない</option>
+            </select>
+          </label>
+          <label class="radio">居住地
+            <select style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:#1d1e21;color:#fff">
+              <option>未設定</option>
+              <option>東京</option>
+              <option>大阪</option>
+              <option>神奈川</option>
+              <option>その他</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="card" style="padding:12px">
+        <h2 class="title" style="font-size:16px">ポリシー</h2>
+        <ul>
+          <li><a href="#">利用規約</a></li>
+          <li><a href="#">プライバシーポリシー</a></li>
+          <li><a href="#">コミュニティガイドライン</a></li>
+          <li><a href="#">透明性レポート</a></li>
+        </ul>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+

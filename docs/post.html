@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>投稿詳細 – 壊れゆく日本Archives</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand-title" href="./index.html">壊れゆく日本Archives</a>
+    </header>
+    <main class="container">
+      <article class="post-detail" data-post-id="post-001">
+        <h1 class="title">地方祭りの中止、補助見直しの影響</h1>
+        <div class="meta">
+          <span class="handle">@hanako</span>
+          <time datetime="2025-01-01">2025/01/01</time>
+          <span class="tags">#地域コミュニティ・#長野</span>
+        </div>
+        <div class="media">
+          <img src="https://placehold.co/1200x675?text=OGP+Image" alt="プレビュー画像" />
+        </div>
+        <p class="comment">支援が途切れ、長年の祭りが姿を消しつつある。</p>
+        <div class="source">
+          出典: <a href="#" rel="nofollow noopener" target="_blank">example.com/news/123</a>
+        </div>
+        <div class="actions">
+          <button class="btn primary" data-action="empathize">共感する <span class="count">12</span></button>
+          <button class="btn" data-action="share">シェア</button>
+          <button class="btn subtle" data-action="request-removal">削除要請</button>
+        </div>
+      </article>
+
+      <section class="policy-note">
+        <p>特集に関する注意: 出典リンクの明示、個人特定情報のマスキング、属性に基づく一般化の禁止。</p>
+      </section>
+
+      <!-- 削除要請モーダル -->
+      <div class="modal" id="removal-modal" aria-hidden="true" role="dialog" aria-labelledby="removal-title">
+        <div class="modal-content">
+          <h3 id="removal-title">削除要請</h3>
+          <p class="modal-desc">理由を選択してください（1端末1回）。</p>
+          <form>
+            <label class="radio"><input type="radio" name="reason" value="誤情報"> 誤情報の可能性</label>
+            <label class="radio"><input type="radio" name="reason" value="権利侵害"> 著作権/肖像権などの侵害</label>
+            <label class="radio"><input type="radio" name="reason" value="個人情報"> 個人情報の含有</label>
+            <label class="radio"><input type="radio" name="reason" value="無関係"> テーマと無関係</label>
+            <div class="modal-actions">
+              <button type="button" class="btn" data-action="modal-cancel">キャンセル</button>
+              <button type="submit" class="btn primary" data-action="modal-submit">送信</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+
