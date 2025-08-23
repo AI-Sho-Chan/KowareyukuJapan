@@ -1,0 +1,27 @@
+{
+  "name": "壊れゆく日本Archives",
+  "short_name": "KJ Archives",
+  "start_url": "/KowareyukuJapan/index.html",
+  "scope": "/KowareyukuJapan/",
+  "display": "standalone",
+  "background_color": "#0f0f10",
+  "theme_color": "#d33",
+  "icons": [
+    { "src": "/KowareyukuJapan/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "share_target": {
+    "action": "/KowareyukuJapan/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        { "name": "files", "accept": ["image/*", "video/*"] }
+      ]
+    }
+  }
+}
+
+

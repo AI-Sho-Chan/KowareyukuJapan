@@ -9,6 +9,8 @@
     <meta property="og:title" content="壊れゆく日本Archives" />
     <meta property="og:description" content="見過ごさない。記録する。伝える。" />
     <meta property="og:type" content="website" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" />
   </head>
   <body>
     <header class="site-header">
@@ -97,6 +99,11 @@
       </div>
     </div>
 
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+      }
+    </script>
     <script src="./app.js"></script>
   </body>
   </html>
