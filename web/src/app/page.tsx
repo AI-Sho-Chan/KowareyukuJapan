@@ -4,7 +4,7 @@ import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
 import { useEffect, useState } from "react";
 
-const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家"] as const;
+const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
 
 export default function Home() {
   const [posts, setPosts] = useState<Array<{
@@ -18,15 +18,18 @@ export default function Home() {
     createdAt: number;
   }>>([]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch('/api/posts', { cache: 'no-store' });
-        const j = await r.json();
-        if (j?.ok && Array.isArray(j.posts)) setPosts(j.posts);
-      } catch {}
-    })();
-  }, []);
+  async function refresh(){
+    const r = await fetch('/api/posts', { cache: 'no-store' });
+    const j = await r.json();
+    if (j?.ok && Array.isArray(j.posts)) setPosts(j.posts);
+  }
+
+  useEffect(() => { refresh(); }, []);
+
+  async function updateTags(id: string, tags: string[]){
+    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ tags }) });
+    await refresh();
+  }
 
   return (
     <>
@@ -40,55 +43,75 @@ export default function Home() {
         <section className="feed" id="feed">
           {posts.map((p) => {
             const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
-            const tagText = (p.tags && p.tags.length) ? p.tags.map(t=>`#${t}`).join("・") : "";
+            const selected = new Set(p.tags || []);
+            const TagEditor = (
+              <details style={{marginTop:6}}>
+                <summary style={{cursor:'pointer'}}>タグを編集</summary>
+                <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:6}}>
+                  {FIXED_TAGS.map(t=>{
+                    const checked = selected.has(t);
+                    return (
+                      <label key={t} style={{display:'inline-flex',alignItems:'center',gap:6}}>
+                        <input type="checkbox" defaultChecked={checked} onChange={(e)=>{
+                          const next = new Set(selected);
+                          if (e.currentTarget.checked) next.add(t); else next.delete(t);
+                          updateTags(p.id, Array.from(next));
+                        }} />
+                        <span>#{t}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </details>
+            );
             if (isX) {
               return (
-                <XEmbedCard key={p.id} postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                <div key={p.id}>
+                  <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                  {TagEditor}
+                </div>
               );
             }
             if (p.media) {
               return (
-                <InlineEmbedCard
-                  key={p.id}
-                  postId={p.id}
-                  title={p.title}
-                  comment={p.comment || ""}
-                  tags={p.tags && p.tags.length ? p.tags : ["ユーザー投稿"]}
-                  sourceUrl={p.url || p.media.url}
-                  thumbnailUrl={p.media.type === 'image' ? p.media.url : undefined}
-                  embedUrl={p.media.url}
-                  kind={p.media.type}
-                  alwaysOpen
-                  createdAt={p.createdAt}
-                  handle={p.handle}
-                />
+                <div key={p.id}>
+                  <InlineEmbedCard
+                    postId={p.id}
+                    title={p.title}
+                    comment={p.comment || ""}
+                    tags={p.tags && p.tags.length ? p.tags : ["ユーザー投稿"]}
+                    sourceUrl={p.url || p.media.url}
+                    thumbnailUrl={p.media.type === 'image' ? p.media.url : undefined}
+                    embedUrl={p.media.url}
+                    kind={p.media.type}
+                    alwaysOpen
+                    createdAt={p.createdAt}
+                    handle={p.handle}
+                  />
+                  {TagEditor}
+                </div>
               );
             }
             if (p.url) {
               return (
-                <InlineEmbedCard
-                  key={p.id}
-                  postId={p.id}
-                  title={p.title}
-                  comment={p.comment || ""}
-                  tags={p.tags && p.tags.length ? p.tags : ["リンク"]}
-                  sourceUrl={p.url}
-                  embedUrl={p.url}
-                  kind="page"
-                  alwaysOpen
-                  createdAt={p.createdAt}
-                  handle={p.handle}
-                />
+                <div key={p.id}>
+                  <InlineEmbedCard
+                    postId={p.id}
+                    title={p.title}
+                    comment={p.comment || ""}
+                    tags={p.tags && p.tags.length ? p.tags : ["リンク"]}
+                    sourceUrl={p.url}
+                    embedUrl={p.url}
+                    kind="page"
+                    alwaysOpen
+                    createdAt={p.createdAt}
+                    handle={p.handle}
+                  />
+                  {TagEditor}
+                </div>
               );
             }
-            return (
-              <article key={p.id} className="card" data-post-id={p.id}>
-                <div className="card-body">
-                  <h2 className="title">{p.title}</h2>
-                  <p className="comment">{p.comment || ""}</p>
-                </div>
-              </article>
-            );
+            return null;
           })}
         </section>
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
@@ -97,7 +120,6 @@ export default function Home() {
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
-            // チェックされたタグを収集
             const checked = Array.from(form.querySelectorAll('input[name="tag"]:checked')) as HTMLInputElement[];
             checked.forEach(ch => fd.append('tags', ch.value));
             const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
