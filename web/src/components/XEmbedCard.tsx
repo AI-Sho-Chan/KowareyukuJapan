@@ -9,6 +9,8 @@ type Props = {
   statusUrl: string;
 };
 
+const MODE_KEY = 'data-x-embed-mode';
+
 function getTweetId(u: string){
   try{
     const url = new URL(u);
@@ -38,6 +40,7 @@ function attachAutoHeight(ifr: HTMLIFrameElement){
     }
   };
   window.addEventListener('message', onMsg);
+  return () => window.removeEventListener('message', onMsg);
 }
 
 async function renderOfficial(container: HTMLElement, statusUrl: string, timeoutMs = 6000){
@@ -50,8 +53,8 @@ async function renderOfficial(container: HTMLElement, statusUrl: string, timeout
   return !!container.querySelector('iframe.twitter-tweet-rendered');
 }
 
-function renderIframe(container: HTMLElement, statusUrl: string){
-  const id = getTweetId(statusUrl); if(!id) return false;
+function renderIframe(container: HTMLElement, statusUrl: string): HTMLIFrameElement | null {
+  const id = getTweetId(statusUrl); if(!id) return null;
   const ifr = document.createElement('iframe');
   ifr.src = `https://platform.twitter.com/embed/Tweet.html?id=${id}&dnt=1&hide_thread=1&lang=ja`;
   ifr.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; web-share';
@@ -60,27 +63,35 @@ function renderIframe(container: HTMLElement, statusUrl: string){
   ifr.style.border = '0'; ifr.style.width = '100%'; ifr.style.maxWidth = '550px';
   ifr.style.minHeight = '300px'; ifr.setAttribute('loading','lazy');
   container.replaceChildren(ifr);
-  attachAutoHeight(ifr);
-  return true;
+  return ifr;
 }
 
 export default function XEmbedCard({ postId, title = "Xの投稿", comment, statusUrl }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   useEffect(()=>{
     let cancelled = false;
+    const cleanupFns: Array<() => void> = [];
     (async()=>{
       const block = document.querySelector(`[data-post-id="${postId}"] blockquote.twitter-tweet`) as HTMLElement | null;
       if(!block) return;
+      if (block.getAttribute(MODE_KEY)) return; // 二重描画ガード
       // 1) 公式埋め込み
       const ok = await renderOfficial(block, statusUrl, 6000);
       if(cancelled) return;
       if(ok){
+        const ifr = block.querySelector('iframe.twitter-tweet-rendered') as HTMLIFrameElement | null;
+        if (ifr) cleanupFns.push(attachAutoHeight(ifr));
+        block.setAttribute(MODE_KEY, 'official');
         return;
       }
       // 2) 直接IFRAME埋め込み
-      const ok2 = renderIframe(block, statusUrl);
+      const ifr2 = renderIframe(block, statusUrl);
       if(cancelled) return;
-      if(ok2) return;
+      if(ifr2){
+        cleanupFns.push(attachAutoHeight(ifr2));
+        block.setAttribute(MODE_KEY, 'iframe');
+        return;
+      }
       // 3) スクショ + 要約
       try{
         const img = await fetch(`/api/x-screenshot?url=${encodeURIComponent(statusUrl)}`);
@@ -89,7 +100,7 @@ export default function XEmbedCard({ postId, title = "Xの投稿", comment, stat
         const sj = await s.json(); if(sj?.ok && !cancelled) setFallback(p=>({ ...p, text: sj.text }));
       }catch(_e){ /* ignore */ }
     })();
-    return ()=>{ cancelled = true; };
+    return ()=>{ cancelled = true; cleanupFns.forEach(fn=>{ try{ fn(); }catch{} }); };
   },[postId, statusUrl]);
 
   return (
