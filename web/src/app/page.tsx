@@ -4,8 +4,29 @@ import Image from "next/image";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
 import TitleFetcher from "@/components/TitleFetcher";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [posts, setPosts] = useState<Array<{
+    id: string;
+    url?: string;
+    media?: { type: "image" | "video"; id: string; url: string };
+    title: string;
+    comment?: string;
+    handle?: string;
+    createdAt: number;
+  }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/posts', { cache: 'no-store' });
+        const j = await r.json();
+        if (j?.ok && Array.isArray(j.posts)) setPosts(j.posts);
+      } catch {}
+    })();
+  }, []);
+
   return (
     <>
       <header className="site-header">
@@ -17,6 +38,58 @@ export default function Home() {
       </header>
       <main className="container">
         <section className="feed" id="feed">
+          {/* 先に最新のユーザー投稿を表示 */}
+          {posts.map((p) => {
+            const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
+            if (isX) {
+              return (
+                <XEmbedCard key={p.id} postId={p.id} comment={p.comment || ""} statusUrl={p.url!} />
+              );
+            }
+            if (p.media) {
+              return (
+                <InlineEmbedCard
+                  key={p.id}
+                  postId={p.id}
+                  title={p.title}
+                  comment={p.comment || ""}
+                  tags={["ユーザー投稿"]}
+                  sourceUrl={p.url || p.media.url}
+                  thumbnailUrl={p.media.type === 'image' ? p.media.url : undefined}
+                  embedUrl={p.media.url}
+                  kind={p.media.type}
+                  alwaysOpen
+                  createdAt={p.createdAt}
+                />
+              );
+            }
+            if (p.url) {
+              return (
+                <InlineEmbedCard
+                  key={p.id}
+                  postId={p.id}
+                  title={p.title}
+                  comment={p.comment || ""}
+                  tags={["リンク"]}
+                  sourceUrl={p.url}
+                  embedUrl={p.url}
+                  kind="page"
+                  alwaysOpen
+                  createdAt={p.createdAt}
+                />
+              );
+            }
+            return (
+              <article key={p.id} className="card" data-post-id={p.id}>
+                <div className="card-body">
+                  <h2 className="title">{p.title}</h2>
+                  <p className="comment">{p.comment || ""}</p>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* 既存のデモカード */}
           <InlineEmbedCard
             postId="gd-91102"
             title="現代ビジネスの記事"
@@ -83,7 +156,7 @@ export default function Home() {
             if(j?.ok){ alert('投稿しました（デモ: 再読み込みで反映）'); location.reload(); } else { alert('投稿に失敗しました'); }
           }}>
             <label className="radio">URL
-              <input type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+              <input name="url" type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
               <label className="radio">動画／画像のアップロード（端末から選択）
