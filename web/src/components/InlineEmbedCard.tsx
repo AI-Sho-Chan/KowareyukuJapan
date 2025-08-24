@@ -62,6 +62,8 @@ export default function InlineEmbedCard(props: Props) {
   const [open, setOpen] = useState<boolean>(!!autoOpen || !!alwaysOpen);
   const [count, setCount] = useState<number>(0);
   const [readable, setReadable] = useState<boolean>(false);
+  const [canEmbed, setCanEmbed] = useState<boolean>(true);
+  const [readerText, setReaderText] = useState<string | null>(null);
 
   useEffect(() => {
     setOpen(!!autoOpen || !!alwaysOpen);
@@ -73,6 +75,24 @@ export default function InlineEmbedCard(props: Props) {
     }
     return embedUrl || sourceUrl;
   }, [embedUrl, sourceUrl, kind]);
+
+  useEffect(()=>{
+    let cancelled = false;
+    (async()=>{
+      if (kind === 'image' || kind === 'video') { setCanEmbed(true); return; }
+      try{
+        const r = await fetch(`/api/can-embed?url=${encodeURIComponent(resolvedEmbedUrl)}`);
+        const j = await r.json();
+        if(!cancelled){ setCanEmbed(!!(j?.ok && j?.canEmbed)); }
+        if(!j?.canEmbed){
+          const rr = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`);
+          const jj = await rr.json();
+          if(!cancelled && jj?.ok){ setReaderText(jj.text as string); }
+        }
+      }catch(_e){ if(!cancelled) setCanEmbed(false); }
+    })();
+    return ()=>{ cancelled = true; };
+  },[resolvedEmbedUrl, sourceUrl, kind]);
 
   const onShare = useCallback(async () => {
     try {
@@ -132,7 +152,7 @@ export default function InlineEmbedCard(props: Props) {
             共感する <span className="count">{count}</span>
           </button>
           <button className="btn" onClick={onShare}>シェア</button>
-          <button className="btn subtle" onClick={onRemoval}>削除要請</button>
+          <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
         </div>
         <div
           className="embed"
@@ -144,7 +164,7 @@ export default function InlineEmbedCard(props: Props) {
             <img src={resolvedEmbedUrl} alt="拡大画像" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
           ) : kind === "video" ? (
             <video src={resolvedEmbedUrl} controls playsInline style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
-          ) : (
+          ) : canEmbed ? (
             <iframe
               src={resolvedEmbedUrl}
               width="100%"
@@ -160,19 +180,17 @@ export default function InlineEmbedCard(props: Props) {
                 filter: readable ? "invert(1) hue-rotate(180deg)" : undefined,
               }}
             />
-          )}
-          {kind !== "youtube" && showSourceLink && (
-            <div className="modal-actions" style={{ marginTop: 8 }}>
-              <button className="btn" onClick={() => setReadable((v) => !v)}>
-                読みやすさ調整
-              </button>
-              <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">
-                引用元へ
-              </a>
+          ) : (
+            <div style={{border:'1px solid var(--line)',borderRadius:12,padding:12,background:'#fff'}}>
+              <p style={{margin:'4px 0 8px'}}>このサイトは埋め込みを禁止しています。プレビューをご覧ください。</p>
+              {thumbnailUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={thumbnailUrl} alt="プレビュー" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
+              ) : null}
+              {readerText ? (
+                <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit',marginTop:8}}>{readerText}</pre>
+              ) : null}
             </div>
-          )}
-          {kind !== "youtube" && (
-            <p className="policy-note">埋め込み不可のサイトは空白になる場合があります。</p>
           )}
         </div>
       </div>
