@@ -40,7 +40,7 @@ export default function Home() {
             const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
             if (isX) {
               return (
-                <XEmbedCard key={p.id} postId={p.id} comment={p.comment || ""} statusUrl={p.url!} />
+                <XEmbedCard key={p.id} postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} />
               );
             }
             if (p.media) {

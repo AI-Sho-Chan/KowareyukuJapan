@@ -45,11 +45,18 @@ export async function POST(req: NextRequest) {
   }
 
   let title = titleManual || "";
+  const isX = !!url && /https?:\/\/(x\.com|twitter\.com)\//i.test(url);
   if (!title && url) {
     try {
       const meta = await fetchMeta(url);
       if (meta.title) title = meta.title;
     } catch (_) {}
+  }
+  // X/TwitterはJS未許可環境で"JavaScript is not available."等になるため保存しない
+  if (!titleManual && isX) {
+    if (!title || /javascript is not available\.?/i.test(title)) {
+      title = "";
+    }
   }
   if (!title) title = "(無題)";
 

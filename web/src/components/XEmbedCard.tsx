@@ -66,8 +66,60 @@ function renderIframe(container: HTMLElement, statusUrl: string): HTMLIFrameElem
   return ifr;
 }
 
-export default function XEmbedCard({ postId, title = "Xの投稿", comment, statusUrl }: Props){
+function stripDisclaimers(s: string): string{
+  return s
+    .replace(/javascript is not available\.?/gi, '')
+    .replace(/view on x/gi, '')
+    .replace(/see on x/gi, '')
+    .replace(/この投稿は表示できません。?/g, '')
+    .replace(/pic\.twitter\.com\/\S+/gi, '')
+    .trim();
+}
+
+function sanitizeForTitle(s: string): string{
+  return stripDisclaimers(
+    s
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[#＃][\p{L}0-9_一-龥ぁ-んァ-ンー]+/gu, '')
+      .replace(/@\w+/g, '')
+      .replace(/\s+/g, ' ')
+  ).trim();
+}
+
+function truncateJa(s: string, limit = 32): string{
+  if (s.length <= limit) return s;
+  const punct = /[。．！？!?]/g;
+  let idx = -1; let m: RegExpExecArray | null;
+  while ((m = punct.exec(s)) && m.index <= limit) { idx = m.index; }
+  if (idx >= 8) return s.slice(0, idx + 1);
+  return s.slice(0, limit) + '…';
+}
+
+export default function XEmbedCard({ postId, title = "", comment, statusUrl }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
+  const [autoTitle, setAutoTitle] = useState<string | undefined>(undefined);
+
+  // タイトル自動取得（ユーザー指定がない場合のみ）
+  useEffect(()=>{
+    let cancelled = false;
+    (async()=>{
+      if (title && title.trim()) return;
+      try{
+        const r = await fetch(`/api/x-oembed?url=${encodeURIComponent(statusUrl)}`);
+        const j = await r.json();
+        let t = sanitizeForTitle(j?.text || '');
+        if (!t && comment) t = sanitizeForTitle(comment);
+        if (!cancelled && t) setAutoTitle(truncateJa(t, 32));
+      }catch(_e){
+        // 失敗時はコメントからタイトルを生成
+        if (!cancelled && comment) setAutoTitle(truncateJa(sanitizeForTitle(comment), 32));
+      }
+    })();
+    return ()=>{ cancelled = true; };
+  },[statusUrl, title, comment]);
+
+  const displayTitle = (title && title.trim()) || autoTitle || "Xの投稿";
+
   useEffect(()=>{
     let cancelled = false;
     const cleanupFns: Array<() => void> = [];
@@ -106,7 +158,7 @@ export default function XEmbedCard({ postId, title = "Xの投稿", comment, stat
   return (
     <article className="card twitter-card" data-post-id={postId}>
       <div className="card-body">
-        <h2 className="title">{title}</h2>
+        <h2 className="title">{displayTitle}</h2>
         <div className="meta"><span className="handle">@guest</span><span className="tags">#治安/マナー</span></div>
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
