@@ -9,46 +9,78 @@ type Props = {
   statusUrl: string;
 };
 
+function getTweetId(u: string){
+  const m = u.match(/status\/(\d+)/); return m ? m[1] : '';
+}
+
+function ensureWidgets(): Promise<any>{
+  return new Promise((resolve)=>{
+    const w: any = window as any;
+    if (w.twttr?.widgets) return resolve(w.twttr);
+    const s = document.createElement('script');
+    s.src = "https://platform.twitter.com/widgets.js"; s.async = true;
+    s.onload = () => resolve((window as any).twttr);
+    document.head.appendChild(s);
+  });
+}
+
+async function renderOfficial(container: HTMLElement, statusUrl: string, timeoutMs = 6000){
+  const id = getTweetId(statusUrl); if(!id) return false;
+  const twttr = await Promise.race([ensureWidgets(), new Promise(res=>setTimeout(()=>res(null), timeoutMs))]);
+  if(!twttr) return false;
+  try{
+    await twttr.widgets.createTweet(id, container, { dnt: true, lang: 'ja', conversation: 'none' });
+  }catch{ return false; }
+  return !!container.querySelector('iframe.twitter-tweet-rendered');
+}
+
+function renderIframe(container: HTMLElement, statusUrl: string){
+  const id = getTweetId(statusUrl); if(!id) return false;
+  const ifr = document.createElement('iframe');
+  ifr.src = `https://platform.twitter.com/embed/Tweet.html?dnt=1&hide_thread=1&lang=ja&id=${id}`;
+  ifr.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write; web-share';
+  ifr.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
+  ifr.style.border = '0'; ifr.style.width = '100%'; ifr.style.maxWidth = '550px';
+  ifr.style.minHeight = '250px'; ifr.setAttribute('loading','lazy');
+  container.replaceChildren(ifr);
+  const onMsg = (e: MessageEvent)=>{
+    if(!ifr.contentWindow || e.source !== ifr.contentWindow) return;
+    if(typeof e.data === 'string'){
+      const m = e.data.match(/height=(\d+)/); if(m) ifr.style.height = Math.max(250, +m[1]) + 'px';
+    }
+  };
+  window.addEventListener('message', onMsg);
+  return true;
+}
+
 export default function XEmbedCard({ postId, title = "Xの投稿", comment, statusUrl }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   useEffect(()=>{
-    // @ts-ignore
-    if(!(window as any).twttr){
-      const s = document.createElement('script');
-      s.src = "https://platform.twitter.com/widgets.js"; s.async = true; s.charset = 'utf-8';
-      document.body.appendChild(s);
-    } else {
-      // @ts-ignore
-      (window as any).twttr.widgets.load();
-    }
-    // フォールバック: 5秒で未展開ならリンクを挿入
-    const t = setTimeout(async()=>{
+    let cancelled = false;
+    (async()=>{
       const block = document.querySelector(`[data-post-id="${postId}"] blockquote.twitter-tweet`) as HTMLElement | null;
-      const rendered = block?.querySelector('iframe.twitter-tweet-rendered');
-      if(block && !rendered){
-        try{
-          const r = await fetch(`/api/x-oembed?url=${encodeURIComponent(statusUrl)}`);
-          const j = await r.json();
-          if(j?.ok && j?.html){
-            // 親で置換して入れ子を避ける
-            const wrapper = block.parentElement!;
-            const tmp = document.createElement('div');
-            tmp.innerHTML = j.html;
-            if (tmp.firstElementChild) {
-              wrapper.replaceChild(tmp.firstElementChild, block);
-            }
-            setFallback({ text: j.text || undefined });
-          }
-          else {
-            // oEmbed不可→スクショ
-            const img = await fetch(`/api/x-screenshot?url=${encodeURIComponent(statusUrl)}`);
-            if(img.ok){ const blob = await img.blob(); setFallback({ image: URL.createObjectURL(blob) }); }
-          }
-        }catch(_e){}
+      if(!block) return;
+      // 1) 公式埋め込み
+      const ok = await renderOfficial(block, statusUrl, 6000);
+      if(cancelled) return;
+      if(ok){
+        // IFRAME生成の検知はrenderOfficial内で実施
+        return;
       }
-    },5000);
-    return ()=>clearTimeout(t);
-  },[]);
+      // 2) 直接IFRAME埋め込み
+      const ok2 = renderIframe(block, statusUrl);
+      if(cancelled) return;
+      if(ok2) return;
+      // 3) スクショ + 要約
+      try{
+        const img = await fetch(`/api/x-screenshot?url=${encodeURIComponent(statusUrl)}`);
+        if(img.ok){ const blob = await img.blob(); if(!cancelled) setFallback(p=>({ ...p, image: URL.createObjectURL(blob) })); }
+        const s = await fetch(`/api/x-summary?url=${encodeURIComponent(statusUrl)}`);
+        const sj = await s.json(); if(sj?.ok && !cancelled) setFallback(p=>({ ...p, text: sj.text }));
+      }catch(_e){ /* ignore */ }
+    })();
+    return ()=>{ cancelled = true; };
+  },[postId, statusUrl]);
 
   return (
     <article className="card" data-post-id={postId}>
