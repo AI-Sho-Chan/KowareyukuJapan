@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "壊れゆく日本Archives",
-  description: "見過ごさない。記録する。伝える。",
+  title: "守ろうJAPAN",
+  description: "日本のために記録し、伝える",
   manifest: "/manifest.webmanifest",
 };
 
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

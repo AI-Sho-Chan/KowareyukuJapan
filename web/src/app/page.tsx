@@ -1,112 +1,113 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
+import InlineEmbedCard from "@/components/InlineEmbedCard";
+import XEmbedCard from "@/components/XEmbedCard";
+import TitleFetcher from "@/components/TitleFetcher";
 
 export default function Home() {
   return (
     <>
       <header className="site-header">
         <div className="site-brand">
-          <Link href="/" className="brand-title">壊れゆく日本Archives</Link>
-          <p className="brand-copy">見過ごさない。記録する。伝える。</p>
+          <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
+          <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
         </div>
-        <nav className="site-tabs" aria-label="フィード切替">
-          <a className="tab active" href="#new">新着</a>
-          <a className="tab" href="#trend">トレンド</a>
-          <Link className="tab" href="/special">特集</Link>
-        </nav>
+        {/* 単一ページ構成のためタブは撤去 */}
       </header>
       <main className="container">
-        <section className="notice special" id="special-banner">
-          <div className="notice-title">特集: 外国人による犯罪・迷惑行為</div>
-          <p className="notice-body">出典リンクの明示と、個人特定情報の配慮をお願いします。属性に基づく一般化・侮蔑はガイドラインで禁止されています。</p>
-          <Link className="notice-link" href="/special">特集フィードを見る</Link>
-        </section>
         <section className="feed" id="feed">
-          <article className="card" data-post-id="post-001">
-            <Link className="media" href="/post/post-001">
-              <Image src="https://placehold.co/800x450?text=OGP+Image" alt="プレビュー画像" width={800} height={450} />
-            </Link>
-            <div className="card-body">
-              <h2 className="title"><Link href="/post/post-001">地方祭りの中止、補助見直しの影響</Link></h2>
-              <p className="comment">支援が途切れ、長年の祭りが姿を消しつつある。</p>
-              <div className="meta"><span className="handle">@hanako</span><span className="tags">#地域コミュニティ・#都道府県: 長野</span></div>
-              <div className="actions">
-                <button className="btn primary" data-action="empathize">共感する <span className="count" aria-live="polite">12</span></button>
-                <button className="btn" data-action="share">シェア</button>
-                <button className="btn subtle" data-action="request-removal">削除要請</button>
-              </div>
-            </div>
-          </article>
-          <article className="card" data-post-id="post-002">
-            <Link className="media" href="/post/post-002">
-              <Image src="https://placehold.co/800x450?text=Video+Thumbnail" alt="プレビュー画像" width={800} height={450} />
-            </Link>
-            <div className="card-body">
-              <h2 className="title"><Link href="/post/post-002">商店街の閉店が続く</Link></h2>
-              <p className="comment">空き店舗が増え、地元の交流が薄れていく。</p>
-              <div className="meta"><span className="handle">@taro</span><span className="tags">#産業/商店街・#都道府県: 兵庫</span></div>
-              <div className="actions">
-                <button className="btn primary" data-action="empathize">共感する <span className="count" aria-live="polite">88</span></button>
-                <button className="btn" data-action="share">シェア</button>
-                <button className="btn subtle" data-action="request-removal">削除要請</button>
-              </div>
-            </div>
-          </article>
+          <InlineEmbedCard
+            postId="gd-91102"
+            title="現代ビジネスの記事"
+            comment="日本人を本当に苦しめているのは、政治家をも操る財務省。財務省を解体せよ！"
+            tags={["政治/制度"]}
+            sourceUrl="https://gendai.media/articles/-/91102"
+            thumbnailUrl="https://placehold.co/800x450?text=NEWS+OGP"
+            embedUrl="https://gendai.media/articles/-/91102"
+            kind="page"
+            alwaysOpen
+            createdAt={Date.now()}
+          />
+          <TitleFetcher url="https://gendai.media/articles/-/91102" fallback="" onTitle={(t)=>{
+            const el = document.querySelector('[data-post-id="gd-91102"] .title');
+            if(el) el.textContent = t;
+          }} />
+          <InlineEmbedCard
+            postId="nhk-001"
+            title="埼玉 三郷 小学生ひき逃げ事件 中国籍の運転手を起訴"
+            comment="出典: NHK 首都圏ニュース"
+            tags={["治安/マナー","ニュース"]}
+            sourceUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
+            thumbnailUrl="https://placehold.co/800x450?text=NHK+NEWS"
+            embedUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
+            kind="page"
+            alwaysOpen
+            createdAt={Date.now()}
+          />
+          <TitleFetcher url="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html" fallback="" onTitle={(t)=>{
+            const el = document.querySelector('[data-post-id="nhk-001"] .title');
+            if(el) el.textContent = t;
+          }} />
+          <InlineEmbedCard
+            postId="yt-001"
+            title="FNNプライムオンラインのニュース映像"
+            comment="サムネイルの再生ボタンから動画を再生できます"
+            tags={["動画","特集"]}
+            sourceUrl="https://www.youtube.com/watch?v=HKPfestn2iY"
+            thumbnailUrl="https://img.youtube.com/vi/HKPfestn2iY/hqdefault.jpg"
+            embedUrl="https://www.youtube.com/embed/HKPfestn2iY"
+            kind="youtube"
+            alwaysOpen
+            createdAt={Date.now()}
+          />
+          <TitleFetcher url="https://www.youtube.com/watch?v=HKPfestn2iY" fallback="" onTitle={(t)=>{
+            const el = document.querySelector('[data-post-id="yt-001"] .title');
+            if(el) el.textContent = t;
+          }} />
+          <XEmbedCard
+            postId="tw-001"
+            comment="もう中国人は一律入国禁止でいいだろ？沖縄乗っ取られる前に早く！"
+            statusUrl="https://x.com/La_Pla/status/1954718910584082931"
+          />
         </section>
-      </main>
-      <a className="fab" href="/compose" aria-label="投稿作成">＋投稿</a>
-      <div className="modal" id="removal-modal" aria-hidden="true" role="dialog" aria-labelledby="removal-title">
-        <div className="modal-content">
-          <h3 id="removal-title">削除要請</h3>
-          <p className="modal-desc">理由を選択してください（1端末1回）。</p>
-          <form>
-            <label className="radio"><input type="radio" name="reason" value="誤情報"/> 誤情報の可能性</label>
-            <label className="radio"><input type="radio" name="reason" value="権利侵害"/> 著作権/肖像権などの侵害</label>
-            <label className="radio"><input type="radio" name="reason" value="個人情報"/> 個人情報の含有</label>
-            <label className="radio"><input type="radio" name="reason" value="無関係"/> テーマと無関係</label>
-            <div className="modal-actions">
-              <button type="button" className="btn" data-action="modal-cancel">キャンセル</button>
-              <button type="submit" className="btn primary" data-action="modal-submit">送信</button>
+        {/* 簡易投稿フォーム（URL/画像/動画、任意タイトル/50字コメント/ハンドル） */}
+        <section id="compose" className="card" style={{padding:12, marginTop:16}}>
+          <h2 className="title">記録する</h2>
+          <form onSubmit={async (e)=>{
+            e.preventDefault();
+            const form = e.currentTarget as HTMLFormElement;
+            const fd = new FormData(form);
+            const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
+            const j = await res.json();
+            if(j?.ok){ alert('投稿しました（デモ: 再読み込みで反映）'); location.reload(); } else { alert('投稿に失敗しました'); }
+          }}>
+            <label className="radio">URL
+              <input type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+            </label>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
+              <label className="radio">動画／画像のアップロード（端末から選択）
+                <input name="file" type="file" accept="image/*,video/*" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'var(--muted)'}} />
+              </label>
+              <label className="radio">タイトル（任意）
+                <input name="title" type="text" placeholder="任意のタイトル" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+              </label>
+            </div>
+            <label className="radio" style={{marginTop:8}}>コメント（50字上限・任意）
+              <textarea name="comment" rows={2} maxLength={50} placeholder="あなたのコメント" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+            </label>
+            <label className="radio" style={{marginTop:8}}>ハンドル（任意）
+              <input name="handle" type="text" placeholder="@handle" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+            </label>
+            <div className="modal-actions" style={{marginTop:12}}>
+              <button className="btn">下書き</button>
+              <button className="btn primary" type="submit">記録</button>
             </div>
           </form>
-        </div>
-      </div>
-      <script dangerouslySetInnerHTML={{__html:`(${clientJS.toString()})()`}} />
+        </section>
+      </main>
+      {/* 投稿導線（フローティング） */}
+      <a className="fab" href="#compose" aria-label="記録作成">＋記録</a>
     </>
   );
-}
-
-function clientJS(){
-  function onceGuard(key: string){
-    const k = `kj_once_${key}`;
-    if(localStorage.getItem(k)) return false;
-    localStorage.setItem(k,'1');
-    return true;
-  }
-  const modal=document.getElementById('removal-modal');
-  const opens=document.querySelectorAll('[data-action="request-removal"]');
-  const cancel=document.querySelector('[data-action="modal-cancel"]');
-  const submit=document.querySelector('[data-action="modal-submit"]');
-  opens.forEach(b=>b.addEventListener('click',()=>modal?.setAttribute('aria-hidden','false')));
-  cancel?.addEventListener('click',()=>modal?.setAttribute('aria-hidden','true'));
-  submit?.addEventListener('click',(e)=>{
-    e.preventDefault();
-    const checked=modal?.querySelector('input[name="reason"]:checked');
-    if(!checked){ alert('理由を選択してください。'); return; }
-    const post=document.querySelector('[data-post-id]');
-    const pid=post?post.getAttribute('data-post-id'):'unknown';
-    if(!onceGuard(`removal_${pid}`)){ alert('この投稿への削除要請は既に送信済みです。'); }
-    else { alert('削除要請を受け付けました。'); }
-    modal?.setAttribute('aria-hidden','true');
-  });
-  document.querySelectorAll('[data-action="empathize"]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const post=btn.closest('[data-post-id]');
-      const pid=post?post.getAttribute('data-post-id'):'unknown';
-      if(!onceGuard(`empathize_${pid}`)){ alert('この投稿には既に共感済みです。'); return; }
-      const count=btn.querySelector('.count');
-      if(!count) return; count.textContent=String((parseInt(count.textContent||'0',10)||0)+1);
-    });
-  });
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
 }

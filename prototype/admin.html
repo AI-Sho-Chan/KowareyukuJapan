@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理 – 削除依頼キュー</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand-title" href="./index.html">壊れゆく日本Archives</a>
+    </header>
+    <main class="container">
+      <h1 class="title">削除依頼キュー</h1>
+      <table style="width:100%;border-collapse:collapse;border:1px solid var(--line)" class="card">
+        <thead>
+          <tr style="background:#1b1c1f">
+            <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line)">投稿</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line)">理由</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line)">要請数</th>
+            <th style="text-align:left;padding:8px;border-bottom:1px solid var(--line)">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px;border-bottom:1px solid var(--line)"><a href="./post.html?id=post-001">地方祭りの中止…</a></td>
+            <td style="padding:8px;border-bottom:1px solid var(--line)">権利侵害</td>
+            <td style="padding:8px;border-bottom:1px solid var(--line)"><span class="badge">6</span></td>
+            <td style="padding:8px;border-bottom:1px solid var(--line)">
+              <button class="btn" data-admin="keep">保留</button>
+              <button class="btn" data-admin="reject">却下</button>
+              <button class="btn primary" data-admin="delete">削除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="meta">監査ログは削除/保留/却下の操作ごとに時刻・担当者・理由を記録します。</p>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+  </html>
+
+
