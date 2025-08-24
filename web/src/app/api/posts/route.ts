@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { fetchMeta } from "@/lib/metadata";
-import { mediaStore, postsStore, StoredPost } from "@/lib/store";
+import { mediaStore, postsStore, StoredPost, persistPostsToDisk } from "@/lib/store";
 
 type Post = {
   id: string;
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
     ownerKey,
   };
   postsStore.push(post);
+  persistPostsToDisk();
   return new Response(JSON.stringify({ ok: true, post }), { headers: { "content-type": "application/json" } });
 }
 

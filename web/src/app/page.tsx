@@ -34,11 +34,10 @@ export default function Home() {
           <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
           <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
         </div>
-        {/* 単一ページ構成のためタブは撤去 */}
       </header>
       <main className="container">
         <section className="feed" id="feed">
-          {/* 先に最新のユーザー投稿を表示 */}
+          {/* ユーザー投稿 */}
           {posts.map((p) => {
             const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
             if (isX) {
@@ -89,62 +88,66 @@ export default function Home() {
             );
           })}
 
-          {/* 既存のデモカード */}
-          <InlineEmbedCard
-            postId="gd-91102"
-            title="現代ビジネスの記事"
-            comment="日本人を本当に苦しめているのは、政治家をも操る財務省。財務省を解体せよ！"
-            tags={["政治/制度"]}
-            sourceUrl="https://gendai.media/articles/-/91102"
-            thumbnailUrl="https://placehold.co/800x450?text=NEWS+OGP"
-            embedUrl="https://gendai.media/articles/-/91102"
-            kind="page"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://gendai.media/articles/-/91102" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="gd-91102"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <InlineEmbedCard
-            postId="nhk-001"
-            title="埼玉 三郷 小学生ひき逃げ事件 中国籍の運転手を起訴"
-            comment="出典: NHK 首都圏ニュース"
-            tags={["治安/マナー","ニュース"]}
-            sourceUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
-            thumbnailUrl="https://placehold.co/800x450?text=NHK+NEWS"
-            embedUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
-            kind="page"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="nhk-001"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <InlineEmbedCard
-            postId="yt-001"
-            title="FNNプライムオンラインのニュース映像"
-            comment="サムネイルの再生ボタンから動画を再生できます"
-            tags={["動画","特集"]}
-            sourceUrl="https://www.youtube.com/watch?v=HKPfestn2iY"
-            thumbnailUrl="https://img.youtube.com/vi/HKPfestn2iY/hqdefault.jpg"
-            embedUrl="https://www.youtube.com/embed/HKPfestn2iY"
-            kind="youtube"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://www.youtube.com/watch?v=HKPfestn2iY" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="yt-001"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <XEmbedCard
-            postId="tw-001"
-            comment="もう中国人は一律入国禁止でいいだろ？沖縄乗っ取られる前に早く！"
-            statusUrl="https://x.com/La_Pla/status/1954718910584082931"
-          />
+          {/* 投稿0件のときのみダミー記事を表示 */}
+          {posts.length === 0 && (
+            <>
+              <InlineEmbedCard
+                postId="gd-91102"
+                title="現代ビジネスの記事"
+                comment="日本人を本当に苦しめているのは、政治家をも操る財務省。財務省を解体せよ！"
+                tags={["政治/制度"]}
+                sourceUrl="https://gendai.media/articles/-/91102"
+                thumbnailUrl="https://placehold.co/800x450?text=NEWS+OGP"
+                embedUrl="https://gendai.media/articles/-/91102"
+                kind="page"
+                alwaysOpen
+                createdAt={Date.now()}
+              />
+              <TitleFetcher url="https://gendai.media/articles/-/91102" fallback="" onTitle={(t)=>{
+                const el = document.querySelector('[data-post-id="gd-91102"] .title');
+                if(el) el.textContent = t;
+              }} />
+              <InlineEmbedCard
+                postId="nhk-001"
+                title="埼玉 三郷 小学生ひき逃げ事件 中国籍の運転手を起訴"
+                comment="出典: NHK 首都圏ニュース"
+                tags={["治安/マナー","ニュース"]}
+                sourceUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
+                thumbnailUrl="https://placehold.co/800x450?text=NHK+NEWS"
+                embedUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
+                kind="page"
+                alwaysOpen
+                createdAt={Date.now()}
+              />
+              <TitleFetcher url="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html" fallback="" onTitle={(t)=>{
+                const el = document.querySelector('[data-post-id="nhk-001"] .title');
+                if(el) el.textContent = t;
+              }} />
+              <InlineEmbedCard
+                postId="yt-001"
+                title="FNNプライムオンラインのニュース映像"
+                comment="サムネイルの再生ボタンから動画を再生できます"
+                tags={["動画","特集"]}
+                sourceUrl="https://www.youtube.com/watch?v=HKPfestn2iY"
+                thumbnailUrl="https://img.youtube.com/vi/HKPfestn2iY/hqdefault.jpg"
+                embedUrl="https://www.youtube.com/embed/HKPfestn2iY"
+                kind="youtube"
+                alwaysOpen
+                createdAt={Date.now()}
+              />
+              <TitleFetcher url="https://www.youtube.com/watch?v=HKPfestn2iY" fallback="" onTitle={(t)=>{
+                const el = document.querySelector('[data-post-id="yt-001"] .title');
+                if(el) el.textContent = t;
+              }} />
+              <XEmbedCard
+                postId="tw-001"
+                comment="もう中国人は一律入国禁止でいいだろ？沖縄乗っ取られる前に早く！"
+                statusUrl="https://x.com/La_Pla/status/1954718910584082931"
+              />
+            </>
+          )}
         </section>
-        {/* 簡易投稿フォーム（URL/画像/動画、任意タイトル/50字コメント/ハンドル） */}
+        {/* 投稿フォーム */}
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
           <h2 className="title">記録する</h2>
           <form onSubmit={async (e)=>{
@@ -179,7 +182,6 @@ export default function Home() {
           </form>
         </section>
       </main>
-      {/* 投稿導線（フローティング） */}
       <a className="fab" href="#compose" aria-label="記録作成">＋記録</a>
     </>
   );
