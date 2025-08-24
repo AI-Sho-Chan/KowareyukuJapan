@@ -9,6 +9,7 @@ type Props = {
   title?: string;
   comment: string;
   statusUrl: string;
+  handle?: string;
 };
 
 const MODE_KEY = 'data-x-embed-mode';
@@ -97,7 +98,13 @@ function truncateJa(s: string, limit = 32): string{
   return s.slice(0, limit) + '…';
 }
 
-export default function XEmbedCard({ postId, title = "", comment, statusUrl }: Props){
+function formatHandle(h?: string): string {
+  const t = (h || "").trim();
+  if (!t) return "@guest";
+  return t.startsWith("@") ? t : `@${t}`;
+}
+
+export default function XEmbedCard({ postId, title = "", comment, statusUrl, handle }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   const [autoTitle, setAutoTitle] = useState<string | undefined>(undefined);
 
@@ -159,7 +166,7 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
     <article className="card twitter-card" data-post-id={postId}>
       <div className="card-body">
         <h2 className="title">{displayTitle}</h2>
-        <div className="meta"><span className="handle">@guest</span><span className="tags">#治安/マナー</span></div>
+        <div className="meta"><span className="handle">{formatHandle(handle)}</span><span className="tags">#治安/マナー</span></div>
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
         <blockquote className="twitter-tweet" data-dnt="true">
