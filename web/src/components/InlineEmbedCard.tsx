@@ -123,7 +123,7 @@ export default function InlineEmbedCard(props: Props) {
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
         <div className="meta">
-          <span className="handle">{formatHandle(handle)}</span>
+          <span className="handle">記録者：{formatHandle(handle)}</span>
           <span className="tags">{tags.map((t) => `#${t}`).join("・")}</span>
           {props.createdAt ? <time style={{marginLeft:8}}>{formatDateTime(props.createdAt)}</time> : null}
         </div>

@@ -9,6 +9,7 @@ type Post = {
   title: string;
   comment?: string;
   handle?: string;
+  tags?: string[];
   createdAt: number;
   ownerKey: string; // 簡易: 端末匿名ID
 };
@@ -16,6 +17,29 @@ type Post = {
 function getOwnerKey(req: NextRequest): string {
   const key = req.headers.get("x-client-key") || "anon";
   return key;
+}
+
+const FIXED_TAGS = [
+  "治安/マナー","ニュース","政治/制度","動画","画像",
+  "外国人犯罪","中国人","クルド人","媚中政治家","財務省",
+  "官僚","左翼","保守","日本","帰化人","帰化人政治家"
+];
+
+function autoTags(input: { url?: string | null; mediaType?: "image"|"video"; comment?: string | null }): string[] {
+  const tags: string[] = [];
+  if (input.mediaType === 'image') tags.push('画像');
+  if (input.mediaType === 'video') tags.push('動画');
+  const url = (input.url || '').toLowerCase();
+  if (/nhk|yomiuri|asahi|mainichi|nikkei|yahoo/.test(url)) tags.push('ニュース');
+  if (/youtube\.com|youtu\.be/.test(url)) tags.push('動画');
+  const text = (input.comment || '').toLowerCase();
+  const map: Record<string,string> = {
+    '中国': '中国人', 'チャイナ': '中国人', '中共': '中国人',
+    'クルド': 'クルド人', '財務省': '財務省', '官僚': '官僚',
+    '左翼': '左翼', '保守': '保守', '帰化': '帰化人', '日本': '日本'
+  };
+  for (const k in map){ if (text.includes(k)) tags.push(map[k]); }
+  return Array.from(new Set(tags)).slice(0, 3);
 }
 
 export async function GET() {
@@ -28,6 +52,7 @@ export async function POST(req: NextRequest) {
   const titleManual = (form.get("title") as string | null) || undefined;
   const comment = (form.get("comment") as string | null) || undefined;
   const handle = (form.get("handle") as string | null) || undefined;
+  const tagsRaw = (form.getAll("tags") as string[]).filter(Boolean);
   const ownerKey = getOwnerKey(req);
 
   let mediaType: "image" | "video" | undefined;
@@ -52,18 +77,22 @@ export async function POST(req: NextRequest) {
       if (meta.title) title = meta.title;
     } catch (_) {}
   }
-  // X/Twitterはクライアント側でタイトル自動生成。サーバ保存では空のまま維持
   if (!titleManual && isX) {
     if (!title || /javascript is not available\.?/i.test(title)) {
       title = "";
     }
   }
-  // ファイルのみ投稿でタイトル未指定→種類別の既定タイトル
   if (!title && !url && mediaType) {
     title = mediaType === "image" ? "画像（ユーザー投稿）" : "動画（ユーザー投稿）";
   }
-  // それ以外のみデフォルト"(無題)"
   if (!title && !isX) title = "(無題)";
+
+  let tags: string[] | undefined = undefined;
+  if (tagsRaw.length > 0) {
+    tags = tagsRaw.filter(t => FIXED_TAGS.includes(t));
+  } else {
+    tags = autoTags({ url, mediaType, comment });
+  }
 
   const id = Math.random().toString(36).slice(2, 10);
   const post: StoredPost = {
@@ -73,12 +102,13 @@ export async function POST(req: NextRequest) {
     title,
     comment,
     handle,
+    tags,
     createdAt: Date.now(),
     ownerKey,
   };
   postsStore.push(post);
   persistPostsToDisk();
-  return new Response(JSON.stringify({ ok: true, post }), { headers: { "content-type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true, post, tags: FIXED_TAGS }), { headers: { "content-type": "application/json" } });
 }
 
 

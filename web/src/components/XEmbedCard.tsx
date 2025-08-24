@@ -108,7 +108,6 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   const [autoTitle, setAutoTitle] = useState<string | undefined>(undefined);
 
-  // タイトル自動取得（ユーザー指定がない場合のみ）
   useEffect(()=>{
     let cancelled = false;
     (async()=>{
@@ -166,7 +165,7 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
     <article className="card twitter-card" data-post-id={postId}>
       <div className="card-body">
         <h2 className="title">{displayTitle}</h2>
-        <div className="meta"><span className="handle">{formatHandle(handle)}</span><span className="tags">#治安/マナー</span></div>
+        <div className="meta"><span className="handle">記録者：{formatHandle(handle)}</span><span className="tags">#治安/マナー</span></div>
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
         <blockquote className="twitter-tweet" data-dnt="true">

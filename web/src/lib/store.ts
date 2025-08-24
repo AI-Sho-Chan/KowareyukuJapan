@@ -7,6 +7,7 @@ export type StoredPost = {
   title: string;
   comment?: string;
   handle?: string;
+  tags?: string[];
   createdAt: number;
   ownerKey: string;
 };

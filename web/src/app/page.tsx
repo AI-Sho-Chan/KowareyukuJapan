@@ -4,6 +4,8 @@ import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
 import { useEffect, useState } from "react";
 
+const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家"] as const;
+
 export default function Home() {
   const [posts, setPosts] = useState<Array<{
     id: string;
@@ -12,6 +14,7 @@ export default function Home() {
     title: string;
     comment?: string;
     handle?: string;
+    tags?: string[];
     createdAt: number;
   }>>([]);
 
@@ -35,9 +38,9 @@ export default function Home() {
       </header>
       <main className="container">
         <section className="feed" id="feed">
-          {/* ユーザー投稿 */}
           {posts.map((p) => {
             const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
+            const tagText = (p.tags && p.tags.length) ? p.tags.map(t=>`#${t}`).join("・") : "";
             if (isX) {
               return (
                 <XEmbedCard key={p.id} postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
@@ -50,7 +53,7 @@ export default function Home() {
                   postId={p.id}
                   title={p.title}
                   comment={p.comment || ""}
-                  tags={["ユーザー投稿"]}
+                  tags={p.tags && p.tags.length ? p.tags : ["ユーザー投稿"]}
                   sourceUrl={p.url || p.media.url}
                   thumbnailUrl={p.media.type === 'image' ? p.media.url : undefined}
                   embedUrl={p.media.url}
@@ -68,7 +71,7 @@ export default function Home() {
                   postId={p.id}
                   title={p.title}
                   comment={p.comment || ""}
-                  tags={["リンク"]}
+                  tags={p.tags && p.tags.length ? p.tags : ["リンク"]}
                   sourceUrl={p.url}
                   embedUrl={p.url}
                   kind="page"
@@ -88,13 +91,15 @@ export default function Home() {
             );
           })}
         </section>
-        {/* 投稿フォーム */}
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
           <h2 className="title">記録する</h2>
           <form onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
+            // チェックされたタグを収集
+            const checked = Array.from(form.querySelectorAll('input[name="tag"]:checked')) as HTMLInputElement[];
+            checked.forEach(ch => fd.append('tags', ch.value));
             const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
             const j = await res.json();
             if(j?.ok){ alert('投稿しました（デモ: 再読み込みで反映）'); location.reload(); } else { alert('投稿に失敗しました'); }
@@ -116,6 +121,16 @@ export default function Home() {
             <label className="radio" style={{marginTop:8}}>ハンドル（任意）
               <input name="handle" type="text" placeholder="@handle" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
+            <div style={{marginTop:8}}>
+              <div className="comment-label">カテゴリー（任意・複数可）</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {FIXED_TAGS.map(t=> (
+                  <label key={t} className="radio" style={{display:'inline-flex',alignItems:'center',gap:6}}>
+                    <input type="checkbox" name="tag" value={t} /> <span>#{t}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="modal-actions" style={{marginTop:12}}>
               <button className="btn">下書き</button>
               <button className="btn primary" type="submit">記録</button>
