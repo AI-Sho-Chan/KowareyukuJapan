@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const PLACEHOLDER = "(無題)";
+
 type Props = {
   postId: string;
   title?: string;
@@ -103,7 +105,8 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
   useEffect(()=>{
     let cancelled = false;
     (async()=>{
-      if (title && title.trim()) return;
+      const userTitle = (title || '').trim();
+      if (userTitle && userTitle !== PLACEHOLDER) return;
       try{
         const r = await fetch(`/api/x-oembed?url=${encodeURIComponent(statusUrl)}`);
         const j = await r.json();
@@ -111,14 +114,14 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
         if (!t && comment) t = sanitizeForTitle(comment);
         if (!cancelled && t) setAutoTitle(truncateJa(t, 32));
       }catch(_e){
-        // 失敗時はコメントからタイトルを生成
         if (!cancelled && comment) setAutoTitle(truncateJa(sanitizeForTitle(comment), 32));
       }
     })();
     return ()=>{ cancelled = true; };
   },[statusUrl, title, comment]);
 
-  const displayTitle = (title && title.trim()) || autoTitle || "Xの投稿";
+  const userTitle = (title || '').trim();
+  const displayTitle = (userTitle && userTitle !== PLACEHOLDER ? userTitle : '') || autoTitle || "Xの投稿";
 
   useEffect(()=>{
     let cancelled = false;
@@ -127,7 +130,6 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
       const block = document.querySelector(`[data-post-id="${postId}"] blockquote.twitter-tweet`) as HTMLElement | null;
       if(!block) return;
       if (block.getAttribute(MODE_KEY)) return; // 二重描画ガード
-      // 1) 公式埋め込み
       const ok = await renderOfficial(block, statusUrl, 6000);
       if(cancelled) return;
       if(ok){
@@ -136,7 +138,6 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
         block.setAttribute(MODE_KEY, 'official');
         return;
       }
-      // 2) 直接IFRAME埋め込み
       const ifr2 = renderIframe(block, statusUrl);
       if(cancelled) return;
       if(ifr2){
@@ -144,7 +145,6 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl }: P
         block.setAttribute(MODE_KEY, 'iframe');
         return;
       }
-      // 3) スクショ + 要約
       try{
         const img = await fetch(`/api/x-screenshot?url=${encodeURIComponent(statusUrl)}`);
         if(img.ok){ const blob = await img.blob(); if(!cancelled) setFallback(p=>({ ...p, image: URL.createObjectURL(blob) })); }

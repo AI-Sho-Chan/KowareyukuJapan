@@ -52,13 +52,18 @@ export async function POST(req: NextRequest) {
       if (meta.title) title = meta.title;
     } catch (_) {}
   }
-  // X/TwitterはJS未許可環境で"JavaScript is not available."等になるため保存しない
+  // X/Twitterはクライアント側でタイトル自動生成。サーバ保存では空のまま維持
   if (!titleManual && isX) {
     if (!title || /javascript is not available\.?/i.test(title)) {
       title = "";
     }
   }
-  if (!title) title = "(無題)";
+  // ファイルのみ投稿でタイトル未指定→種類別の既定タイトル
+  if (!title && !url && mediaType) {
+    title = mediaType === "image" ? "画像（ユーザー投稿）" : "動画（ユーザー投稿）";
+  }
+  // それ以外のみデフォルト"(無題)"
+  if (!title && !isX) title = "(無題)";
 
   const id = Math.random().toString(36).slice(2, 10);
   const post: StoredPost = {
