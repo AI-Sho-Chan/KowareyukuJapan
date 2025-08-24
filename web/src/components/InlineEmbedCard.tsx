@@ -17,6 +17,7 @@ type Props = {
   owner?: boolean;
   onDelete?: () => void;
   createdAt?: number;
+  handle?: string;
 };
 
 function onceGuard(key: string): boolean {
@@ -36,6 +37,12 @@ function formatDateTime(ts?: number): string {
   }
 }
 
+function formatHandle(h?: string): string {
+  const t = (h || "").trim();
+  if (!t) return "@guest";
+  return t.startsWith("@") ? t : `@${t}`;
+}
+
 export default function InlineEmbedCard(props: Props) {
   const {
     postId,
@@ -49,6 +56,7 @@ export default function InlineEmbedCard(props: Props) {
     autoOpen,
     alwaysOpen,
     showSourceLink = true,
+    handle,
   } = props;
 
   const [open, setOpen] = useState<boolean>(!!autoOpen || !!alwaysOpen);
@@ -115,7 +123,7 @@ export default function InlineEmbedCard(props: Props) {
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
         <div className="meta">
-          <span className="handle">@guest</span>
+          <span className="handle">{formatHandle(handle)}</span>
           <span className="tags">{tags.map((t) => `#${t}`).join("・")}</span>
           {props.createdAt ? <time style={{marginLeft:8}}>{formatDateTime(props.createdAt)}</time> : null}
         </div>

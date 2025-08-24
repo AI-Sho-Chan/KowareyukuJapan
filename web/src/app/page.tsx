@@ -57,6 +57,7 @@ export default function Home() {
                   kind={p.media.type}
                   alwaysOpen
                   createdAt={p.createdAt}
+                  handle={p.handle}
                 />
               );
             }
@@ -73,6 +74,7 @@ export default function Home() {
                   kind="page"
                   alwaysOpen
                   createdAt={p.createdAt}
+                  handle={p.handle}
                 />
               );
             }
