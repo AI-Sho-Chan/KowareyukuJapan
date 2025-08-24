@@ -66,3 +66,7 @@ html,body{background:var(--bg);color:var(--text)}
 input::placeholder, textarea::placeholder{color:var(--muted);opacity:1}
 input[type="file"]{color:var(--muted)}
 input[type="file"]::file-selector-button{background:#f3f4f6;color:#1f2937;border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-right:10px}
+
+/* Twitter embed */
+.twitter-card{overflow:visible}
+.twitter-card iframe{display:block;width:100%;max-width:550px;border:0}

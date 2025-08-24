@@ -10,7 +10,11 @@ type Props = {
 };
 
 function getTweetId(u: string){
-  const m = u.match(/status\/(\d+)/); return m ? m[1] : '';
+  try{
+    const url = new URL(u);
+    const m = url.pathname.match(/status(?:es)?\/(\d{5,})/);
+    return m ? m[1] : '';
+  }catch{ return ''; }
 }
 
 function ensureWidgets(): Promise<any>{
@@ -22,6 +26,18 @@ function ensureWidgets(): Promise<any>{
     s.onload = () => resolve((window as any).twttr);
     document.head.appendChild(s);
   });
+}
+
+function attachAutoHeight(ifr: HTMLIFrameElement){
+  const onMsg = (e: MessageEvent) => {
+    if (e.source !== ifr.contentWindow) return;
+    let d: any = e.data;
+    if (typeof d === 'string') { try { d = JSON.parse(d); } catch { return; } }
+    if (d && d.type === 'twttr.embed' && Number.isFinite(d.height)) {
+      ifr.style.height = Math.max(300, d.height) + 'px';
+    }
+  };
+  window.addEventListener('message', onMsg);
 }
 
 async function renderOfficial(container: HTMLElement, statusUrl: string, timeoutMs = 6000){
@@ -37,19 +53,14 @@ async function renderOfficial(container: HTMLElement, statusUrl: string, timeout
 function renderIframe(container: HTMLElement, statusUrl: string){
   const id = getTweetId(statusUrl); if(!id) return false;
   const ifr = document.createElement('iframe');
-  ifr.src = `https://platform.twitter.com/embed/Tweet.html?dnt=1&hide_thread=1&lang=ja&id=${id}`;
-  ifr.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write; web-share';
+  ifr.src = `https://platform.twitter.com/embed/Tweet.html?id=${id}&dnt=1&hide_thread=1&lang=ja`;
+  ifr.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; web-share';
+  ifr.setAttribute('allowfullscreen', 'true');
   ifr.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
   ifr.style.border = '0'; ifr.style.width = '100%'; ifr.style.maxWidth = '550px';
-  ifr.style.minHeight = '250px'; ifr.setAttribute('loading','lazy');
+  ifr.style.minHeight = '300px'; ifr.setAttribute('loading','lazy');
   container.replaceChildren(ifr);
-  const onMsg = (e: MessageEvent)=>{
-    if(!ifr.contentWindow || e.source !== ifr.contentWindow) return;
-    if(typeof e.data === 'string'){
-      const m = e.data.match(/height=(\d+)/); if(m) ifr.style.height = Math.max(250, +m[1]) + 'px';
-    }
-  };
-  window.addEventListener('message', onMsg);
+  attachAutoHeight(ifr);
   return true;
 }
 
@@ -64,7 +75,6 @@ export default function XEmbedCard({ postId, title = "Xの投稿", comment, stat
       const ok = await renderOfficial(block, statusUrl, 6000);
       if(cancelled) return;
       if(ok){
-        // IFRAME生成の検知はrenderOfficial内で実施
         return;
       }
       // 2) 直接IFRAME埋め込み
@@ -83,7 +93,7 @@ export default function XEmbedCard({ postId, title = "Xの投稿", comment, stat
   },[postId, statusUrl]);
 
   return (
-    <article className="card" data-post-id={postId}>
+    <article className="card twitter-card" data-post-id={postId}>
       <div className="card-body">
         <h2 className="title">{title}</h2>
         <div className="meta"><span className="handle">@guest</span><span className="tags">#治安/マナー</span></div>
