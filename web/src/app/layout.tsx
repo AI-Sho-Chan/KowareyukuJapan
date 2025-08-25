@@ -16,6 +16,7 @@ export const metadata: Metadata = {
   title: "守ろうJAPAN",
   description: "日本のために記録し、伝える",
   manifest: "/manifest.webmanifest",
+  icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({

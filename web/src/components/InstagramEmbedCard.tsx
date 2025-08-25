@@ -7,7 +7,7 @@ function toEmbed(u: string): string | null {
   try {
     const url = new URL(u);
     const m = url.pathname.match(/\/(p|reel|tv)\/([A-Za-z0-9_\-]+)/);
-    return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed` : null;
+    return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed/captioned` : null;
   } catch { return null; }
 }
 
@@ -45,6 +45,7 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
       bq.className = 'instagram-media';
       bq.setAttribute('data-instgrm-permalink', url);
       bq.setAttribute('data-instgrm-version', '14');
+      bq.setAttribute('data-instgrm-captioned', '');
       el.appendChild(bq);
 
       const okScript = await ensureScript();
@@ -63,6 +64,7 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
 
       const ifr = document.createElement('iframe');
       ifr.src = embedUrl;
+      ifr.referrerPolicy = 'origin-when-cross-origin';
       ifr.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen';
       ifr.setAttribute('allowfullscreen', 'true');
       ifr.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';

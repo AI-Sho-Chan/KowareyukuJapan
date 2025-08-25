@@ -10,8 +10,7 @@ export default function YouTubeEmbedCard({ url }: { url: string }) {
     wrap.className = 'embed-16by9';
     const ifr = document.createElement('iframe');
     ifr.src = e.src;
-    ifr.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
-    ifr.setAttribute('allowfullscreen', 'true');
+    ifr.allow = 'fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     ifr.referrerPolicy = 'origin-when-cross-origin';
     ifr.loading = 'lazy';
     ifr.style.border = '0';

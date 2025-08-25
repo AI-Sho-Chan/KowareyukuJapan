@@ -26,6 +26,8 @@ export default function Home() {
     createdAt: number;
   }>>([]);
   const [viewerKey, setViewerKey] = useState<string>("");
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
 
   async function refresh(){
     const r = await fetch('/api/posts', { cache: 'no-store' });
@@ -243,11 +245,72 @@ export default function Home() {
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
-            const checked = Array.from(form.querySelectorAll('input[name="tag"]:checked')) as HTMLInputElement[];
-            checked.forEach(ch => fd.append('tags', ch.value));
-            const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
-            const j = await res.json();
-            if(j?.ok){ alert('投稿しました（デモ: 再読み込みで反映）'); location.reload(); } else { alert('投稿に失敗しました'); }
+
+            async function downscaleImageFile(file: File, maxW = 1600, maxH = 1600, quality = 0.85): Promise<File> {
+              return new Promise((resolve) => {
+                try {
+                  const img = new Image();
+                  const url = URL.createObjectURL(file);
+                  img.onload = () => {
+                    const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+                    const w = Math.max(1, Math.round(img.width * ratio));
+                    const h = Math.max(1, Math.round(img.height * ratio));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { URL.revokeObjectURL(url); return resolve(file); }
+                    ctx.drawImage(img, 0, 0, w, h);
+                    canvas.toBlob((blob) => {
+                      URL.revokeObjectURL(url);
+                      if (!blob) return resolve(file);
+                      const out = new File([blob], (file.name || 'image').replace(/\.(png|jpe?g|webp|gif)$/i, '') + '.jpg', { type: 'image/jpeg' });
+                      resolve(out);
+                    }, 'image/jpeg', quality);
+                  };
+                  img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                  img.src = url;
+                } catch { resolve(file); }
+              });
+            }
+
+            try {
+              setUploading(true); setUploadMsg('アップロード中…');
+              const checked = Array.from(form.querySelectorAll('input[name="tag"]:checked')) as HTMLInputElement[];
+              checked.forEach(ch => fd.append('tags', ch.value));
+
+              const fileInput = form.querySelector('input[name="file"]') as HTMLInputElement | null;
+              const sel = fileInput?.files?.[0];
+              if (sel) {
+                const isImage = sel.type.startsWith('image/');
+                const isVideo = sel.type.startsWith('video/');
+                const MAX_VIDEO = 60 * 1024 * 1024; // 60MB
+                if (isVideo && sel.size > MAX_VIDEO) {
+                  setUploadMsg('動画サイズが大きすぎます（最大60MB）');
+                  setUploading(false);
+                  return;
+                }
+                if (isImage) {
+                  const small = await downscaleImageFile(sel, 1600, 1600, 0.85);
+                  if (small !== sel) {
+                    fd.delete('file');
+                    fd.append('file', small, small.name);
+                  }
+                }
+              }
+
+              const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
+              const j = await res.json();
+              if(j?.ok){
+                setUploadMsg('アップロード完了');
+                await refresh();
+                form.reset();
+              } else {
+                setUploadMsg('アップロードに失敗しました');
+                alert('投稿に失敗しました');
+              }
+            } finally {
+              setUploading(false);
+            }
           }}>
             <label className="radio">URL
               <input name="url" type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
@@ -276,9 +339,10 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <div className="modal-actions" style={{marginTop:12}}>
+            <div className="modal-actions" style={{marginTop:12, display:'flex', alignItems:'center', gap:8}}>
               <button className="btn" type="button">下書き</button>
-              <button className="btn primary" type="submit">記録</button>
+              <button className="btn primary" type="submit" disabled={uploading} aria-busy={uploading}>{uploading ? 'アップロード中…' : '記録'}</button>
+              {uploadMsg ? <small style={{color: uploadMsg.includes('完了') ? 'var(--muted)' : 'crimson'}}>{uploadMsg}</small> : null}
             </div>
           </form>
         </section>

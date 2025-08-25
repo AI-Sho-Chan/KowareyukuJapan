@@ -3,11 +3,19 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 
-function parseBlocked(xfo: string, csp: string){
+function parseBlocked(xfo: string, csp: string, ourOrigin?: string){
   const x = (xfo || '').toLowerCase();
   const c = (csp || '').toLowerCase();
-  const byXfo = x.includes('deny') || x.includes('sameorigin');
-  const byCsp = /frame-ancestors/i.test(c);
+  const byXfo = /\b(deny|sameorigin)\b/.test(x);
+
+  let byCsp = false;
+  const m = c.match(/frame-ancestors\s+([^;]+)/);
+  if (m) {
+    const list = m[1].trim();
+    // 明示的に禁止されているときだけブロック扱い
+    if (/\b'none'\b/.test(list)) byCsp = true;
+    // それ以外（*, ドメイン列挙, 'self' 等）は判定を厳しくせず、実ブラウザに委ねる
+  }
   return { blocked: byXfo || byCsp, byXfo, byCsp };
 }
 
