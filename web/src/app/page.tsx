@@ -38,6 +38,11 @@ export default function Home() {
     await refresh();
   }
 
+  async function updateComment(id: string, comment: string){
+    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ comment }) });
+    await refresh();
+  }
+
   async function removePost(id: string){
     if (!confirm(`この投稿(${id})を削除します。よろしいですか？`)) return;
     const r = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
@@ -59,7 +64,8 @@ export default function Home() {
         <section className="feed" id="feed">
           {posts.map((p) => {
             const selected = new Set(p.tags || []);
-            const TagEditor = (
+            const isOwner = typeof window !== 'undefined' && (localStorage.getItem('kj_owner') || '') === (p as any).ownerKey;
+            const TagEditor = !isOwner ? null : (
               <details style={{marginTop:6}}>
                 <summary style={{cursor:'pointer'}}>タグを編集</summary>
                 <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:6}}>
@@ -79,6 +85,15 @@ export default function Home() {
                 </div>
               </details>
             );
+            const OwnerActions = !isOwner ? null : (
+              <div style={{display:'flex',gap:8,marginTop:8}}>
+                <button className="btn" onClick={()=>{
+                  const next = prompt('コメントを編集', p.comment || '') ?? undefined;
+                  if (typeof next === 'string') updateComment(p.id, next);
+                }}>コメントを編集</button>
+                <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+              </div>
+            );
 
             const AdminHeader = (
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
@@ -92,6 +107,7 @@ export default function Home() {
                 <div key={p.id}>
                   <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
                   {TagEditor}
+                  {OwnerActions}
                 </div>
               );
             }
@@ -117,6 +133,7 @@ export default function Home() {
                     </div>
                   </article>
                   {TagEditor}
+                  {OwnerActions}
                 </div>
               );
             }
@@ -140,6 +157,7 @@ export default function Home() {
                     adminHeader={AdminHeader}
                   />
                   {TagEditor}
+                  {OwnerActions}
                 </div>
               );
             }

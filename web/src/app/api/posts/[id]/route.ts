@@ -22,6 +22,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (typeof body.handle === 'string') {
     postsStore[idx].handle = body.handle;
   }
+  if (typeof body.comment === 'string') {
+    postsStore[idx].comment = body.comment;
+  }
   return NextResponse.json({ ok: true, post: postsStore[idx] }, { headers: { 'content-type': 'application/json' } });
 }
 
