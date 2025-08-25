@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   postId: string;
@@ -64,6 +64,7 @@ export default function InlineEmbedCard(props: Props) {
   const [readable, setReadable] = useState<boolean>(false);
   const [canEmbed, setCanEmbed] = useState<boolean>(true);
   const [readerText, setReaderText] = useState<string | null>(null);
+  const reqRef = useRef(0);
 
   useEffect(() => {
     setOpen(!!autoOpen || !!alwaysOpen);
@@ -77,21 +78,23 @@ export default function InlineEmbedCard(props: Props) {
   }, [embedUrl, sourceUrl, kind]);
 
   useEffect(()=>{
-    let cancelled = false;
+    const myId = ++reqRef.current;
     (async()=>{
       if (kind === 'image' || kind === 'video') { setCanEmbed(true); return; }
       try{
         const r = await fetch(`/api/can-embed?url=${encodeURIComponent(resolvedEmbedUrl)}`);
         const j = await r.json();
-        if(!cancelled){ setCanEmbed(!!(j?.ok && j?.canEmbed)); }
+        if (reqRef.current !== myId) return;
+        setCanEmbed(!!(j?.ok && j?.canEmbed));
         if(!j?.canEmbed){
           const rr = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`);
           const jj = await rr.json();
-          if(!cancelled && jj?.ok){ setReaderText(jj.text as string); }
+          if (reqRef.current !== myId) return;
+          if(jj?.ok){ setReaderText(jj.text as string); }
         }
-      }catch(_e){ if(!cancelled) setCanEmbed(false); }
+      }catch(_e){ if (reqRef.current === myId) setCanEmbed(false); }
     })();
-    return ()=>{ cancelled = true; };
+    return ()=>{ reqRef.current++; };
   },[resolvedEmbedUrl, sourceUrl, kind]);
 
   const onShare = useCallback(async () => {

@@ -7,6 +7,12 @@ import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
 
+function formatHandle(h?: string): string {
+  const t = (h || "").trim();
+  if (!t) return "@guest";
+  return t.startsWith("@") ? t : `@${t}`;
+}
+
 export default function Home() {
   const [posts, setPosts] = useState<Array<{
     id: string;
@@ -33,6 +39,7 @@ export default function Home() {
   }
 
   const isYT = (u?: string) => !!u && /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u);
+  const isX  = (u?: string) => !!u && /https?:\/\/(x\.com|twitter\.com)\//i.test(u);
 
   return (
     <>
@@ -45,7 +52,6 @@ export default function Home() {
       <main className="container">
         <section className="feed" id="feed">
           {posts.map((p) => {
-            const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
             const selected = new Set(p.tags || []);
             const TagEditor = (
               <details style={{marginTop:6}}>
@@ -67,7 +73,8 @@ export default function Home() {
                 </div>
               </details>
             );
-            if (isX) {
+
+            if (isX(p.url)) {
               return (
                 <div key={p.id}>
                   <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
@@ -75,14 +82,26 @@ export default function Home() {
                 </div>
               );
             }
+
             if (p.url && isYT(p.url)) {
               return (
                 <div key={p.id}>
-                  <YouTubeEmbedCard url={p.url!} />
+                  <article className="card" data-post-id={p.id}>
+                    <div className="card-body">
+                      <h2 className="title">{p.title}</h2>
+                      <div className="meta"><span className="handle">記録者：{formatHandle(p.handle)}</span>{p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}</div>
+                      <div className="comment-label">記録者のコメント</div>
+                      <p className="comment">{p.comment || "(コメントなし)"}</p>
+                      <div className="embed" style={{marginTop:8}}>
+                        <YouTubeEmbedCard url={p.url!} />
+                      </div>
+                    </div>
+                  </article>
                   {TagEditor}
                 </div>
               );
             }
+
             if (p.media) {
               return (
                 <div key={p.id}>
@@ -103,6 +122,7 @@ export default function Home() {
                 </div>
               );
             }
+
             if (p.url) {
               return (
                 <div key={p.id}>
@@ -122,6 +142,7 @@ export default function Home() {
                 </div>
               );
             }
+
             return null;
           })}
         </section>
