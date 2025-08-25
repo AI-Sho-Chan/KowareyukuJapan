@@ -1,17 +1,32 @@
 export const runtime = 'nodejs';
-import type { NextRequest } from 'next/server';
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+function toJina(u: string){
+  return `https://r.jina.ai/${u.startsWith('http') ? u : `https://${u}`}`;
+}
 
 export async function GET(req: NextRequest){
   const url = req.nextUrl.searchParams.get('url');
-  if(!url) return Response.json({ok:false,error:'url required'},{status:400});
+  if(!url) return NextResponse.json({ ok:false, error:'url required' }, { status:400 });
+
   try{
-    const normalized = url.replace(/^https?:\/\//,'https://');
-    const r = await fetch(`https://r.jina.ai/${normalized}`);
-    if(!r.ok) return Response.json({ok:false,error:`${r.status}`},{status:502});
-    const text = await r.text();
-    const excerpt = text.split('\n').slice(0,80).join('\n').slice(0,4000);
-    return Response.json({ok:true, text: excerpt});
-  }catch(e:any){
-    return Response.json({ok:false,error:e?.message||'extract failed'},{status:502});
+    const ac = new AbortController();
+    const to = setTimeout(()=>ac.abort(), 8000);
+    const r = await fetch(toJina(url), {
+      headers: { 'user-agent':'Mozilla/5.0', 'accept-language':'ja-JP,ja;q=0.9,en-US;q=0.3' },
+      signal: ac.signal
+    });
+    clearTimeout(to);
+    if(!r.ok) return NextResponse.json({ ok:false, error:`${r.status}` }, { status:200 });
+
+    const text = (await r.text()).slice(0, 8000);
+    return NextResponse.json(
+      { ok:true, text },
+      { headers: { 'cache-control':'public, s-maxage=3600', 'vary':'accept-language' } }
+    );
+  } catch(e:any){
+    return NextResponse.json({ ok:false, error:String(e?.message||e) }, { status:200 });
   }
 }

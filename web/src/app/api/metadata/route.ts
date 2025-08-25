@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { fetchMeta } from "@/lib/metadata";
 
 type Meta = {
@@ -39,18 +39,18 @@ async function fetchGeneric(url: string): Promise<Meta> {
 
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
-  if (!url) return new Response(JSON.stringify({ error: "url is required" }), { status: 400 });
+  if (!url) return NextResponse.json({ error: "url is required" }, { status: 400 });
   try {
     const meta = await fetchMeta(url);
-    return new Response(JSON.stringify({ ok: true, meta }), { headers: { "content-type": "application/json" } });
+    return NextResponse.json({ ok: true, meta });
   } catch (e: any) {
-    return new Response(JSON.stringify({ ok: false, error: e?.message ?? String(e) }), { status: 200 });
+    return NextResponse.json({ ok: false, error: e?.message ?? String(e) }, { status: 200 });
   }
 }
 
 export async function POST(req: NextRequest) {
   const { url } = await req.json();
-  if (!url) return new Response(JSON.stringify({ error: "url is required" }), { status: 400 });
+  if (!url) return NextResponse.json({ error: "url is required" }, { status: 400 });
   return GET(new NextRequest(new URL(req.url + `?url=${encodeURIComponent(url)}`)));
 }
 
