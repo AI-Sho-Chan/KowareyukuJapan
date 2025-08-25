@@ -105,7 +105,16 @@ export default function Home() {
             if (isX(p.url)) {
               return (
                 <div key={p.id}>
-                  <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                  <XEmbedCard
+                    postId={p.id}
+                    title={p.title}
+                    comment={p.comment || ""}
+                    statusUrl={p.url!}
+                    handle={p.handle}
+                    tags={p.tags}
+                    createdAt={p.createdAt}
+                    adminHeader={AdminHeader}
+                  />
                   {TagEditor}
                   {OwnerActions}
                 </div>
@@ -119,12 +128,16 @@ export default function Home() {
                     <div className="card-body">
                       {AdminHeader}
                       <h2 className="title">{p.title}</h2>
-                      <div className="meta"><span className="handle">記録者：{formatHandle(p.handle)}</span>{p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}</div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
                       <div className="embed" style={{marginTop:8}}>
                         <YouTubeEmbedCard url={p.url!} />
                       </div>
+                      <div className="meta" style={{marginTop:8}}>
+                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
+                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
+                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
+                      </div>
+                      <div className="comment-label">記録者のコメント</div>
+                      <p className="comment">{p.comment || "(コメントなし)"}</p>
                       <div className="actions" style={{marginTop:8}}>
                         <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
                         <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>

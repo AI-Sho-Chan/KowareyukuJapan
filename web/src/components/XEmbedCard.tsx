@@ -10,6 +10,9 @@ type Props = {
   comment: string;
   statusUrl: string;
   handle?: string;
+  tags?: string[];
+  createdAt?: number;
+  adminHeader?: React.ReactNode;
 };
 
 const MODE_KEY = 'data-x-embed-mode';
@@ -104,7 +107,7 @@ function formatHandle(h?: string): string {
   return t.startsWith("@") ? t : `@${t}`;
 }
 
-export default function XEmbedCard({ postId, title = "", comment, statusUrl, handle }: Props){
+export default function XEmbedCard({ postId, title = "", comment, statusUrl, handle, tags, createdAt, adminHeader }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   const [autoTitle, setAutoTitle] = useState<string | undefined>(undefined);
 
@@ -164,13 +167,20 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
   return (
     <article className="card twitter-card" data-post-id={postId}>
       <div className="card-body">
+        {adminHeader}
         <h2 className="title">{displayTitle}</h2>
-        <div className="meta"><span className="handle">記録者：{formatHandle(handle)}</span><span className="tags">#治安/マナー</span></div>
+        <div className="embed" style={{marginTop:8}}>
+          <blockquote className="twitter-tweet" data-dnt="true">
+            <a href={statusUrl}>Xで見る</a>
+          </blockquote>
+        </div>
+        <div className="meta" style={{marginTop:8}}>
+          <span className="handle">記録者：{formatHandle(handle)}</span>
+          {Array.isArray(tags) && tags.length ? (<span className="tags">{tags.map(t=>`#${t}`).join('・')}</span>) : null}
+          {createdAt ? <time style={{marginLeft:8}}>{new Date(createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
+        </div>
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
-        <blockquote className="twitter-tweet" data-dnt="true">
-          <a href={statusUrl}>Xで見る</a>
-        </blockquote>
         {(!fallback.text && !fallback.image) ? null : (
           <div style={{border:'1px solid var(--line)',borderRadius:12,padding:10,marginTop:8}}>
             {fallback.image ? (<img src={fallback.image} alt="Xサムネイル" style={{maxWidth:'100%',borderRadius:8}} />) : null}
@@ -180,7 +190,7 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
         <div className="actions" style={{marginTop:8}}>
           <button className="btn primary">共感する <span className="count">0</span></button>
           <a className="btn" href={statusUrl} target="_blank" rel="noopener noreferrer">シェア</a>
-          <button className="btn subtle">削除要請</button>
+          <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
         </div>
       </div>
     </article>

@@ -19,6 +19,7 @@ type Props = {
   createdAt?: number;
   handle?: string;
   adminHeader?: React.ReactNode;
+  footerExtras?: React.ReactNode;
 };
 
 function onceGuard(key: string): boolean {
@@ -59,6 +60,7 @@ export default function InlineEmbedCard(props: Props) {
     showSourceLink = true,
     handle,
     adminHeader,
+    footerExtras,
   } = props;
 
   const [open, setOpen] = useState<boolean>(!!autoOpen || !!alwaysOpen);
@@ -146,20 +148,6 @@ export default function InlineEmbedCard(props: Props) {
       <div className="card-body">
         {adminHeader}
         <h2 className="title">{title}</h2>
-        <div className="comment-label">記録者のコメント</div>
-        <p className="comment">{comment || "(コメントなし)"}</p>
-        <div className="meta">
-          <span className="handle">記録者：{formatHandle(handle)}</span>
-          <span className="tags">{tags.map((t) => `#${t}`).join("・")}</span>
-          {props.createdAt ? <time style={{marginLeft:8}}>{formatDateTime(props.createdAt)}</time> : null}
-        </div>
-        <div className="actions">
-          <button className="btn primary" onClick={onEmpathize}>
-            共感する <span className="count">{count}</span>
-          </button>
-          <button className="btn" onClick={onShare}>シェア</button>
-          <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
-        </div>
         <div
           className="embed"
           aria-hidden={!(alwaysOpen || open)}
@@ -199,6 +187,21 @@ export default function InlineEmbedCard(props: Props) {
             </div>
           )}
         </div>
+        <div className="meta" style={{marginTop:8}}>
+          <span className="handle">記録者：{formatHandle(handle)}</span>
+          <span className="tags">{tags.map((t) => `#${t}`).join("・")}</span>
+          {props.createdAt ? <time style={{marginLeft:8}}>{formatDateTime(props.createdAt)}</time> : null}
+        </div>
+        <div className="comment-label">記録者のコメント</div>
+        <p className="comment">{comment || "(コメントなし)"}</p>
+        <div className="actions">
+          <button className="btn primary" onClick={onEmpathize}>
+            共感する <span className="count">{count}</span>
+          </button>
+          <button className="btn" onClick={onShare}>シェア</button>
+          <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
+        </div>
+        {footerExtras}
       </div>
     </article>
   );
