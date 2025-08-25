@@ -132,7 +132,7 @@ export default function Home() {
         </section>
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
           <h2 className="title">記録する</h2>
-          <form onSubmit={async (e)=>{
+          <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
@@ -170,7 +170,7 @@ export default function Home() {
               </div>
             </div>
             <div className="modal-actions" style={{marginTop:12}}>
-              <button className="btn">下書き</button>
+              <button className="btn" type="button">下書き</button>
               <button className="btn primary" type="submit">記録</button>
             </div>
           </form>
