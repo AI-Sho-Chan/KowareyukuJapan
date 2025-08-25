@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 const MODE_KEY = 'data-ig-embed-mode';
+const WAIT_MS = 5000;
 
 function toEmbed(u: string): string | null {
   try {
@@ -35,11 +36,13 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
     (async () => {
       const embedUrl = toEmbed(url); if (!embedUrl) { setFailed(true); return; }
 
+      // 先に Instagram 専用プローブを実施
       try {
-        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(embedUrl)}`).then(r => r.json());
-        if (!ce?.ok || ce.canEmbed === false) { setFailed(true); return; }
-      } catch {}
+        const pr = await fetch(`/api/instagram/probe?url=${encodeURIComponent(url)}`, { cache: 'no-store' }).then(r=>r.json());
+        if (!pr?.ok) { setFailed(true); return; }
+      } catch { setFailed(true); return; }
 
+      // 公式 widget をまず試行
       el.replaceChildren();
       const bq = document.createElement('blockquote');
       bq.className = 'instagram-media';
@@ -53,21 +56,24 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
         try {
           (window as any).instgrm.Embeds.process();
           const ok = await new Promise<boolean>((r) => {
-            const t = setTimeout(() => r(false), 3500);
+            const t = setTimeout(() => r(false), WAIT_MS);
             const iv = setInterval(() => {
               if (el.querySelector('iframe')) { clearTimeout(t); clearInterval(iv); r(true); }
-            }, 120);
+            }, 150);
           });
           if (ok) { el.setAttribute(MODE_KEY, 'official'); return; }
         } catch {}
       }
 
+      // IFRAME フォールバック
       const ifr = document.createElement('iframe');
       ifr.src = embedUrl;
       ifr.referrerPolicy = 'origin-when-cross-origin';
       ifr.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen';
       ifr.setAttribute('allowfullscreen', 'true');
-      ifr.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
+      ifr.sandbox = (process.env.NEXT_PUBLIC_RELAX_IG_SANDBOX === '1')
+        ? 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation allow-storage-access-by-user-activation'
+        : 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
       ifr.style.width = '100%'; ifr.style.maxWidth = '540px'; ifr.style.minHeight = '300px'; ifr.style.border = '0';
       el.replaceChildren(ifr);
       el.setAttribute(MODE_KEY, 'iframe');
