@@ -3,6 +3,7 @@ import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
 import InstagramEmbedCard from "@/components/InstagramEmbedCard";
+import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -33,7 +34,8 @@ export default function Home() {
   }
 
   const isX = (u?: string) => !!u && /https?:\/\/(x\.com|twitter\.com)\//i.test(u);
-  const isIG = (u?: string) => !!u && /https?:\/\/www\.instagram\.com\//i.test(u);
+  const isIG = (u?: string) => !!u && /https?:\/\/(www\.)?instagram\.com\//i.test(u);
+  const isYT = (u?: string) => !!u && /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u);
 
   return (
     <>
@@ -81,6 +83,15 @@ export default function Home() {
               return (
                 <div key={p.id}>
                   <InstagramEmbedCard postId={p.id} url={p.url!} title={p.title} comment={p.comment} handle={p.handle} />
+                  {TagEditor}
+                </div>
+              );
+            }
+
+            if (isYT(p.url)) {
+              return (
+                <div key={p.id}>
+                  <YouTubeEmbedCard postId={p.id} url={p.url!} title={p.title} comment={p.comment} handle={p.handle} />
                   {TagEditor}
                 </div>
               );

@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
   headers: async () => {
     const csp = [
       "default-src 'self'",
-      "frame-src https: http: data: https://platform.twitter.com https://www.instagram.com",
+      "frame-src https: http: data: https://platform.twitter.com https://www.instagram.com https://www.youtube.com https://www.youtube-nocookie.com",
       "img-src 'self' https: data: blob:",
       "media-src https: blob:",
       "script-src 'self' https://platform.twitter.com https://www.instagram.com",
