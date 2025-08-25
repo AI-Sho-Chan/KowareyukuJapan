@@ -14,10 +14,10 @@ const nextConfig: NextConfig = {
     if (!isProd) return [];
     const csp = [
       "default-src 'self'",
-      "frame-src https: http: data: https://platform.twitter.com",
+      "frame-src https: http: data: https://platform.twitter.com https://www.instagram.com",
       "img-src 'self' https: data: blob:",
       "media-src https: blob:",
-      "script-src 'self' https://platform.twitter.com",
+      "script-src 'self' https://platform.twitter.com https://www.instagram.com",
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self'",
       "frame-ancestors 'self'",

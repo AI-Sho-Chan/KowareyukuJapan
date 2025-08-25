@@ -2,6 +2,7 @@
 import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
+import InstagramEmbedCard from "@/components/InstagramEmbedCard";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -31,6 +32,9 @@ export default function Home() {
     await refresh();
   }
 
+  const isX = (u?: string) => !!u && /https?:\/\/(x\.com|twitter\.com)\//i.test(u);
+  const isIG = (u?: string) => !!u && /https?:\/\/www\.instagram\.com\//i.test(u);
+
   return (
     <>
       <header className="site-header">
@@ -42,7 +46,6 @@ export default function Home() {
       <main className="container">
         <section className="feed" id="feed">
           {posts.map((p) => {
-            const isX = p.url && /https?:\/\/(x\.com|twitter\.com)\//i.test(p.url);
             const selected = new Set(p.tags || []);
             const TagEditor = (
               <details style={{marginTop:6}}>
@@ -64,7 +67,8 @@ export default function Home() {
                 </div>
               </details>
             );
-            if (isX) {
+
+            if (isX(p.url)) {
               return (
                 <div key={p.id}>
                   <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
@@ -72,6 +76,16 @@ export default function Home() {
                 </div>
               );
             }
+
+            if (isIG(p.url)) {
+              return (
+                <div key={p.id}>
+                  <InstagramEmbedCard postId={p.id} url={p.url!} title={p.title} comment={p.comment} handle={p.handle} />
+                  {TagEditor}
+                </div>
+              );
+            }
+
             if (p.media) {
               return (
                 <div key={p.id}>
@@ -92,6 +106,7 @@ export default function Home() {
                 </div>
               );
             }
+
             if (p.url) {
               return (
                 <div key={p.id}>
@@ -111,6 +126,7 @@ export default function Home() {
                 </div>
               );
             }
+
             return null;
           })}
         </section>
