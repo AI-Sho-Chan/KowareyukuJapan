@@ -162,11 +162,6 @@ export default function Home() {
                         <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
                         <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
                       </div>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
                     </div>
                   </article>
                   {TagEditor}
@@ -192,11 +187,6 @@ export default function Home() {
                       </div>
                       <div className="comment-label">記録者のコメント</div>
                       <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
                       <div className="actions" style={{marginTop:8}}>
                         <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
                         <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
@@ -287,6 +277,11 @@ export default function Home() {
                       </div>
                       <div className="comment-label">記録者のコメント</div>
                       <p className="comment">{p.comment || "(コメントなし)"}</p>
+                      <div className="actions" style={{marginTop:8}}>
+                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
+                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
+                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
+                      </div>
                     </div>
                   </article>
                   {TagEditor}
@@ -312,6 +307,11 @@ export default function Home() {
                       </div>
                       <div className="comment-label">記録者のコメント</div>
                       <p className="comment">{p.comment || "(コメントなし)"}</p>
+                      <div className="actions" style={{marginTop:8}}>
+                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
+                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
+                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
+                      </div>
                     </div>
                   </article>
                   {TagEditor}
