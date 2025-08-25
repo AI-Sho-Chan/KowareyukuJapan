@@ -13,10 +13,10 @@ const nextConfig: NextConfig = {
     if (!isProd) return [];
     const csp = [
       "default-src 'self'",
-      "frame-src https: http: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com https://www.instagram.com",
+      "frame-src https: http: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com https://www.threads.net https://embed.nicovideo.jp https://note.com",
       "img-src 'self' https: data: blob:",
       "media-src https: blob:",
-      "script-src 'self' https://platform.twitter.com https://www.instagram.com",
+      "script-src 'self' https://platform.twitter.com https://www.instagram.com https://www.tiktok.com https://www.threads.net",
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self'",
       "frame-ancestors 'self'",
