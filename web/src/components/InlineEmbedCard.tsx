@@ -68,6 +68,8 @@ export default function InlineEmbedCard(props: Props) {
   const [readable, setReadable] = useState<boolean>(false);
   const [canEmbed, setCanEmbed] = useState<boolean>(true);
   const [readerText, setReaderText] = useState<string | null>(null);
+  const [lp, setLp] = useState<{ ok?: boolean; title?: string|null; description?: string|null; image?: string|null; site?: string; url?: string }|null>(null);
+  const [mode, setMode] = useState<'iframe'|'preview'|'reader'>('preview');
   const reqRef = useRef(0);
 
   useEffect(() => {
@@ -84,19 +86,19 @@ export default function InlineEmbedCard(props: Props) {
   useEffect(()=>{
     const myId = ++reqRef.current;
     (async()=>{
-      if (kind === 'image' || kind === 'video') { setCanEmbed(true); return; }
+      if (kind === 'image' || kind === 'video') { setCanEmbed(true); setMode('iframe'); return; }
       try{
-        const r = await fetch(`/api/can-embed?url=${encodeURIComponent(resolvedEmbedUrl)}`);
-        const j = await r.json();
+        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(resolvedEmbedUrl)}`).then(r=>r.json()).catch(()=>({ok:false,canEmbed:false}));
         if (reqRef.current !== myId) return;
-        setCanEmbed(!!(j?.ok && j?.canEmbed));
-        if(!j?.canEmbed){
-          const rr = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`);
-          const jj = await rr.json();
+        if(!ce?.ok || ce?.canEmbed === false){
+          const lpr = await fetch(`/api/link-preview?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
           if (reqRef.current !== myId) return;
-          if(jj?.ok){ setReaderText(jj.text as string); }
+          setLp(lpr?.ok ? lpr : null);
+          setMode('preview');
+          return;
         }
-      }catch(_e){ if (reqRef.current === myId) setCanEmbed(false); }
+        setCanEmbed(true); setMode('iframe');
+      }catch(_e){ if (reqRef.current === myId){ setCanEmbed(false); setMode('preview'); } }
     })();
     return ()=>{ reqRef.current++; };
   },[resolvedEmbedUrl, sourceUrl, kind]);
@@ -158,7 +160,7 @@ export default function InlineEmbedCard(props: Props) {
             <img src={resolvedEmbedUrl} alt="拡大画像" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
           ) : kind === "video" ? (
             <video src={resolvedEmbedUrl} controls playsInline style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
-          ) : canEmbed ? (
+          ) : mode === 'iframe' ? (
             <iframe
               src={resolvedEmbedUrl}
               width="100%"
@@ -174,16 +176,28 @@ export default function InlineEmbedCard(props: Props) {
                 filter: readable ? "invert(1) hue-rotate(180deg)" : undefined,
               }}
             />
-          ) : (
+          ) : mode === 'reader' ? (
             <div style={{border:'1px solid var(--line)',borderRadius:12,padding:12,background:'#fff'}}>
-              <p style={{margin:'4px 0 8px'}}>このサイトは埋め込みを禁止しています。プレビューをご覧ください。</p>
-              {thumbnailUrl ? (
+              <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit',margin:0}}>{readerText || '(本文を取得できませんでした)'}</pre>
+            </div>
+          ) : (
+            <div className="link-card" style={{display:'grid',gridTemplateColumns:'120px 1fr',gap:12,alignItems:'start'}}>
+              {lp?.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={thumbnailUrl} alt="プレビュー" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
-              ) : null}
-              {readerText ? (
-                <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit',marginTop:8}}>{readerText}</pre>
-              ) : null}
+                <img src={lp.image} alt="" style={{width:120,height:90,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)'}} />
+              ) : <div style={{width:120,height:90,background:'#f3f4f6',border:'1px solid var(--line)',borderRadius:8}} />}
+              <div>
+                <div className="title" style={{fontWeight:700}}>{lp?.title || '(タイトル不明)'}</div>
+                <div className="site" style={{color:'var(--muted)',fontSize:12}}>{lp?.site || new URL(sourceUrl).hostname}</div>
+                {lp?.description ? <p className="desc" style={{marginTop:6,color:'#111'}}>{lp.description}</p> : null}
+                <div className="actions" style={{marginTop:8,display:'flex',gap:8}}>
+                  <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">元記事で読む</a>
+                  <button className="btn" onClick={async()=>{
+                    const ex = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
+                    if (ex?.ok) { setReaderText(ex.text as string); setMode('reader'); }
+                  }}>本文プレビュー</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
