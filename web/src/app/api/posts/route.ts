@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { fetchMeta } from "@/lib/metadata";
 import { mediaStore, postsStore, StoredPost, persistPostsToDisk, saveMediaToDisk } from "@/lib/store";
