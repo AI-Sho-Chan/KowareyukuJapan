@@ -11,6 +11,7 @@
 - can-embed 判定修正: `frame-ancestors` は `'none'` のときのみブロック扱い。
 - Instagram: `data-instgrm-captioned` 追加、IFRAME は `/embed/captioned`、`referrerPolicy` 追加。
 - YouTube: `allow` に `fullscreen` を含め、`allowfullscreen` を廃止（警告回避）。
+ - Instagram（追加）: URL正規化ユーティリティ追加、`/api/instagram/probe` と `/api/instagram/preview` を実装し、カードはプローブ主導で公式→IFRAME→プレビューへフォールバック。不可判定は24hローカルキャッシュ。不可理由のUI表示を追加。
 
 ### 投稿フォームUX
 - 記録ボタン: アップロード中の無効化/ビジー表示、完了メッセージ表示。
@@ -47,6 +48,11 @@
 - 500 (manifest/favicon): `app/manifest.*` や `app/icon.*` を削除、`public` を参照。
 - `ERR_BLOCKED_BY_CLIENT`: 広告ブロッカー由来で無視可。
 - http/https 混在: ローカルを https でプロキシすれば警告低減（機能影響なし）。
+ - Instagram埋め込み不可の例（vv9204uk）:
+   - 対象: https://www.instagram.com/reel/DMrzdacTmy8/
+   - /embed/captioned/: 200 だが本文は「利用できません」相当、`X-Frame-Options: DENY`
+   - Probe: `{ ok:false, unavailable:true, blocked:true }`
+   - 結論: 先方制限で埋め込み不可。プレビューへ即時フォールバックが正。
 # 開発状況・進捗・引き継ぎメモ
 
 このドキュメントだけ読めば、別の開発者/AIでも作業を即時引き継げます。
