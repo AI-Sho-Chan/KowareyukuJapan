@@ -22,7 +22,7 @@ function getOwnerKey(req: NextRequest): string {
 const FIXED_TAGS = [
   "治安/マナー","ニュース","政治/制度","動画","画像",
   "外国人犯罪","中国人","クルド人","媚中政治家","財務省",
-  "官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造","迷惑外国人"
+  "官僚","左翼","保守","日本","帰化人","帰化人政治家"
 ];
 
 function autoTags(input: { url?: string | null; mediaType?: "image"|"video"; comment?: string | null }): string[] {
@@ -36,8 +36,7 @@ function autoTags(input: { url?: string | null; mediaType?: "image"|"video"; com
   const map: Record<string,string> = {
     '中国': '中国人', 'チャイナ': '中国人', '中共': '中国人',
     'クルド': 'クルド人', '財務省': '財務省', '官僚': '官僚',
-    '左翼': '左翼', '保守': '保守', '帰化': '帰化人', '日本': '日本',
-    '迷惑': '迷惑外国人', '外国人': '外国人犯罪'
+    '左翼': '左翼', '保守': '保守', '帰化': '帰化人', '日本': '日本'
   };
   for (const k in map){ if (text.includes(k)) tags.push(map[k]); }
   return Array.from(new Set(tags)).slice(0, 3);
