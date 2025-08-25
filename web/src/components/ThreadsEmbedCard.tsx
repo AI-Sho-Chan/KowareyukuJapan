@@ -13,10 +13,21 @@ function toEmbed(u: string): string | null {
 export default function ThreadsEmbedCard({ url }: { url: string }){
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [preview, setPreview] = useState<{ title?: string|null; image?: string|null }>();
   useEffect(()=>{
     const el = host.current; if(!el) return;
     (async()=>{
       const embed = toEmbed(url); if(!embed){ setFailed(true); return; }
+      // 事前可否
+      try {
+        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(embed)}`).then(r=>r.json());
+        if (!ce?.ok || ce.canEmbed === false) {
+          setFailed(true);
+          const lp = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`).then(r=>r.json()).catch(()=>null);
+          if (lp?.ok) setPreview({ title: lp.title, image: lp.image });
+          return;
+        }
+      } catch { setFailed(true); return; }
       // 1) 公式 IFRAME ウィジェット
       const ifr = document.createElement('iframe');
       ifr.src = embed;
@@ -28,9 +39,13 @@ export default function ThreadsEmbedCard({ url }: { url: string }){
       el.replaceChildren(ifr);
     })().catch(()=>setFailed(true));
   },[url]);
-  if (failed) {
-    return <div className="threads-embed"><p style={{margin:0}}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">Threadsで見る</a></p></div>;
-  }
+  if (failed) return (
+    <div className="threads-embed">
+      {preview?.image ? <img src={preview.image} alt="プレビュー" style={{maxWidth:'100%',borderRadius:8}}/> : null}
+      {preview?.title ? <p className="comment" style={{fontWeight:700, marginTop:6}}>{preview.title}</p> : null}
+      <p style={{margin:0}}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">Threadsで見る</a></p>
+    </div>
+  );
   return <div ref={host} className="threads-embed"/>;
 }
 

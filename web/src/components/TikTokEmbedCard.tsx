@@ -16,10 +16,15 @@ function toEmbed(u: string): string | null {
 export default function TikTokEmbedCard({ url }: { url: string }){
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [reason, setReason] = useState<string>('');
   useEffect(()=>{
     const el = host.current; if(!el) return;
     (async()=>{
       const embed = toEmbed(url); if (!embed) { setFailed(true); return; }
+      try {
+        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(embed)}`).then(r=>r.json());
+        if (!ce?.ok || ce.canEmbed === false) { setReason('埋め込み不可（X-Frame-Options/CSP）'); setFailed(true); return; }
+      } catch { setFailed(true); return; }
       // 1) 公式 blockquote + embed.js
       el.replaceChildren();
       const bq = document.createElement('blockquote');
@@ -56,9 +61,7 @@ export default function TikTokEmbedCard({ url }: { url: string }){
       el.replaceChildren(ifr);
     })().catch(()=>setFailed(true));
   },[url]);
-  if (failed) {
-    return <div className="tiktok-embed"><p style={{margin:0}}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">TikTokで見る</a></p></div>;
-  }
+  if (failed) return <div className="tiktok-embed"><p style={{margin:0}}>プレビューのみ（{reason||'サイト側の制限'}）。<a href={url} target="_blank" rel="noopener noreferrer">TikTokで見る</a></p></div>;
   return <div ref={host} className="tiktok-embed"/>;
 }
 
