@@ -154,7 +154,6 @@ export default function Home() {
             if (p.media) {
               return (
                 <div key={p.id}>
-                  {AdminHeader}
                   <InlineEmbedCard
                     postId={p.id}
                     title={p.title}
@@ -178,7 +177,6 @@ export default function Home() {
             if (p.url) {
               return (
                 <div key={p.id}>
-                  {AdminHeader}
                   <InlineEmbedCard
                     postId={p.id}
                     title={p.title}
