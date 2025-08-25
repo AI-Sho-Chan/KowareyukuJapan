@@ -28,6 +28,7 @@ function ensureScript(): Promise<boolean> {
 export default function InstagramEmbedCard({ url }: { postId?: string; url: string }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const [probe, setProbe] = useState<{ unavailable?: boolean; blocked?: boolean; status?: number } | null>(null);
 
   useEffect(() => {
     const el = host.current; if (!el) return;
@@ -38,8 +39,23 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
 
       // 先に Instagram 専用プローブを実施
       try {
+        // 否定結果のローカルキャッシュ（24h）
+        const cacheKey = `ig-probe-cache:${embedUrl}`;
+        try {
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+          if (cached && Date.now() - (cached.ts as number) < 24*60*60*1000) {
+            setProbe(cached.data || null);
+            setFailed(true);
+            return;
+          }
+        } catch {}
+
         const pr = await fetch(`/api/instagram/probe?url=${encodeURIComponent(url)}`, { cache: 'no-store' }).then(r=>r.json());
-        if (!pr?.ok) { setFailed(true); return; }
+        if (!pr?.ok) {
+          setProbe({ unavailable: !!pr?.unavailable, blocked: !!pr?.blocked, status: pr?.status });
+          try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: { unavailable: !!pr?.unavailable, blocked: !!pr?.blocked, status: pr?.status } })); } catch {}
+          setFailed(true); return;
+        }
       } catch { setFailed(true); return; }
 
       // 公式 widget をまず試行
@@ -82,7 +98,10 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
 
   if (failed) {
     return <div className="instagram-embed">
-      <p style={{ margin: 0 }}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">Instagramで見る</a></p>
+      <p style={{ margin: 0 }}>
+        投稿者設定/年齢・地域制限/ログイン必須のため、サイト内表示できません。
+        <a href={url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 6 }}>Instagramで見る</a>
+      </p>
     </div>;
   }
   return <div ref={host} className="instagram-embed" />;

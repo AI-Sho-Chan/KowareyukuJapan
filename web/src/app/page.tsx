@@ -232,7 +232,7 @@ export default function Home() {
                     adminHeader={AdminHeader}
                   />
                   {TagEditor}
-                </div>
+    </div>
               );
             }
 
