@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === 'production';
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -11,7 +9,6 @@ const nextConfig: NextConfig = {
     ],
   },
   headers: async () => {
-    if (!isProd) return [];
     const csp = [
       "default-src 'self'",
       "frame-src https: http: data: https://platform.twitter.com https://www.instagram.com",

@@ -17,28 +17,59 @@ import path from 'node:path';
 
 const DATA_DIR = path.join(process.cwd(), '.data');
 const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
+const POSTS_FILE_BAK = path.join(DATA_DIR, 'posts.json.bak');
+const MEDIA_DIR = path.join(DATA_DIR, 'media');
 
-function ensureDataDir(): void {
-  try { if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
+function ensureDirs(): void {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(MEDIA_DIR)) fs.mkdirSync(MEDIA_DIR, { recursive: true });
+  } catch {}
 }
 
 function loadPostsFromDisk(): StoredPost[] {
-  ensureDataDir();
+  ensureDirs();
   try {
     if (!fs.existsSync(POSTS_FILE)) return [];
     const raw = fs.readFileSync(POSTS_FILE, 'utf8');
     const json = JSON.parse(raw);
-    return Array.isArray(json) ? json as StoredPost[] : [];
+    return Array.isArray(json) ? (json as StoredPost[]) : [];
   } catch {
     return [];
   }
 }
 
 export function persistPostsToDisk(): void {
-  ensureDataDir();
+  ensureDirs();
   try {
-    fs.writeFileSync(POSTS_FILE, JSON.stringify(postsStore, null, 2), 'utf8');
+    const json = JSON.stringify(postsStore, null, 2);
+    fs.writeFileSync(POSTS_FILE, json, 'utf8');
+    // 簡易バックアップ
+    fs.writeFileSync(POSTS_FILE_BAK, json, 'utf8');
   } catch {}
+}
+
+function mediaDataPath(id: string): string { return path.join(MEDIA_DIR, id); }
+function mediaMetaPath(id: string): string { return path.join(MEDIA_DIR, `${id}.json`); }
+
+export function saveMediaToDisk(id: string, contentType: string, ownerKey: string, data: Buffer): void {
+  ensureDirs();
+  try {
+    fs.writeFileSync(mediaDataPath(id), data);
+    fs.writeFileSync(mediaMetaPath(id), JSON.stringify({ contentType, ownerKey }), 'utf8');
+  } catch {}
+}
+
+export function loadMediaFromDisk(id: string): StoredMedia | null {
+  ensureDirs();
+  try {
+    const metaRaw = fs.readFileSync(mediaMetaPath(id), 'utf8');
+    const meta = JSON.parse(metaRaw) as { contentType: string; ownerKey: string };
+    const bin = fs.readFileSync(mediaDataPath(id));
+    return { contentType: meta.contentType, ownerKey: meta.ownerKey, data: bin };
+  } catch {
+    return null;
+  }
 }
 
 const g: any = globalThis as any;

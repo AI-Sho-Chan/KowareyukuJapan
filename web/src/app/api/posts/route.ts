@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { fetchMeta } from "@/lib/metadata";
-import { mediaStore, postsStore, StoredPost, persistPostsToDisk } from "@/lib/store";
+import { mediaStore, postsStore, StoredPost, persistPostsToDisk, saveMediaToDisk } from "@/lib/store";
 
 type Post = {
   id: string;
@@ -65,7 +65,10 @@ export async function POST(req: NextRequest) {
     else mediaType = "image";
     const id = Math.random().toString(36).slice(2, 10);
     const ab = await file.arrayBuffer();
-    mediaStore.set(id, { contentType: file.type || (mediaType === "video" ? "video/mp4" : "image/png"), data: Buffer.from(ab), ownerKey });
+    const buf = Buffer.from(ab);
+    // ディスクへ永続化＋メモリにも保持
+    saveMediaToDisk(id, file.type || (mediaType === "video" ? "video/mp4" : "image/png"), ownerKey, buf);
+    mediaStore.set(id, { contentType: file.type || (mediaType === "video" ? "video/mp4" : "image/png"), data: buf, ownerKey });
     mediaId = id;
   }
 
@@ -108,7 +111,7 @@ export async function POST(req: NextRequest) {
   };
   postsStore.push(post);
   persistPostsToDisk();
-  return new Response(JSON.stringify({ ok: true, post, tags: FIXED_TAGS }), { headers: { "content-type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true, post }), { headers: { "content-type": "application/json" } });
 }
 
 
