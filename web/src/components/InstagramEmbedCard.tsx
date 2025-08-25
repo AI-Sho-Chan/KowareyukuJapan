@@ -1,74 +1,89 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-function igShortcode(u: string){
-  try{
+type Props = { url: string };
+const MODE_KEY = "data-ig-embed-mode";
+
+function toEmbed(u: string): string | null {
+  try {
     const url = new URL(u);
     const m = url.pathname.match(/\/(p|reel|tv)\/([A-Za-z0-9_\-]+)/);
-    return m ? `${m[1]}/${m[2]}` : null;
-  }catch{ return null; }
+    return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed` : null;
+  } catch { return null; }
 }
 
-function toIgEmbedUrl(u: string){
-  const sc = igShortcode(u);
-  return sc ? `https://www.instagram.com/${sc}/embed` : null;
-}
-
-function ensureEmbedScript(): Promise<void>{
-  return new Promise(res=>{
-    const w: any = window as any;
-    if (w.instgrm?.Embeds?.process) return res();
-    const s = document.createElement('script');
-    s.src = 'https://www.instagram.com/embed.js';
+function ensureScript(): Promise<boolean> {
+  return new Promise((res) => {
+    const w: any = window;
+    if (w.instgrm?.Embeds?.process) return res(true);
+    const s = document.createElement("script");
+    s.src = "https://www.instagram.com/embed.js";
     s.async = true;
-    s.onload = ()=>res();
+    s.onload = () => res(!!w.instgrm?.Embeds?.process);
+    s.onerror = () => res(false);
     document.head.appendChild(s);
   });
 }
 
-export default function InstagramEmbedCard({ postId, url }: { postId: string; url: string }){
+export default function InstagramEmbedCard({ url }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const [failed, setFailed] = useState(false);
 
-  useEffect(()=>{
-    const el = host.current; if(!el) return;
-    let cancelled = false;
-    (async()=>{
+  useEffect(() => {
+    const el = host.current; if (!el) return;
+    el.removeAttribute(MODE_KEY); setFailed(false);
+
+    (async () => {
+      const embedUrl = toEmbed(url);
+      if (!embedUrl) { setFailed(true); return; }
+
+      // 0) /embed に対して可否チェック
+      try {
+        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(embedUrl)}`).then(r=>r.json());
+        if (!ce?.ok || ce.canEmbed === false) { setFailed(true); return; }
+      } catch { /* ネットワーク失敗時は続行 */ }
+
       // 1) 公式 embed.js
       el.replaceChildren();
-      const bq = document.createElement('blockquote');
-      bq.className = 'instagram-media';
-      bq.setAttribute('data-instgrm-permalink', url);
-      bq.setAttribute('data-instgrm-version', '14');
+      const bq = document.createElement("blockquote");
+      bq.className = "instagram-media";
+      bq.setAttribute("data-instgrm-permalink", url);
+      bq.setAttribute("data-instgrm-version", "14");
+      const a = document.createElement("a"); a.href = url; bq.appendChild(a);
       el.appendChild(bq);
-      try{
-        await ensureEmbedScript();
-        (window as any).instgrm.Embeds.process();
-        const ok = await new Promise<boolean>(r=>{
-          const t = setTimeout(()=>r(false), 3500);
-          const iv = setInterval(()=>{ if (el.querySelector('iframe')){ clearInterval(iv); clearTimeout(t); r(true); } }, 120);
-        });
-        if (cancelled) return;
-        if (ok) return; // 成功
-      }catch{}
 
-      // 2) IFRAME直挿し
-      const embedUrl = toIgEmbedUrl(url);
-      if (embedUrl){
-        const ifr = document.createElement('iframe');
-        ifr.src = embedUrl;
-        ifr.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen';
-        ifr.setAttribute('allowfullscreen','true');
-        ifr.sandbox = 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox';
-        ifr.style.width = '100%'; ifr.style.maxWidth = '540px'; ifr.style.minHeight = '300px'; ifr.style.border = '0';
-        el.replaceChildren(ifr);
-      } else {
-        el.textContent = 'プレビューのみ。Instagramで見るをご利用ください。';
+      const okScript = await ensureScript();
+      if (okScript) {
+        try {
+          (window as any).instgrm.Embeds.process();
+          const ok = await new Promise<boolean>((r)=>{
+            const t = setTimeout(()=>r(false), 3500);
+            const iv = setInterval(()=>{ if (el.querySelector("iframe")) { clearTimeout(t); clearInterval(iv); r(true); } },120);
+          });
+          if (ok) { el.setAttribute(MODE_KEY, "official"); return; }
+        } catch {}
       }
-    })();
-    return ()=>{ cancelled = true; };
-  },[url]);
 
+      // 2) 直 IFRAME
+      const ifr = document.createElement("iframe");
+      ifr.src = embedUrl;
+      ifr.allow = "autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen";
+      ifr.setAttribute("allowfullscreen","true");
+      ifr.sandbox = "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox";
+      ifr.style.width = "100%"; ifr.style.maxWidth = "540px"; ifr.style.minHeight = "300px"; ifr.style.border = "0";
+      el.replaceChildren(ifr);
+      el.setAttribute(MODE_KEY, "iframe");
+    })().catch(()=>setFailed(true));
+  }, [url]);
+
+  if (failed) {
+    return (
+      <div className="instagram-embed">
+        <p style={{margin:0}}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">Instagramで見る</a></p>
+      </div>
+    );
+  }
   return <div ref={host} className="instagram-embed" />;
 }
 

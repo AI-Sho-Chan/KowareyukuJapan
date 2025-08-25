@@ -168,7 +168,7 @@ export default function Home() {
                       {AdminHeader}
                       <h2 className="title">{p.title}</h2>
                       <div className="embed" style={{marginTop:8}}>
-                        <InstagramEmbedCard postId={p.id} url={p.url!} />
+                        <InstagramEmbedCard url={p.url!} />
                       </div>
                       <div className="meta" style={{marginTop:8}}>
                         <span className="handle">記録者：{formatHandle(p.handle)}</span>
