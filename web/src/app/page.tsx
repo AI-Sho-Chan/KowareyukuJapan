@@ -3,6 +3,7 @@ import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
 import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
+import InstagramEmbedCard from "@/components/InstagramEmbedCard";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -58,6 +59,7 @@ export default function Home() {
 
   const isYT = (u?: string) => !!u && /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u);
   const isX  = (u?: string) => !!u && /https?:\/\/(x\.com|twitter\.com)\//i.test(u);
+  const isIG = (u?: string) => !!u && /https?:\/\/(www\.)?instagram\.com\//i.test(u);
 
   return (
     <>
@@ -137,6 +139,36 @@ export default function Home() {
                       <h2 className="title">{p.title}</h2>
                       <div className="embed" style={{marginTop:8}}>
                         <YouTubeEmbedCard url={p.url!} />
+                      </div>
+                      <div className="meta" style={{marginTop:8}}>
+                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
+                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
+                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
+                      </div>
+                      <div className="comment-label">記録者のコメント</div>
+                      <p className="comment">{p.comment || "(コメントなし)"}</p>
+                      <div className="actions" style={{marginTop:8}}>
+                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
+                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
+                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
+                      </div>
+                    </div>
+                  </article>
+                  {TagEditor}
+                  {OwnerActions}
+                </div>
+              );
+            }
+
+            if (p.url && isIG(p.url)){
+              return (
+                <div key={p.id}>
+                  <article className="card" data-post-id={p.id}>
+                    <div className="card-body">
+                      {AdminHeader}
+                      <h2 className="title">{p.title}</h2>
+                      <div className="embed" style={{marginTop:8}}>
+                        <InstagramEmbedCard postId={p.id} url={p.url!} />
                       </div>
                       <div className="meta" style={{marginTop:8}}>
                         <span className="handle">記録者：{formatHandle(p.handle)}</span>
