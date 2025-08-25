@@ -90,8 +90,23 @@ export default function Home() {
             if (isX(p.url)) {
               return (
                 <div key={p.id}>
-                  {AdminHeader}
-                  <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                  <article className="card" data-post-id={p.id}>
+                    <div className="card-body">
+                      {AdminHeader}
+                      <h2 className="title">{p.title}</h2>
+                      <div className="meta"><span className="handle">記録者：{formatHandle(p.handle)}</span>{p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}</div>
+                      <div className="comment-label">記録者のコメント</div>
+                      <p className="comment">{p.comment || "(コメントなし)"}</p>
+                      <div className="embed" style={{marginTop:8}}>
+                        <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                      </div>
+                      <div className="actions" style={{marginTop:8}}>
+                        <button className="btn primary">共感する <span className="count">0</span></button>
+                        <a className="btn" href={p.url!} target="_blank" rel="noopener noreferrer">シェア</a>
+                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
+                      </div>
+                    </div>
+                  </article>
                   {TagEditor}
                 </div>
               );
@@ -133,6 +148,7 @@ export default function Home() {
                     alwaysOpen
                     createdAt={p.createdAt}
                     handle={p.handle}
+                    adminHeader={AdminHeader}
                   />
                   {TagEditor}
                 </div>
@@ -154,6 +170,7 @@ export default function Home() {
                     alwaysOpen
                     createdAt={p.createdAt}
                     handle={p.handle}
+                    adminHeader={AdminHeader}
                   />
                   {TagEditor}
                 </div>

@@ -18,6 +18,7 @@ type Props = {
   onDelete?: () => void;
   createdAt?: number;
   handle?: string;
+  adminHeader?: React.ReactNode;
 };
 
 function onceGuard(key: string): boolean {
@@ -57,6 +58,7 @@ export default function InlineEmbedCard(props: Props) {
     alwaysOpen,
     showSourceLink = true,
     handle,
+    adminHeader,
   } = props;
 
   const [open, setOpen] = useState<boolean>(!!autoOpen || !!alwaysOpen);
@@ -142,6 +144,7 @@ export default function InlineEmbedCard(props: Props) {
         </button>
       )}
       <div className="card-body">
+        {adminHeader}
         <h2 className="title">{title}</h2>
         <div className="comment-label">記録者のコメント</div>
         <p className="comment">{comment || "(コメントなし)"}</p>
