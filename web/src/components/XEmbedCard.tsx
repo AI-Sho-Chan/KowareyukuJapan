@@ -13,6 +13,7 @@ type Props = {
   tags?: string[];
   createdAt?: number;
   adminHeader?: React.ReactNode;
+  footerExtras?: React.ReactNode;
 };
 
 const MODE_KEY = 'data-x-embed-mode';
@@ -107,7 +108,7 @@ function formatHandle(h?: string): string {
   return t.startsWith("@") ? t : `@${t}`;
 }
 
-export default function XEmbedCard({ postId, title = "", comment, statusUrl, handle, tags, createdAt, adminHeader }: Props){
+export default function XEmbedCard({ postId, title = "", comment, statusUrl, handle, tags, createdAt, adminHeader, footerExtras }: Props){
   const [fallback, setFallback] = useState<{text?:string; image?:string}>({});
   const [autoTitle, setAutoTitle] = useState<string | undefined>(undefined);
 
@@ -192,6 +193,7 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
           <a className="btn" href={statusUrl} target="_blank" rel="noopener noreferrer">シェア</a>
           <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
         </div>
+        {footerExtras}
       </div>
     </article>
   );

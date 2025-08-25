@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { makeIntroFromExtract } from '@/lib/extract';
 
 type Props = {
   postId: string;
@@ -45,6 +46,90 @@ function formatHandle(h?: string): string {
   return t.startsWith("@") ? t : `@${t}`;
 }
 
+// Preview utilities per spec
+const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; } };
+const norm = (s: string = '') => s.toLowerCase().replace(/\s+/g,' ')
+  .replace(/[|｜\-–—:：。「」『』【】（）()\[\]"]/g,'').trim();
+const shouldShowDesc = (title?: string, desc?: string) => {
+  if (!desc) return false;
+  const d = desc.trim();
+  if (d.length < 40 || d.length > 220) return false;
+  const nt = norm(title || ''), nd = norm(d);
+  if (nt && (nd === nt || nd.startsWith(nt))) return false;
+  return true;
+};
+
+// Extract cleaner: drop metadata lines from r.jina.ai and make a short intro
+function makeIntroFromExtract(rawText: string, previewTitle?: string, target: number = 180): string {
+  let t = (rawText || '').replace(/\r/g, '');
+  // Drop known metadata/header lines (before merging lines)
+  t = t.replace(/^\s*Title:\s.*$/gmi, '')
+       .replace(/^\s*URL\s*Source:\s.*$/gmi, '')
+       .replace(/^\s*Published\s*Time:\s.*$/gmi, '')
+       .replace(/^\s*Markdown\s*Content:\s*$/gmi, '')
+       .replace(/^=+.*=+$/gmi, '');
+  // Remove portal boilerplate lines (blacklist) & pick first natural Japanese sentence as start
+  const rawLines = t.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  const forbid = [
+    /Yahoo!?\s*JAPAN/i,
+    /Yahoo!?\s*ニュース?/i,
+    /(速報|ライブ|エキスパート|オリジナル|みんなの意見|ランキング|有料|主要|国内|国際|経済|エンタメ|スポーツ|IT|科学|ライフ|地域|トピックス一覧)/,
+    /(IDでもっと便利に|新規取得|登録情報を確認|ログイン|クーポン|ヘルプ|マイページ|購入履歴|トップ\b|検索|キーワード)/,
+    /^Image\s*\d+/i,
+  ];
+  const isJapanese = (s: string) => /[一-龥ぁ-んァ-ン]/.test(s);
+  const looksNav = (s: string) => /(?:[^。・]{1,12}・){3,}/.test(s);
+  const cleanedLines = rawLines.filter(l => !forbid.some(r=>r.test(l)) && !looksNav(l));
+  // Choose first plausible content line
+  let startIdx = cleanedLines.findIndex(l => isJapanese(l) && l.length >= 10);
+  if (startIdx < 0) startIdx = 0;
+  let joined = cleanedLines.slice(startIdx, startIdx + 8).join(' ');
+  t = joined;
+  // Strip images and markdown links
+  t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+       .replace(/\[\]\([^)]*\)/g, '')
+       .replace(/https?:\/\/\S+/g, '');
+  // Drop percent-encoded blobs and hashtags left from shares
+  t = t.replace(/(?:%[0-9A-Fa-f]{2}){2,}/g, '')
+       .replace(/#[^\s#]+/g, '');
+  // Remove long nav chain like "aaa・bbb・ccc …"
+  t = t.replace(/^(?:[^。・]{1,12}・){3,}[^。]*[。\s]*/, '');
+  // Remove distribution/time/comment/boilerplate like "6/9(月)8:55 配信 566 コメント 566 件" and image notes
+  t = t.replace(/\b\d{1,2}\/\d{1,2}[（(]?[月火水木金土日]?[）)]?\s*\d{1,2}:\d{2}\s*配信\b/g, '')
+       .replace(/\b\d+\s*コメント(?:\s*\d+\s*件)?/g, '')
+       .replace(/\b\d{1,2}:\d{2}\s*配信[^。!?]*[。!?]?/g, '')
+       .replace(/\b\d{1,2}\s*配信[^。!?]*[。!?]?/g, '')
+       .replace(/※?写真はイメージです?/g, '');
+  // Collapse whitespace
+  t = t.replace(/\s+/g, ' ').trim();
+  // Remove title duplication at head（タイトル分だけ、もしくは最初の句点までに限定して削る）
+  const titleRaw = (previewTitle || '').trim();
+  const nt = norm(titleRaw);
+  const head = norm(t.slice(0, Math.min(200, t.length)));
+  if (nt && head.startsWith(nt)) {
+    const punctPos = t.indexOf('。');
+    const safeWindow = Math.min(120, Math.max(60, titleRaw.length + 2));
+    if (punctPos >= 0 && punctPos <= safeWindow) {
+      t = t.slice(punctPos + 1).trim();
+    } else {
+      t = t.slice(titleRaw.length).trim();
+    }
+  }
+  if (t.length <= target) return t;
+  // Try to cut at sentence boundary near target
+  const windowEnd = Math.min(t.length, target + 40);
+  const segment = t.slice(0, windowEnd);
+  const puncts = ['。','！','？','.','!','?'];
+  let best = -1;
+  for (let i = segment.length - 1; i >= 0; i--) {
+    if (puncts.includes(segment[i])) { best = i + 1; break; }
+  }
+  const cut = best >= Math.max(80, target - 60) ? best : target;
+  const out = segment.slice(0, cut).trim();
+  return /[。！？.!?]$/.test(out) ? out : out + '…';
+}
+
 export default function InlineEmbedCard(props: Props) {
   const {
     postId,
@@ -69,6 +154,7 @@ export default function InlineEmbedCard(props: Props) {
   const [canEmbed, setCanEmbed] = useState<boolean>(true);
   const [readerText, setReaderText] = useState<string | null>(null);
   const [lp, setLp] = useState<{ ok?: boolean; title?: string|null; description?: string|null; image?: string|null; site?: string; url?: string }|null>(null);
+  const [lpText, setLpText] = useState<string | null>(null);
   const [mode, setMode] = useState<'iframe'|'preview'|'reader'>('preview');
   const reqRef = useRef(0);
 
@@ -94,6 +180,13 @@ export default function InlineEmbedCard(props: Props) {
           const lpr = await fetch(`/api/link-preview?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
           if (reqRef.current !== myId) return;
           setLp(lpr?.ok ? lpr : null);
+          try{
+            const ex = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
+            if (reqRef.current !== myId) return;
+            if (ex?.ok && typeof ex.text === 'string'){
+              setLpText(makeIntroFromExtract(ex.text as string, lpr?.title || undefined, 180));
+            } else setLpText(null);
+          }catch{ setLpText(null); }
           setMode('preview');
           return;
         }
@@ -181,22 +274,16 @@ export default function InlineEmbedCard(props: Props) {
               <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit',margin:0}}>{readerText || '(本文を取得できませんでした)'}</pre>
             </div>
           ) : (
-            <div className="link-card" style={{display:'grid',gridTemplateColumns:'120px 1fr',gap:12,alignItems:'start'}}>
-              {lp?.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={lp.image} alt="" style={{width:120,height:90,objectFit:'cover',borderRadius:8,border:'1px solid var(--line)'}} />
-              ) : <div style={{width:120,height:90,background:'#f3f4f6',border:'1px solid var(--line)',borderRadius:8}} />}
-              <div>
-                <div className="title" style={{fontWeight:700}}>{lp?.title || '(タイトル不明)'}</div>
-                <div className="site" style={{color:'var(--muted)',fontSize:12}}>{lp?.site || new URL(sourceUrl).hostname}</div>
-                {lp?.description ? <p className="desc" style={{marginTop:6,color:'#111'}}>{lp.description}</p> : null}
-                <div className="actions" style={{marginTop:8,display:'flex',gap:8}}>
-                  <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">元記事で読む</a>
-                  <button className="btn" onClick={async()=>{
-                    const ex = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
-                    if (ex?.ok) { setReaderText(ex.text as string); setMode('reader'); }
-                  }}>本文プレビュー</button>
-                </div>
+            <div className="link-card">
+              <div className="meta">
+                {!lpText ? (
+                  <div className="site" style={{color:'var(--muted)',fontSize:12}}>{lp?.site || hostOf(sourceUrl)}</div>
+                ) : null}
+                {lpText ? (
+                  <p className="desc" style={{marginTop:8,color:'#111',fontSize:16,lineHeight:'1.8'}}>{lpText}</p>
+                ) : shouldShowDesc(lp?.title || undefined, lp?.description || undefined) ? (
+                  <p className="desc" style={{marginTop:8,color:'#111',fontSize:16,lineHeight:'1.8'}}>{lp!.description}</p>
+                ) : null}
               </div>
             </div>
           )}

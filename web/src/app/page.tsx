@@ -24,6 +24,7 @@ export default function Home() {
     tags?: string[];
     createdAt: number;
   }>>([]);
+  const [viewerKey, setViewerKey] = useState<string>("");
 
   async function refresh(){
     const r = await fetch('/api/posts', { cache: 'no-store' });
@@ -32,20 +33,26 @@ export default function Home() {
   }
 
   useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const v = localStorage.getItem('kj_owner') || localStorage.getItem('ownerKey') || '';
+      setViewerKey(v);
+    }
+  }, []);
 
   async function updateTags(id: string, tags: string[]){
-    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ tags }) });
+    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json','x-owner-key': viewerKey }, body: JSON.stringify({ tags }) });
     await refresh();
   }
 
   async function updateComment(id: string, comment: string){
-    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ comment }) });
+    await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json','x-owner-key': viewerKey }, body: JSON.stringify({ comment }) });
     await refresh();
   }
 
   async function removePost(id: string){
     if (!confirm(`この投稿(${id})を削除します。よろしいですか？`)) return;
-    const r = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+    const r = await fetch(`/api/posts/${id}`, { method: 'DELETE', headers: { 'x-owner-key': viewerKey } });
     if (r.ok) { await refresh(); } else { alert('削除に失敗しました'); }
   }
 
@@ -64,7 +71,7 @@ export default function Home() {
         <section className="feed" id="feed">
           {posts.map((p) => {
             const selected = new Set(p.tags || []);
-            const isOwner = typeof window !== 'undefined' && (localStorage.getItem('kj_owner') || '') === (p as any).ownerKey;
+            const isOwner = !!viewerKey && !!(p as any).ownerKey && viewerKey === (p as any).ownerKey;
             const TagEditor = !isOwner ? null : (
               <details style={{marginTop:6}}>
                 <summary style={{cursor:'pointer'}}>タグを編集</summary>
