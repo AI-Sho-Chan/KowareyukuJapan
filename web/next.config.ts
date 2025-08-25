@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
     if (!isProd) return [];
     const csp = [
       "default-src 'self'",
-      "frame-src https: http: data: https://platform.twitter.com",
+      "frame-src https: http: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com",
       "img-src 'self' https: data: blob:",
       "media-src https: blob:",
       "script-src 'self' https://platform.twitter.com",

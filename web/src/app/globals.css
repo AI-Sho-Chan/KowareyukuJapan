@@ -70,3 +70,7 @@ input[type="file"]::file-selector-button{background:#f3f4f6;color:#1f2937;border
 /* Twitter embed */
 .twitter-card{overflow:visible}
 .twitter-card iframe{display:block;width:100%;max-width:550px;border:0}
+
+/* YouTube embed */
+.embed-16by9{position:relative;width:100%;padding-top:56.25%}
+.embed-16by9>iframe{position:absolute;inset:0;width:100%;height:100%;border:0}

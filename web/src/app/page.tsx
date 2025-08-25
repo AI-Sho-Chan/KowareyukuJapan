@@ -2,6 +2,7 @@
 import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
+import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -30,6 +31,8 @@ export default function Home() {
     await fetch(`/api/posts/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ tags }) });
     await refresh();
   }
+
+  const isYT = (u?: string) => !!u && /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u);
 
   return (
     <>
@@ -68,6 +71,14 @@ export default function Home() {
               return (
                 <div key={p.id}>
                   <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
+                  {TagEditor}
+                </div>
+              );
+            }
+            if (p.url && isYT(p.url)) {
+              return (
+                <div key={p.id}>
+                  <YouTubeEmbedCard url={p.url!} />
                   {TagEditor}
                 </div>
               );
