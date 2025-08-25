@@ -72,11 +72,29 @@ export function loadMediaFromDisk(id: string): StoredMedia | null {
   }
 }
 
+export function deleteMediaFromDisk(id: string): void {
+  try { fs.unlinkSync(mediaDataPath(id)); } catch {}
+  try { fs.unlinkSync(mediaMetaPath(id)); } catch {}
+}
+
 const g: any = globalThis as any;
 if (!g.__mediaStore) g.__mediaStore = new Map<string, StoredMedia>();
 if (!g.__postsStore) g.__postsStore = loadPostsFromDisk();
 
 export const mediaStore: Map<string, StoredMedia> = g.__mediaStore;
 export const postsStore: StoredPost[] = g.__postsStore;
+
+export function deletePostById(id: string): boolean {
+  const idx = postsStore.findIndex(p => p.id === id);
+  if (idx < 0) return false;
+  const p = postsStore[idx];
+  if (p.media) {
+    deleteMediaFromDisk(p.media.id);
+    try { mediaStore.delete(p.media.id); } catch {}
+  }
+  postsStore.splice(idx, 1);
+  persistPostsToDisk();
+  return true;
+}
 
 

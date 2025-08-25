@@ -38,6 +38,12 @@ export default function Home() {
     await refresh();
   }
 
+  async function removePost(id: string){
+    if (!confirm(`この投稿(${id})を削除します。よろしいですか？`)) return;
+    const r = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+    if (r.ok) { await refresh(); } else { alert('削除に失敗しました'); }
+  }
+
   const isYT = (u?: string) => !!u && /https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u);
   const isX  = (u?: string) => !!u && /https?:\/\/(x\.com|twitter\.com)\//i.test(u);
 
@@ -74,9 +80,17 @@ export default function Home() {
               </details>
             );
 
+            const AdminHeader = (
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                <small style={{color:'var(--muted)'}}>管理番号: <code>{p.id}</code></small>
+                <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+              </div>
+            );
+
             if (isX(p.url)) {
               return (
                 <div key={p.id}>
+                  {AdminHeader}
                   <XEmbedCard postId={p.id} title={p.title} comment={p.comment || ""} statusUrl={p.url!} handle={p.handle} />
                   {TagEditor}
                 </div>
@@ -88,6 +102,7 @@ export default function Home() {
                 <div key={p.id}>
                   <article className="card" data-post-id={p.id}>
                     <div className="card-body">
+                      {AdminHeader}
                       <h2 className="title">{p.title}</h2>
                       <div className="meta"><span className="handle">記録者：{formatHandle(p.handle)}</span>{p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}</div>
                       <div className="comment-label">記録者のコメント</div>
@@ -105,6 +120,7 @@ export default function Home() {
             if (p.media) {
               return (
                 <div key={p.id}>
+                  {AdminHeader}
                   <InlineEmbedCard
                     postId={p.id}
                     title={p.title}
@@ -126,6 +142,7 @@ export default function Home() {
             if (p.url) {
               return (
                 <div key={p.id}>
+                  {AdminHeader}
                   <InlineEmbedCard
                     postId={p.id}
                     title={p.title}
