@@ -1,9 +1,10 @@
 {
-  "buildCommand": "cd web && npm run build",
-  "outputDirectory": "web/.next",
-  "installCommand": "cd web && npm ci --no-fund --no-audit",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm ci --no-fund --no-audit",
   "framework": "nextjs",
   "regions": ["hnd1"],
+  "rootDirectory": "web",
   "env": {
     "NEXT_PUBLIC_BASE_URL": "@production_url",
     "TURSO_DB_URL": "@turso_db_url",
