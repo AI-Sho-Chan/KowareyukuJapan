@@ -81,15 +81,15 @@ export default function Home() {
 
   return (
     <>
-      <header className={styles.siteHeader}>
-        <div className={styles.siteBrand}>
-          <Link href="/" className={styles.brandTitle}>守ろう<span className={styles.siteAccent}>JAPAN</span></Link>
-          <p className={styles.brandCopy}>日本のために記録し、伝える</p>
+      <header className={styles['site-header']}>
+        <div className={styles['site-brand']}>
+          <Link href="/" className={styles['brand-title']}>守ろう<span className={styles['site-accent']}>JAPAN</span></Link>
+          <p className={styles['brand-copy']}>日本のために記録し、伝える</p>
         </div>
         {/* 開発期間中の管理画面リンク */}
         <Link 
           href="/admin/dashboard" 
-          className={styles.adminLink}
+          className={styles['admin-link']}
           style={{
             position: 'absolute',
             top: 16,
