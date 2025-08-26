@@ -16,7 +16,11 @@
       "Bash(grep:*)",
       "Bash(test:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run migrate-db:*)",
+      "Bash(npx tsx:*)",
+      "Bash(cat:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []

@@ -293,8 +293,6 @@ export default function Home() {
             <Link href="/terms" className="hover:text-gray-900">利用規約</Link>
             <span>|</span>
             <Link href="/privacy" className="hover:text-gray-900">プライバシーポリシー</Link>
-            <span>|</span>
-            <a href="https://github.com/AI-Sho-Chan/KowareyukuJapan" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">GitHub</a>
           </div>
           <div className="text-center mt-4 text-xs text-gray-500">
             © 2024 KowareyukuJapan - 日本を守ろう

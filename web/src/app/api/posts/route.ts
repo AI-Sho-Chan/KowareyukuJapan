@@ -1,29 +1,30 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from 'zod';
 import { fileTypeFromBuffer } from 'file-type';
 import { fetchMeta } from "@/lib/metadata";
-import { mediaStore, postsStore, StoredPost, persistPostsToDisk, saveMediaToDisk } from "@/lib/store";
+import { PostsRepository } from "@/lib/db/posts-repository";
+import {
+  NGWordFilterV2,
+  RateLimiter,
+  AuditLogger,
+  AuditAction,
+  AuditSeverity,
+  isBlocked,
+  getClientIP,
+  getRateLimitHeaders,
+  GeoBlocker,
+  AdvancedProtection,
+} from "@/lib/security";
 import sharp from 'sharp';
 import ffmpeg from 'fluent-ffmpeg';
 import ffmpegStatic from 'ffmpeg-static';
-import ffprobe from 'ffprobe-static';
 import fs from 'node:fs';
 import path from 'node:path';
 
-type Post = {
-  id: string;
-  url?: string;
-  media?: { type: "image" | "video"; name: string };
-  title: string;
-  comment?: string;
-  handle?: string;
-  tags?: string[];
-  createdAt: number;
-  ownerKey: string; // 簡易: 端末匿名ID
-};
+const postsRepo = new PostsRepository();
 
 function getOwnerKey(req: NextRequest): string {
   const key = req.headers.get("x-client-key") || "anon";
@@ -53,24 +54,212 @@ function autoTags(input: { url?: string | null; mediaType?: "image"|"video"; com
   return Array.from(new Set(tags)).slice(0, 3);
 }
 
-export async function GET() {
-  return new Response(JSON.stringify({ ok: true, posts: postsStore.slice(-50).reverse() }), { headers: { "content-type": "application/json" } });
+export async function GET(req: NextRequest) {
+  try {
+    // レート制限チェック
+    const ip = getClientIP(req as any);
+    const rateLimitResult = await RateLimiter.checkIP(ip, 'api:read');
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many requests' },
+        { 
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult)
+        }
+      );
+    }
+    
+    const posts = await postsRepo.getAllPosts({ limit: 50 });
+    return NextResponse.json(
+      { ok: true, posts: posts.reverse() },
+      { headers: getRateLimitHeaders(rateLimitResult) }
+    );
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return new Response(JSON.stringify({ ok: false, error: 'Failed to fetch posts' }), { 
+      status: 500,
+      headers: { "content-type": "application/json" } 
+    });
+  }
 }
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIP(req as any);
+  const ownerKey = getOwnerKey(req);
+  const headers = req.headers;
+  
+  // 地理的ブロックチェック
+  const geoBlock = await GeoBlocker.shouldBlockAccess(ip, headers);
+  if (geoBlock.shouldBlock) {
+    await AuditLogger.log({
+      action: AuditAction.IP_BLOCKED,
+      severity: AuditSeverity.WARNING,
+      userId: ownerKey,
+      ipAddress: ip,
+      details: { 
+        blocked: true, 
+        reason: geoBlock.reason,
+        country: geoBlock.country,
+        isVPN: geoBlock.isVPN,
+      },
+    });
+    return NextResponse.json(
+      { ok: false, error: geoBlock.reason },
+      { status: 403 }
+    );
+  }
+  
+  // デバイスフィンガープリント生成
+  const fingerprint = AdvancedProtection.generateFingerprint(headers, ip);
+  
+  // 脅威評価
+  const threatAssessment = await AdvancedProtection.assessThreat(
+    ownerKey,
+    ip,
+    fingerprint,
+    'post_create'
+  );
+  
+  if (threatAssessment.shouldBlock) {
+    await AuditLogger.log({
+      action: AuditAction.SUSPICIOUS_ACTIVITY,
+      severity: AuditSeverity.CRITICAL,
+      userId: ownerKey,
+      ipAddress: ip,
+      details: {
+        blocked: true,
+        threatLevel: threatAssessment.threatLevel,
+        reasons: threatAssessment.reasons,
+        blockDuration: threatAssessment.blockDuration,
+        fingerprint,
+      },
+    });
+    return NextResponse.json(
+      { 
+        ok: false, 
+        error: '不審なアクティビティが検出されました。しばらく時間を置いてから再度お試しください。',
+        threatLevel: threatAssessment.threatLevel,
+      },
+      { status: 403 }
+    );
+  }
+  
+  // 既存のブロックチェック
+  const blockStatus = await isBlocked(ownerKey, ip);
+  if (blockStatus.blocked) {
+    await AuditLogger.log({
+      action: AuditAction.POST_CREATE,
+      severity: AuditSeverity.WARNING,
+      userId: ownerKey,
+      ipAddress: ip,
+      details: { blocked: true, reason: blockStatus.reason },
+    });
+    return NextResponse.json(
+      { ok: false, error: 'You are blocked from posting' },
+      { status: 403 }
+    );
+  }
+  
+  // レート制限チェック
+  const rateLimitResult = await RateLimiter.checkCombined(ip, ownerKey, 'post:create');
+  if (!rateLimitResult.allowed) {
+    await AuditLogger.logRateLimitExceeded(ownerKey, 'post:create', ip);
+    const waitMinutes = Math.ceil((rateLimitResult.retryAfter || 0) / 60);
+    return NextResponse.json(
+      { 
+        ok: false, 
+        error: `投稿制限に達しました。5分間で最大3件までの投稿が可能です。`,
+        message: `あと${waitMinutes}分後に再度投稿できます。`,
+        retryAfter: rateLimitResult.retryAfter,
+      },
+      { 
+        status: 429,
+        headers: getRateLimitHeaders(rateLimitResult)
+      }
+    );
+  }
+  
   const form = await req.formData();
   const url = form.get("url") as string | null;
   const titleManual = (form.get("title") as string | null) || undefined;
   const comment = (form.get("comment") as string | null) || undefined;
   const handle = (form.get("handle") as string | null) || undefined;
   const tagsRaw = (form.getAll("tags") as string[]).filter(Boolean);
-  const ownerKey = getOwnerKey(req);
 
+  // NGワードチェック（強化版）
+  const ngCheck = NGWordFilterV2.check(titleManual || '', {
+    checkTitle: true,
+  });
+  const handleCheck = NGWordFilterV2.check(handle || '', {
+    checkHandle: true,
+  });
+  const commentCheck = NGWordFilterV2.check(comment || '', {
+    checkComment: true,
+  });
+  
+  // いずれかでブロック対象が検出された場合
+  const combinedCheck = [
+    ngCheck,
+    handleCheck,
+    commentCheck,
+  ].find(check => check.isBlocked);
+  
+  if (combinedCheck) {
+    await AuditLogger.logNGWordDetection(
+      ownerKey,
+      ip,
+      combinedCheck.detectedWords,
+      [titleManual || '', handle || '', comment || ''].join(' ')
+    );
+    
+    // 理由に応じたエラーメッセージ
+    let errorMessage = '投稿に不適切な内容が含まれています';
+    if (combinedCheck.blockedLanguages.length > 0) {
+      errorMessage = `${combinedCheck.blockedLanguages.join('・')}の使用は禁止されています`;
+    } else if (combinedCheck.reason) {
+      errorMessage = combinedCheck.reason;
+    }
+    
+    return NextResponse.json(
+      { 
+        ok: false, 
+        error: errorMessage,
+        detectedWords: combinedCheck.detectedWords.map(() => '[削除済]'),
+        blockedLanguages: combinedCheck.blockedLanguages,
+      },
+      { status: 400 }
+    );
+  }
+  
+  // 警告レベルの検出（ログのみ）
+  const warnings = [ngCheck, handleCheck, commentCheck]
+    .filter(check => check.hasWarning)
+    .flatMap(check => check.warningWords);
+  
+  if (warnings.length > 0) {
+    await AuditLogger.log({
+      action: AuditAction.POST_CREATE,
+      severity: AuditSeverity.WARNING,
+      userId: ownerKey,
+      ipAddress: ip,
+      details: { warningWords: warnings },
+    });
+  }
+  
   let mediaType: "image" | "video" | undefined;
-  let mediaId: string | undefined;
+  let mediaUrl: string | undefined;
 
   const file = form.get("file") as File | null;
   if (file && file.size > 0) {
+    // メディアアップロードのレート制限
+    const mediaRateLimit = await RateLimiter.checkCombined(ip, ownerKey, 'media:upload');
+    if (!mediaRateLimit.allowed) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many uploads. Please wait' },
+        { status: 429, headers: getRateLimitHeaders(mediaRateLimit) }
+      );
+    }
     const ext = (file.name || "").toLowerCase();
     if (/(\.mp4|\.webm|\.mov)$/.test(ext)) mediaType = "video"; else mediaType = "image";
     const MAX_IMAGE = 8 * 1024 * 1024; // 画像アップロード上限
@@ -116,7 +305,6 @@ export async function POST(req: NextRequest) {
 
       try {
         if (ffmpegStatic) (ffmpeg as any).setFfmpegPath(ffmpegStatic as any);
-        if ((ffprobe as any)?.path) (ffmpeg as any).setFfprobePath((ffprobe as any).path);
 
         const meta = await new Promise<any>((resolve, reject) => {
           (ffmpeg as any).ffprobe(inPath, (err: any, data: any) => err ? reject(err) : resolve(data));
@@ -159,10 +347,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ディスクへ永続化＋メモリにも保持
-    saveMediaToDisk(id, outType, ownerKey, outBuffer);
-    mediaStore.set(id, { contentType: outType, data: outBuffer, ownerKey });
-    mediaId = id;
+    // Save media to disk (temporarily until we migrate to R2)
+    const mediaDir = path.join(process.cwd(), '.data', 'media');
+    try { fs.mkdirSync(mediaDir, { recursive: true }); } catch {}
+    const mediaPath = path.join(mediaDir, id);
+    fs.writeFileSync(mediaPath, outBuffer);
+    
+    // For now, we'll store the media URL as a local path
+    mediaUrl = `/api/posts/media/${id}`;
   }
 
   let title = titleManual || "";
@@ -187,24 +379,36 @@ export async function POST(req: NextRequest) {
   if (tagsRaw.length > 0) {
     tags = tagsRaw.filter(t => FIXED_TAGS.includes(t));
   } else {
-    tags = autoTags({ url, mediaType, comment });
+    tags = autoTags({ url: url || undefined, mediaType, comment });
   }
 
-  const id = Math.random().toString(36).slice(2, 10);
-  const post: StoredPost = {
-    id,
-    url: url || undefined,
-    media: mediaType && mediaId ? { type: mediaType, id: mediaId, url: `/api/posts/media/${mediaId}` } : undefined,
-    title,
-    comment,
-    handle,
-    tags,
-    createdAt: Date.now(),
-    ownerKey,
-  };
-  postsStore.push(post);
-  persistPostsToDisk();
-  return new Response(JSON.stringify({ ok: true, post }), { headers: { "content-type": "application/json" } });
+  try {
+    const post = await postsRepo.createPost({
+      title,
+      url: url || undefined,
+      comment,
+      handle,
+      ownerKey,
+      tags,
+      media: mediaType && mediaUrl ? { type: mediaType, url: mediaUrl } : undefined,
+    });
+    
+    // 監査ログ記録
+    await AuditLogger.logPostCreate(post.id, ownerKey, ip, {
+      hasMedia: !!mediaType,
+      hasUrl: !!url,
+      tagCount: tags?.length || 0,
+    });
+    
+    return NextResponse.json(
+      { ok: true, post },
+      { headers: getRateLimitHeaders(rateLimitResult) }
+    );
+  } catch (error) {
+    console.error('Error creating post:', error);
+    return new Response(JSON.stringify({ ok: false, error: 'Failed to create post' }), { 
+      status: 500,
+      headers: { "content-type": "application/json" } 
+    });
+  }
 }
-
-

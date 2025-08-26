@@ -1,0 +1,56 @@
+# Cloudflare Worker設定ファイル
+# wrangler CLIを使用してデプロイします
+
+name = "kowareyukujapan-security"
+main = "src/lib/security/cloudflare-worker.js"
+compatibility_date = "2024-01-01"
+
+# アカウントID（環境変数またはここに設定）
+# account_id = "YOUR_ACCOUNT_ID"
+
+# ゾーンID（環境変数またはここに設定）
+# zone_id = "YOUR_ZONE_ID"
+
+# ルーティング設定
+# route = { pattern = "kowareyukujapan.com/*", zone_name = "kowareyukujapan.com" }
+
+# KVネームスペースバインディング
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "rate_limit_namespace_id"
+preview_id = "rate_limit_preview_id"
+
+[[kv_namespaces]]
+binding = "BLOCKED_IPS"
+id = "blocked_ips_namespace_id"
+preview_id = "blocked_ips_preview_id"
+
+[[kv_namespaces]]
+binding = "SECURITY_LOGS"
+id = "security_logs_namespace_id"
+preview_id = "security_logs_preview_id"
+
+# 環境変数
+[vars]
+ENVIRONMENT = "production"
+MAX_REQUEST_SIZE = "10485760"  # 10MB
+
+# 開発環境設定
+[env.development]
+name = "kowareyukujapan-security-dev"
+vars = { ENVIRONMENT = "development" }
+
+# ステージング環境設定
+[env.staging]
+name = "kowareyukujapan-security-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# Workers Analytics Engine（オプション）
+# [[analytics_engine_datasets]]
+# binding = "SECURITY_ANALYTICS"
+
+# Durable Objects（将来の拡張用）
+# [[durable_objects.bindings]]
+# name = "RATE_LIMITER"
+# class_name = "RateLimiter"
+# script_name = "rate-limiter"
