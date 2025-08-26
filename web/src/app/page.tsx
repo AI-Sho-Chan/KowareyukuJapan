@@ -32,7 +32,7 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState<number>(1);
 
   async function refresh(page: number = currentPage){
-    const r = await fetch(`/api/posts/simple?page=${page}&limit=20`, { cache: 'no-store' });
+    const r = await fetch(`/api/posts?page=${page}&limit=20`, { cache: 'no-store' });
     const j = await r.json();
     if (j?.ok && Array.isArray(j.posts)) {
       setPosts(j.posts);

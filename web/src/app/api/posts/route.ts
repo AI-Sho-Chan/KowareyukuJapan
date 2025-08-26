@@ -56,44 +56,17 @@ function autoTags(input: { url?: string | null; mediaType?: "image"|"video"; com
 
 export async function GET(req: NextRequest) {
   try {
-    // レート制限チェック
-    const ip = getClientIP(req as any);
-    const rateLimitResult = await RateLimiter.checkIP(ip, 'api:read');
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { ok: false, error: 'Too many requests' },
-        { 
-          status: 429,
-          headers: getRateLimitHeaders(rateLimitResult)
-        }
-      );
-    }
+    // Import the simplified get posts function
+    const { getPosts } = await import('./get-posts');
     
     // ページネーション対応
     const searchParams = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
-    const offset = (page - 1) * limit;
     
-    const [posts, total] = await Promise.all([
-      postsRepo.getAllPosts({ limit, offset }),
-      postsRepo.getPostsCount()
-    ]);
+    const result = await getPosts(page, limit);
     
-    return NextResponse.json(
-      { 
-        ok: true, 
-        posts: posts.reverse(),
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
-      },
-      { headers: getRateLimitHeaders(rateLimitResult) }
-    );
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error fetching posts:', error);
     return new Response(JSON.stringify({ ok: false, error: 'Failed to fetch posts' }), { 
