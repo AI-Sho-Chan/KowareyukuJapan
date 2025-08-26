@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 
 function pick(html: string, prop: string): string | null {
   const re = new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i");
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest){
   const url = req.nextUrl.searchParams.get('url');
   if(!url) return new Response(JSON.stringify({ok:false,error:'url is required'}),{status:400});
   try{
-    const r = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' }, next: { revalidate: 60 } });
+    const r = await fetchUrlWithSsrfGuard(url, { headers: { 'user-agent': 'Mozilla/5.0' }, timeoutMs: 5000 });
     if(!r.ok) throw new Error(`status ${r.status}`);
     const html = await r.text();
     // Xのページには og:title/og:description/og:image が埋め込まれていることが多い

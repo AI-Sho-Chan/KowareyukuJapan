@@ -14,6 +14,7 @@
   "dependencies": {
     "@libsql/client": "^0.15.12",
     "@mozilla/readability": "^0.6.0",
+    "@sentry/nextjs": "^10.5.0",
     "@sparticuz/chromium-min": "^119.0.0",
     "@tanstack/react-query": "5.85.5",
     "dotenv": "^17.2.1",
@@ -36,7 +37,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
+    "ignore-loader": "^0.1.2",
+    "nodemailer": "^7.0.5",
     "postcss": "^8",
+    "puppeteer": "^24.17.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"

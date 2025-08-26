@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { toEmbedUrl } from '@/lib/instagram';
-import { validateOutboundUrl } from '@/lib/ssrf';
+import { validateOutboundUrl, fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 import { logApi } from '@/lib/logger';
 
 const H = {
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const started = Date.now();
   try {
     await validateOutboundUrl(embed, { allowHttp: false });
-    const r = await fetch(embed, { redirect: 'manual', headers: H, cache: 'no-store' });
+    const r = await fetchUrlWithSsrfGuard(embed, { headers: H, timeoutMs: 5000 });
     const status = r.status;
     const loc = r.headers.get('location') || '';
     const xfo = (r.headers.get('x-frame-options') || '').toLowerCase();

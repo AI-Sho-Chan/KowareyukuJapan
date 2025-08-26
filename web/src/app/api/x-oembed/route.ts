@@ -6,6 +6,7 @@ import { NextRequest } from "next/server";
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import type { NextRequest } from 'next/server';
+import { fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 
 const toTwitter = (u: string) => u.replace(/^https?:\/\/x\.com\//i, 'https://twitter.com/');
 
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 
   const tw = toTwitter(url);
   const api = `https://publish.twitter.com/oembed?omit_script=1&hide_thread=1&dnt=1&url=${encodeURIComponent(tw)}`;
-  const r = await fetch(api, { headers: { 'user-agent': 'Mozilla/5.0' } });
+  const r = await fetchUrlWithSsrfGuard(api, { headers: { 'user-agent': 'Mozilla/5.0' }, timeoutMs: 5000 });
   if (!r.ok) return Response.json({ ok: false, error: `oembed ${r.status}` }, { status: 502 });
 
   const data = await r.json();

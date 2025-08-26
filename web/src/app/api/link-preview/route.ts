@@ -1,7 +1,7 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { validateOutboundUrl } from '@/lib/ssrf';
+import { validateOutboundUrl, fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 import { logApi } from '@/lib/logger';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
@@ -17,10 +17,7 @@ export async function GET(req: Request){
   const started = Date.now();
   try{
     await validateOutboundUrl(url, { allowHttp: false });
-    const r = await fetch(url, {
-      headers: { 'user-agent': UA, 'accept-language':'ja-JP,ja;q=0.9,en-US;q=0.3' },
-      redirect: 'follow',
-    });
+    const r = await fetchUrlWithSsrfGuard(url, { headers: { 'user-agent': UA, 'accept-language':'ja-JP,ja;q=0.9,en-US;q=0.3' }, timeoutMs: 5000 });
     if(!r.ok){ logApi({ name:'link-preview', start: started, ok:false, status:r.status, targetHost:new URL(url).hostname }); return NextResponse.json({ok:false,status:r.status},{status:r.status}); }
     const html = await r.text();
 

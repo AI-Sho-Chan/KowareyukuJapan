@@ -1,10 +1,36 @@
 import { loadMediaFromDisk, mediaStore } from "@/lib/store";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }){
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }){
   const { id } = await params;
+  const range = (req.headers as any).get?.('range') as string | null || null;
   let media = mediaStore.get(id) || loadMediaFromDisk(id);
   if(!media) return new Response('Not Found',{status:404});
-  return new Response(media.data, { headers: { 'content-type': media.contentType, 'cache-control': 'public, max-age=31536000, immutable' } });
+
+  const baseHeaders: Record<string,string> = {
+    'content-type': media.contentType,
+    'cache-control': 'public, max-age=31536000, immutable',
+    'x-content-type-options': 'nosniff',
+    'accept-ranges': 'bytes',
+  };
+
+  const buf = media.data;
+  if (range) {
+    const m = range.match(/bytes=(\d+)-(\d+)?/);
+    if (m) {
+      const start = Number(m[1]);
+      const end = Math.min(buf.length - 1, m[2] ? Number(m[2]) : buf.length - 1);
+      const chunk = buf.subarray(start, end + 1);
+      return new Response(chunk, {
+        status: 206,
+        headers: {
+          ...baseHeaders,
+          'content-range': `bytes ${start}-${end}/${buf.length}`,
+          'content-length': String(chunk.length),
+        },
+      });
+    }
+  }
+  return new Response(buf, { headers: { ...baseHeaders, 'content-length': String(buf.length) } });
 }
 
 

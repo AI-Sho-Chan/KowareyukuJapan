@@ -20,7 +20,10 @@
       "Bash(npm run migrate-db:*)",
       "Bash(npx tsx:*)",
       "Bash(cat:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(for port in 3000 3001 3030)",
+      "Bash(echo:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

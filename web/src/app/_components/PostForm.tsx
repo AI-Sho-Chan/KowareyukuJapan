@@ -60,11 +60,22 @@ export default function PostForm({ onSubmitted }: Props){
             await onSubmitted();
             form.reset();
           } else {
-            setUploadMsg('アップロードに失敗しました');
-            alert('投稿に失敗しました');
+            // NGワードエラーや他のエラーメッセージを表示
+            const errorMsg = j?.error || j?.message || 'アップロードに失敗しました';
+            setUploadMsg(errorMsg);
+            alert(errorMsg);
           }
+        } catch(error) {
+          // エラー処理を追加
+          console.error('投稿エラー:', error);
+          setUploadMsg('エラーが発生しました');
+          alert('エラーが発生しました。もう一度お試しください。');
         } finally {
           setUploading(false);
+          // エラーメッセージは5秒後にクリア
+          if(uploadMsg && !uploadMsg.includes('完了')) {
+            setTimeout(() => setUploadMsg(null), 5000);
+          }
         }
       }}>
         <label className="radio">URL

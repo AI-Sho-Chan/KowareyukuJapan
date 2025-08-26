@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeInstagramUrl } from '@/lib/instagram';
-import { validateOutboundUrl } from '@/lib/ssrf';
+import { validateOutboundUrl, fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 import { logApi } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
@@ -12,10 +12,7 @@ export async function GET(req: NextRequest) {
   const started = Date.now();
   try {
     await validateOutboundUrl(page, { allowHttp: false });
-    const r = await fetch(page, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'ja,en;q=0.9' },
-      redirect: 'manual', cache: 'no-store',
-    });
+    const r = await fetchUrlWithSsrfGuard(page, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'ja,en;q=0.9' }, timeoutMs: 5000 });
     const html = await r.text();
     const pick = (p: string) => html.match(new RegExp(`<meta[^>]+property=["']${p}["'][^>]+content=["']([^"']+)`, 'i'))?.[1] || null;
     logApi({ name:'ig-preview', start: started, ok: r.ok, status: r.status, targetHost: new URL(page).hostname });

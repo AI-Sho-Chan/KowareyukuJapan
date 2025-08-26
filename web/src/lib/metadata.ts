@@ -5,9 +5,11 @@ export type Meta = {
   provider?: string | null;
 };
 
+import { fetchUrlWithSsrfGuard } from '@/lib/ssrf';
+
 export async function fetchYouTubeMeta(url: string): Promise<Meta> {
   const api = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`;
-  const r = await fetch(api, { next: { revalidate: 60 } });
+  const r = await fetchUrlWithSsrfGuard(api, { timeoutMs: 5000 });
   if (!r.ok) throw new Error(`oembed failed: ${r.status}`);
   const j = await r.json();
   return { title: j.title ?? null, provider: "YouTube", siteName: "YouTube", image: null };
@@ -25,7 +27,7 @@ function pickTitle(html: string): string | null {
 }
 
 export async function fetchGenericMeta(url: string): Promise<Meta> {
-  const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0" }, next: { revalidate: 60 } });
+  const r = await fetchUrlWithSsrfGuard(url, { headers: { "user-agent": "Mozilla/5.0" }, timeoutMs: 5000 });
   if (!r.ok) throw new Error(`fetch failed: ${r.status}`);
   const html = await r.text();
   // 1) OGP/Twitter, 2) JSON-LD headline/name, 3) <h1>, 4) <title>

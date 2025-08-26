@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateOutboundUrl } from '@/lib/ssrf';
+import { validateOutboundUrl, fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 import { logApi } from '@/lib/logger';
 
 function parseBlocked(xfo: string, csp: string, ourOrigin?: string){
@@ -22,15 +22,11 @@ function parseBlocked(xfo: string, csp: string, ourOrigin?: string){
 }
 
 async function headThenGet(u: string, timeoutMs = 5000){
-  const ac = new AbortController();
-  const to = setTimeout(()=>ac.abort(), timeoutMs);
-  try{
-    let r = await fetch(u, { method:'HEAD', redirect:'follow', signal: ac.signal });
-    if (r.status === 405 || r.status === 501) {
-      r = await fetch(u, { method:'GET', redirect:'follow', signal: ac.signal, headers: { 'Range': 'bytes=0-0' } });
-    }
-    return r;
-  } finally { clearTimeout(to); }
+  let r = await fetchUrlWithSsrfGuard(u, { method:'HEAD', timeoutMs, allowHttp: true });
+  if (r.status === 405 || r.status === 501) {
+    r = await fetchUrlWithSsrfGuard(u, { method:'GET', timeoutMs, allowHttp: true, headers: { 'Range': 'bytes=0-0' } });
+  }
+  return r;
 }
 
 export async function GET(req: NextRequest){
