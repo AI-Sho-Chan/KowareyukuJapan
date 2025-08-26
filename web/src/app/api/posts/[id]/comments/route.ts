@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@libsql/client';
 import crypto from 'crypto';
-import { NGWordChecker } from '@/lib/ngword-checker';
+import { NGWordFilterV2 } from '@/lib/security';
 import { headers } from 'next/headers';
 
 export const runtime = 'nodejs';
@@ -32,8 +32,8 @@ export async function POST(
     }
     
     // NGワードチェック
-    const ngChecker = new NGWordChecker();
-    if (ngChecker.containsNGWord(content)) {
+    const ngCheck = NGWordFilterV2.check(content);
+    if (ngCheck.isBlocked) {
       return NextResponse.json(
         { error: '禁止ワードが含まれています' },
         { status: 400 }
