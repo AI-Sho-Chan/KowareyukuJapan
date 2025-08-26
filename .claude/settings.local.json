@@ -10,7 +10,12 @@
       "Bash(npm run lint)",
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(test:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

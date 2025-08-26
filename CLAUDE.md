@@ -2,6 +2,16 @@
 
 This file configures Claude Code for the KowareyukuJapan project with SuperClaude framework.
 
+## 🚨 重要：必須開発指針
+**すべての開発作業は以下のロードマップに従って実施すること：**
+→ [DEVELOPMENT_ROADMAP.md](./DEVELOPMENT_ROADMAP.md)
+
+このロードマップには以下が含まれています：
+- フェーズ別実装計画（基盤構築 → 効率化 → 高度化）
+- 技術選定（Turso/D1、Cloudflare R2、Upstash等）
+- コスト試算と成功指標（KPI）
+- スプリント計画と優先順位
+
 ## Project Context
 - **Project**: KowareyukuJapan - A Next.js web application
 - **Tech Stack**: Next.js, React, TypeScript, Tailwind CSS

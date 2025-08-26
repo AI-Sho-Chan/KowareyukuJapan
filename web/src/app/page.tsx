@@ -170,7 +170,8 @@ export default function Home() {
                     adminHeader={AdminHeader}
                   />
                   {TagEditor}
-    </div>
+                  {OwnerActions}
+                </div>
               );
             }
 
@@ -179,6 +180,7 @@ export default function Home() {
         </section>
         <PostList posts={posts} viewerKey={viewerKey} onChanged={refresh} />
         <PostForm onSubmitted={refresh} />
+        <section id="compose" className="modal">
           <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
