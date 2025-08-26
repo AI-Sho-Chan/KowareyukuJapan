@@ -24,7 +24,9 @@
       "Bash(for port in 3000 3001 3030)",
       "Bash(echo:*)",
       "Bash(done)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git restore:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []

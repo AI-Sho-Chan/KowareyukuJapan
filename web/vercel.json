@@ -2,37 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/feed-check",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/promote",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/trending",
-      "schedule": "0 0,6,12,18 * * *"
-    },
-    {
-      "path": "/api/cron/newsletter-draft",
-      "schedule": "0 0 * * 0"
-    },
-    {
-      "path": "/api/cron/social-media",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 3 * * *"
     }
-  ],
-  "functions": {
-    "src/app/api/cron/feed-check/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/promote/route.ts": {
-      "maxDuration": 30
-    },
-    "src/app/api/cron/trending/route.ts": {
-      "maxDuration": 30
-    },
-    "src/app/api/cron/social-media/route.ts": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
