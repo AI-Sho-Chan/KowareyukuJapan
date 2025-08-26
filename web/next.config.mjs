@@ -3,6 +3,7 @@ const isProd = process.env.NODE_ENV === 'production';
 const isCI = process.env.CI === 'true';
 
 const nextConfig = {
+  output: 'standalone',
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'pbs.twimg.com', pathname: '/**' },

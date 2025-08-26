@@ -1,5 +1,4 @@
 {
-  "installCommand": "cd web && npm install --force",
-  "buildCommand": "cd web && npm run build",
-  "outputDirectory": "web/.next"
+  "framework": "nextjs",
+  "rootDirectory": "web"
 }
