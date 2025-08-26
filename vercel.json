@@ -11,11 +11,6 @@
     "SESSION_SECRET": "@session_secret",
     "ADMIN_PASSWORD": "@admin_password"
   },
-  "functions": {
-    "web/src/app/api/cron/*.ts": {
-      "maxDuration": 60
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/feed-check",
