@@ -5,6 +5,7 @@ import PostList from "./_components/PostList";
 import PostForm from "./_components/PostForm";
 import Pagination from "@/components/Pagination";
 import { useEffect, useState } from "react";
+import styles from './page.module.css';
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
 
@@ -80,15 +81,15 @@ export default function Home() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="site-brand">
-          <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
-          <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
+      <header className={styles.siteHeader}>
+        <div className={styles.siteBrand}>
+          <Link href="/" className={styles.brandTitle}>守ろう<span className={styles.siteAccent}>JAPAN</span></Link>
+          <p className={styles.brandCopy}>日本のために記録し、伝える</p>
         </div>
         {/* 開発期間中の管理画面リンク */}
         <Link 
           href="/admin/dashboard" 
-          className="admin-link"
+          className={styles.adminLink}
           style={{
             position: 'absolute',
             top: 16,
@@ -109,8 +110,8 @@ export default function Home() {
           管理画面
         </Link>
       </header>
-      <main className="container">
-        <section className="feed" id="feed">
+      <main className={styles.container}>
+        <section className={styles.feed} id="feed">
           {posts.map((p) => {
             const selected = new Set(p.tags || []);
             const isOwner = !!viewerKey && !!(p as any).ownerKey && viewerKey === (p as any).ownerKey;
@@ -136,18 +137,18 @@ export default function Home() {
             );
             const OwnerActions = !isOwner ? null : (
               <div style={{display:'flex',gap:8,marginTop:8}}>
-                <button className="btn" onClick={()=>{
+                <button className={styles.btn} onClick={()=>{
                   const next = prompt('コメントを編集', p.comment || '') ?? undefined;
                   if (typeof next === 'string') updateComment(p.id, next);
                 }}>コメントを編集</button>
-                <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+                <button className={styles.btn} onClick={()=>removePost(p.id)}>削除</button>
               </div>
             );
 
             const AdminHeader = (
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
                 <small style={{color:'var(--muted)'}}>管理番号: <code>{p.id}</code></small>
-                <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+                <button className={styles.btn} onClick={()=>removePost(p.id)}>削除</button>
               </div>
             );
 
@@ -226,7 +227,7 @@ export default function Home() {
           />
         )}
         <PostForm onSubmitted={refresh} />
-        <section id="compose" className="modal">
+        <section id="compose" className={styles.modal}>
           <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
