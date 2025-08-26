@@ -287,6 +287,20 @@ export default function Home() {
           </form>
         </section>
       </main>
+      <footer className="mt-12 py-6 border-t border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-center items-center gap-6 text-sm text-gray-600">
+            <Link href="/terms" className="hover:text-gray-900">利用規約</Link>
+            <span>|</span>
+            <Link href="/privacy" className="hover:text-gray-900">プライバシーポリシー</Link>
+            <span>|</span>
+            <a href="https://github.com/AI-Sho-Chan/KowareyukuJapan" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900">GitHub</a>
+          </div>
+          <div className="text-center mt-4 text-xs text-gray-500">
+            © 2024 KowareyukuJapan - 日本を守ろう
+          </div>
+        </div>
+      </footer>
       <a className="fab" href="#compose" aria-label="記録作成">＋記録</a>
     </>
   );
