@@ -5,7 +5,6 @@ import { NextRequest } from "next/server";
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-import type { NextRequest } from 'next/server';
 import { fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 
 const toTwitter = (u: string) => u.replace(/^https?:\/\/x\.com\//i, 'https://twitter.com/');
@@ -15,7 +14,7 @@ const stripDanger = (s: string) =>
   s
     .replace(/<script[\s\S]*?<\/script>/gi, '')
     .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+=( ["'])(?:.(?!\1))*?\1/gi, '');
+    .replace(/\son\w+=( ["'])?(?:.(?!\1))*?\1/gi, '');
 
 // blockquoteだけ抽出
 const extractBlockquote = (html: string) => {

@@ -145,16 +145,12 @@ async function handleRequest(request) {
     return createBlockResponse(securityCheck.reason, 429);
   }
   
-  // 5. POSTリクエストの追加チェック
+  // 5. POSTリクエストの追加チェック（NGワードのみ。言語ブロックは無効化）
   if (method === 'POST') {
-    // リクエストボディのチェック
     const contentType = request.headers.get('Content-Type') || '';
-    
     if (contentType.includes('application/json') || contentType.includes('text/plain')) {
       try {
         const body = await request.clone().text();
-        
-        // NGワードチェック（エッジレベル）
         const hasNGWord = checkNGWords(body);
         if (hasNGWord) {
           securityCheck.blocked = true;
@@ -162,16 +158,8 @@ async function handleRequest(request) {
           await logSecurity('NG_WORD', ip, { detected: hasNGWord });
           return createBlockResponse(securityCheck.reason, 400);
         }
-        
-        // 中国語・韓国語チェック
-        if (containsChineseOrKorean(body)) {
-          securityCheck.blocked = true;
-          securityCheck.reason = 'Chinese and Korean languages are not allowed';
-          await logSecurity('LANGUAGE_BLOCK', ip, { content: body.substring(0, 100) });
-          return createBlockResponse(securityCheck.reason, 400);
-        }
       } catch (e) {
-        // ボディ解析エラー
+        // ignore parse errors
       }
     }
   }
@@ -288,12 +276,8 @@ function checkNGWords(text) {
  * 中国語・韓国語検出
  */
 function containsChineseOrKorean(text) {
-  // 中国語（簡体字・繁体字）
-  const chineseRegex = /[\u4e00-\u9fff\u3400-\u4dbf\u20000-\u2a6df]+/;
-  // 韓国語（ハングル）
-  const koreanRegex = /[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]+/;
-  
-  return chineseRegex.test(text) || koreanRegex.test(text);
+  // Deprecated: no-op to avoid discriminatory blocks
+  return false;
 }
 
 /**

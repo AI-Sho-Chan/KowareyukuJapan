@@ -23,7 +23,8 @@
       "Bash(sqlite3:*)",
       "Bash(for port in 3000 3001 3030)",
       "Bash(echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

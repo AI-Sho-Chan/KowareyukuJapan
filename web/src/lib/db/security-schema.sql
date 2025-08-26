@@ -1,3 +1,12 @@
+-- Newsletter subscribers
+CREATE TABLE IF NOT EXISTS subscribers (
+  email TEXT PRIMARY KEY,
+  status TEXT NOT NULL CHECK(status IN ('pending','active','unsubscribed')),
+  token TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Security関連のテーブルを追加
 
 -- ブロックされたユーザー

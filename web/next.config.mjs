@@ -8,7 +8,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'pbs.twimg.com', pathname: '/**' },
       { protocol: 'https', hostname: 'abs.twimg.com', pathname: '/**' },
     ],
-    dangerouslyAllowSVG: true,
+    dangerouslyAllowSVG: false,
   },
   async headers() {
     if (!isProd) return [];
@@ -31,7 +31,6 @@ const nextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'geolocation=(), microphone=(), camera=()' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
         ],
       },
     ];
@@ -53,8 +52,8 @@ const nextConfig = {
     ];
   },
   serverExternalPackages: ['@sparticuz/chromium-min','puppeteer-core','puppeteer','jsdom','@mozilla/readability','sharp','fluent-ffmpeg','ffmpeg-static','ffprobe-static','@libsql/client','@libsql/hrana-client','nodemailer'],
-  typescript: { ignoreBuildErrors: true },
-  eslint: { ignoreDuringBuilds: true }
+  typescript: { ignoreBuildErrors: !isCI },
+  eslint: { ignoreDuringBuilds: !isCI }
 };
 
 export default nextConfig;

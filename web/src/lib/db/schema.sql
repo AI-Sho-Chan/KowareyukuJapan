@@ -118,6 +118,36 @@ CREATE INDEX IF NOT EXISTS idx_post_tags_tag_id ON post_tags(tag_id);
 CREATE INDEX IF NOT EXISTS idx_reports_post_id ON reports(post_id);
 CREATE INDEX IF NOT EXISTS idx_collection_queue_status ON collection_queue(status, created_at);
 
+-- Stats: events and aggregates
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  post_id TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('view','empathy','share')),
+  user_fp TEXT,
+  ip_hash TEXT,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_stats (
+  post_id TEXT PRIMARY KEY,
+  views INTEGER DEFAULT 0,
+  empathies INTEGER DEFAULT 0,
+  shares INTEGER DEFAULT 0,
+  last_event_at INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS trending_daily (
+  date TEXT NOT NULL,
+  post_id TEXT NOT NULL,
+  score REAL NOT NULL,
+  rank INTEGER NOT NULL,
+  PRIMARY KEY(date, post_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_events_post_created ON events(post_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_events_user_post_type_created ON events(user_fp, post_id, type, created_at);
+
 -- Insert default tags
 INSERT OR IGNORE INTO tags (name, slug) VALUES 
   ('治安/マナー', 'security-manners'),

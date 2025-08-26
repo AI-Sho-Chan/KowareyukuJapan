@@ -1,4 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { StatsRepository } from '@/lib/db/stats-repository';
+import { RateLimiter, getClientIP } from '@/lib/security';
+
+const stats = new StatsRepository();
+
+function fpFrom(req: NextRequest): string {
+  const k = req.headers.get('x-client-key') || '';
+  const ua = req.headers.get('user-agent') || '';
+  return `${k}:${ua}`.slice(0, 200);
+}
+
+export async function POST(req: NextRequest, { params }: { params: { id: string } }){
+  const id = params.id;
+  const body = await req.json().catch(() => ({} as any));
+  const type = (body?.type || '').toString();
+  if (!['view','empathy','share'].includes(type)) {
+    return NextResponse.json({ ok:false, error:'bad_type' }, { status:400 });
+  }
+
+  const ip = getClientIP(req as any);
+  const ownerKey = req.headers.get('x-client-key') || 'anon';
+  const rl = await RateLimiter.checkCombined(ip, ownerKey, `event:${type}`);
+  if (!rl.allowed) {
+    return NextResponse.json({ ok:false, error:'rate_limited' }, { status:429, headers: rl.headers });
+  }
+
+  const fp = fpFrom(req);
+  const recent = await stats.recentEventsCount(id, type as any, fp, 5);
+  if (recent > 0) return NextResponse.json({ ok:true, dedup:true });
+
+  await stats.addEvent(id, type as any, fp);
+  return NextResponse.json({ ok:true });
+}
+
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@libsql/client';
 import crypto from 'crypto';
 import { headers } from 'next/headers';
