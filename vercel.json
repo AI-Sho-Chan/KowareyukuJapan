@@ -1,18 +1,5 @@
 {
   "framework": "nextjs",
   "regions": ["hnd1"],
-  "rootDirectory": "web",
-  "env": {
-    "NEXT_PUBLIC_BASE_URL": "@production_url",
-    "TURSO_DB_URL": "@turso_db_url",
-    "TURSO_AUTH_TOKEN": "@turso_auth_token",
-    "SESSION_SECRET": "@session_secret",
-    "ADMIN_PASSWORD": "@admin_password"
-  },
-  "crons": [
-    {
-      "path": "/api/cron/feed-check",
-      "schedule": "0 3 * * *"
-    }
-  ]
+  "rootDirectory": "web"
 }
