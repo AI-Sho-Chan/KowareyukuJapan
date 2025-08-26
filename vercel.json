@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm ci --no-fund --no-audit",
   "framework": "nextjs",
   "regions": ["hnd1"],
   "rootDirectory": "web",
