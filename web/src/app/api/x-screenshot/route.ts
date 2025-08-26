@@ -1,8 +1,8 @@
 export const runtime = 'nodejs';
 import type { NextRequest } from 'next/server';
 import chromium from '@sparticuz/chromium-min';
-const useLocal = !process.env.VERCEL;
-const getPuppeteer = async () => useLocal ? await import('puppeteer') : await import('puppeteer-core');
+const useLocal = false;
+const getPuppeteer = async () => await import('puppeteer-core');
 
 const toTwitter = (u: string) => u.replace(/^https?:\/\/x\.com\//i, 'https://twitter.com/');
 

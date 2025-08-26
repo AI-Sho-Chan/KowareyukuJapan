@@ -5,8 +5,8 @@ import type { NextRequest } from 'next/server';
 import { validateOutboundUrl } from '@/lib/ssrf';
 import chromium from '@sparticuz/chromium-min';
 
-const useLocal = !process.env.VERCEL;
-const getPuppeteer = async () => useLocal ? await import('puppeteer') : await import('puppeteer-core');
+const useLocal = false;
+const getPuppeteer = async () => await import('puppeteer-core');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 const stripSuffix = (t: string) => t.replace(/\s*[|｜\-]\s*[^|｜\-]+$/u, '').trim();
