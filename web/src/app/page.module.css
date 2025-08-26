@@ -261,7 +261,7 @@ textarea.form-control {
   cursor: pointer;
 }
 
-input[type="checkbox"] {
+.checkbox {
   width: 1.125rem;
   height: 1.125rem;
   cursor: pointer;
