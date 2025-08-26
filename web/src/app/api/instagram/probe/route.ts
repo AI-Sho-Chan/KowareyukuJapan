@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { toEmbedUrl } from '@/lib/instagram';
+import { validateOutboundUrl } from '@/lib/ssrf';
+import { logApi } from '@/lib/logger';
 
 const H = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
@@ -14,7 +16,9 @@ export async function GET(req: NextRequest) {
   const embed = toEmbedUrl(url);
   if (!embed) return NextResponse.json({ ok: false, reason: 'bad_url' }, { status: 400 });
 
+  const started = Date.now();
   try {
+    await validateOutboundUrl(embed, { allowHttp: false });
     const r = await fetch(embed, { redirect: 'manual', headers: H, cache: 'no-store' });
     const status = r.status;
     const loc = r.headers.get('location') || '';
@@ -34,9 +38,11 @@ export async function GET(req: NextRequest) {
     const blocked = /frame-ancestors\s+'none'/.test(csp) || /deny|sameorigin/.test(xfo);
 
     const ok = status === 200 && !unavailable && (hasOgImg || hasOgVid) && !blocked;
-    return NextResponse.json({ ok, status, hasOgImg, hasOgVid, unavailable, blocked });
+    logApi({ name:'ig-probe', start: started, ok, status, targetHost: new URL(embed).hostname });
+    return NextResponse.json({ ok, status, hasOgImg, hasOgVid, unavailable, blocked }, { headers: { 'cache-control': 'public, s-maxage=600' } });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, reason: 'error', error: String(e?.message || e) }, { status: 200 });
+    logApi({ name:'ig-probe', start: started, ok:false, status: 500, targetHost: new URL(embed).hostname, error: String(e?.message||e) });
+    return NextResponse.json({ ok: false, reason: 'error', error: String(e?.message || e) }, { status: 502 });
   }
 }
 

@@ -2,6 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { validateOutboundUrl } from '@/lib/ssrf';
+import { logApi } from '@/lib/logger';
 
 function parseBlocked(xfo: string, csp: string, ourOrigin?: string){
   const x = (xfo || '').toLowerCase();
@@ -35,17 +37,20 @@ export async function GET(req: NextRequest){
   const url = req.nextUrl.searchParams.get('url');
   if(!url) return NextResponse.json({ ok:false, error:'url required' }, { status:400 });
 
+  const started = Date.now();
   try{
+    await validateOutboundUrl(url, { allowHttp: true });
     const r = await headThenGet(url);
     const xfo = r.headers.get('x-frame-options') || '';
     const csp = r.headers.get('content-security-policy') || '';
     const { blocked, byXfo, byCsp } = parseBlocked(xfo, csp);
+    logApi({ name:'can-embed', start: started, ok:true, status:r.status, targetHost: new URL(url).hostname });
     return NextResponse.json(
       { ok:true, canEmbed: !blocked, byXfo, byCsp, xfo: xfo || null, csp: csp || null, finalUrl: r.url },
       { headers: { 'cache-control': 'public, s-maxage=3600' } }
     );
   } catch (e:any){
-    // 失敗時はフォールバックさせる
-    return NextResponse.json({ ok:false, canEmbed:false, error:String(e?.message||e) }, { status:200 });
+    logApi({ name:'can-embed', start: started, ok:false, status:500, targetHost: (()=>{ try{ return new URL(url!).hostname }catch{return undefined}})(), error:String(e?.message||e) });
+    return NextResponse.json({ ok:false, canEmbed:false, error:String(e?.message||e) }, { status:502, headers: { 'cache-control': 'public, s-maxage=120' } });
   }
 }

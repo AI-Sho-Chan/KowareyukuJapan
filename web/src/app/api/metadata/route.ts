@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchMeta } from "@/lib/metadata";
+import { validateOutboundUrl } from "@/lib/ssrf";
 
 type Meta = {
   title: string | null;
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return NextResponse.json({ error: "url is required" }, { status: 400 });
   try {
+    await validateOutboundUrl(url, { allowHttp: false });
     const meta = await fetchMeta(url);
     return NextResponse.json({ ok: true, meta });
   } catch (e: any) {

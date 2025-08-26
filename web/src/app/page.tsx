@@ -1,13 +1,8 @@
 "use client";
 import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
-import XEmbedCard from "@/components/XEmbedCard";
-import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
-import InstagramEmbedCard from "@/components/InstagramEmbedCard";
-import TikTokEmbedCard from "@/components/TikTokEmbedCard";
-import ThreadsEmbedCard from "@/components/ThreadsEmbedCard";
-import NicoVideoEmbedCard from "@/components/NicoVideoEmbedCard";
-import NoteEmbedCard from "@/components/NoteEmbedCard";
+import PostList from "./_components/PostList";
+import PostForm from "./_components/PostForm";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -121,204 +116,19 @@ export default function Home() {
               </div>
             );
 
-            if (isX(p.url)) {
-              return (
-                <div key={p.id}>
-                  <XEmbedCard
-                    postId={p.id}
-                    title={p.title}
-                    comment={p.comment || ""}
-                    statusUrl={p.url!}
-                    handle={p.handle}
-                    tags={p.tags}
-                    createdAt={p.createdAt}
-                    adminHeader={AdminHeader}
-                  />
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (isX(p.url)) return null; // Xは PostList 側が担当
 
-            if (p.url && isYT(p.url)) {
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <YouTubeEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && (isYT(p.url) || isIG(p.url) || isTikTok(p.url) || isThreads(p.url) || isNico(p.url) || isNote(p.url))) return null;
 
-            if (p.url && isIG(p.url)){
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <InstagramEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && isIG(p.url)) return null;
 
-            if (p.url && isTikTok(p.url)){
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <TikTokEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && isTikTok(p.url)) return null;
 
-            if (p.url && isThreads(p.url)){
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <ThreadsEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && isThreads(p.url)) return null;
 
-            if (p.url && isNico(p.url)){
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <NicoVideoEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && isNico(p.url)) return null;
 
-            if (p.url && isNote(p.url)){
-              return (
-                <div key={p.id}>
-                  <article className="card" data-post-id={p.id}>
-                    <div className="card-body">
-                      {AdminHeader}
-                      <h2 className="title">{p.title}</h2>
-                      <div className="embed" style={{marginTop:8}}>
-                        <NoteEmbedCard url={p.url!} />
-                      </div>
-                      <div className="meta" style={{marginTop:8}}>
-                        <span className="handle">記録者：{formatHandle(p.handle)}</span>
-                        {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
-                        {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
-                      </div>
-                      <div className="comment-label">記録者のコメント</div>
-                      <p className="comment">{p.comment || "(コメントなし)"}</p>
-                      <div className="actions" style={{marginTop:8}}>
-                        <button className="btn primary" onClick={()=>alert('共感しました（デモ）')}>共感する</button>
-                        <button className="btn" onClick={async()=>{ try{ if(navigator.share){ await navigator.share({ title: p.title, url: p.url! }); } else { await navigator.clipboard.writeText(p.url!); alert('URLをコピーしました'); } }catch{} }}>シェア</button>
-                        <a className="btn source-link" href={p.url!} target="_blank" rel="noopener noreferrer">引用元へ</a>
-                      </div>
-                    </div>
-                  </article>
-                  {TagEditor}
-                  {OwnerActions}
-                </div>
-              );
-            }
+            if (p.url && isNote(p.url)) return null;
 
             if (p.media) {
               return (
@@ -367,8 +177,8 @@ export default function Home() {
             return null;
           })}
         </section>
-        <section id="compose" className="card" style={{padding:12, marginTop:16}}>
-          <h2 className="title">記録する</h2>
+        <PostList posts={posts} viewerKey={viewerKey} onChanged={refresh} />
+        <PostForm onSubmitted={refresh} />
           <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;

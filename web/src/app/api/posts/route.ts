@@ -2,6 +2,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 import { NextRequest } from "next/server";
+import { z } from 'zod';
+import { fileTypeFromBuffer } from 'file-type';
 import { fetchMeta } from "@/lib/metadata";
 import { mediaStore, postsStore, StoredPost, persistPostsToDisk, saveMediaToDisk } from "@/lib/store";
 import sharp from 'sharp';
@@ -85,8 +87,13 @@ export async function POST(req: NextRequest) {
     let outType: string;
 
     if (mediaType === 'image') {
-      // サーバー側で最終再圧縮（1600px以内, JPEG80, メタデータ除去）
+      // マジックナンバー検証
       const input = Buffer.from(await file.arrayBuffer());
+      const sig = await fileTypeFromBuffer(input).catch(()=>null);
+      if (sig && !sig.mime.startsWith('image/')) {
+        return new Response(JSON.stringify({ ok:false, error:'invalid-image' }), { status:415, headers:{'content-type':'application/json'} });
+      }
+      // サーバー側で最終再圧縮（1600px以内, JPEG80, メタデータ除去）
       try {
         outBuffer = await sharp(input)
           .rotate()

@@ -43,8 +43,11 @@ export function persistPostsToDisk(): void {
   ensureDirs();
   try {
     const json = JSON.stringify(postsStore, null, 2);
-    fs.writeFileSync(POSTS_FILE, json, 'utf8');
-    // 簡易バックアップ
+    // 原子的に書き込む: tmp→rename
+    const tmp = POSTS_FILE + '.tmp';
+    fs.writeFileSync(tmp, json, 'utf8');
+    fs.renameSync(tmp, POSTS_FILE);
+    // バックアップも更新
     fs.writeFileSync(POSTS_FILE_BAK, json, 'utf8');
   } catch {}
 }

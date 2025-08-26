@@ -2,6 +2,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import type { NextRequest } from 'next/server';
+import { validateOutboundUrl } from '@/lib/ssrf';
 import chromium from '@sparticuz/chromium-min';
 
 const useLocal = !process.env.VERCEL;
@@ -14,6 +15,7 @@ const stripTags = (s: string) => s.replace(/<[^>]*>/g, '');
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url) return Response.json({ ok: false, error: 'url is required' }, { status: 400 });
+  try { await validateOutboundUrl(url, { allowHttp: false }); } catch (e: any) { return Response.json({ ok:false, error: 'blocked' }, { status: 400 }); }
 
   const puppeteer = await getPuppeteer();
   const exePath = useLocal ? undefined : await chromium.executablePath();
