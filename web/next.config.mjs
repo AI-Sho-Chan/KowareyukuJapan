@@ -11,7 +11,8 @@ const nextConfig = {
     dangerouslyAllowSVG: false,
   },
   async headers() {
-    if (!isProd) return [];
+    // CSPを開発環境と本番環境で適用
+    const isDev = !isProd;
     const csp = [
       "default-src 'self'",
       "frame-src https: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com https://www.threads.net https://embed.nicovideo.jp https://note.com",
