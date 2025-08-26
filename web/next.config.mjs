@@ -17,7 +17,7 @@ const nextConfig = {
       "frame-src https: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com https://www.threads.net https://embed.nicovideo.jp https://note.com",
       "img-src 'self' https: data: blob:",
       "media-src https: blob:",
-      "script-src 'self' https://platform.twitter.com https://www.instagram.com https://www.tiktok.com https://www.threads.net",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://www.instagram.com https://www.tiktok.com https://www.threads.net",
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self'",
       "frame-ancestors 'self'",
