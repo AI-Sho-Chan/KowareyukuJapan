@@ -70,9 +70,28 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    const posts = await postsRepo.getAllPosts({ limit: 50 });
+    // ページネーション対応
+    const searchParams = req.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const offset = (page - 1) * limit;
+    
+    const [posts, total] = await Promise.all([
+      postsRepo.getAllPosts({ limit, offset }),
+      postsRepo.getPostsCount()
+    ]);
+    
     return NextResponse.json(
-      { ok: true, posts: posts.reverse() },
+      { 
+        ok: true, 
+        posts: posts.reverse(),
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
   } catch (error) {

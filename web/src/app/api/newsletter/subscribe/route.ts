@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   });
 
   // NOTE: 実送信は別実装（Resend/SES等）。ここでは確認URLを返すのみ。
-  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://example.com';
   const confirmUrl = `${base}/api/newsletter/confirm?token=${token}`;
   return NextResponse.json({ ok:true, confirmUrl });
 }

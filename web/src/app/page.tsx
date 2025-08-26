@@ -3,6 +3,7 @@ import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import PostList from "./_components/PostList";
 import PostForm from "./_components/PostForm";
+import Pagination from "@/components/Pagination";
 import { useEffect, useState } from "react";
 
 const FIXED_TAGS = ["治安/マナー","ニュース","政治/制度","動画","画像","外国人犯罪","中国人","クルド人","媚中政治家","財務省","官僚","左翼","保守","日本","帰化人","帰化人政治家","歴史捏造"] as const;
@@ -27,14 +28,25 @@ export default function Home() {
   const [viewerKey, setViewerKey] = useState<string>("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
-  async function refresh(){
-    const r = await fetch('/api/posts', { cache: 'no-store' });
+  async function refresh(page: number = currentPage){
+    const r = await fetch(`/api/posts?page=${page}&limit=20`, { cache: 'no-store' });
     const j = await r.json();
-    if (j?.ok && Array.isArray(j.posts)) setPosts(j.posts);
+    if (j?.ok && Array.isArray(j.posts)) {
+      setPosts(j.posts);
+      if (j.pagination) {
+        setTotalPages(j.pagination.totalPages || 1);
+      }
+    }
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => { refresh(1); }, []);
+  
+  useEffect(() => {
+    refresh(currentPage);
+  }, [currentPage]);
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const v = localStorage.getItem('kj_owner') || localStorage.getItem('ownerKey') || '';
@@ -73,6 +85,29 @@ export default function Home() {
           <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
           <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
         </div>
+        {/* 開発期間中の管理画面リンク */}
+        <Link 
+          href="/admin/dashboard" 
+          className="admin-link"
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            padding: '8px 16px',
+            background: '#333',
+            color: '#fff',
+            borderRadius: 6,
+            fontSize: 14,
+            textDecoration: 'none',
+            fontWeight: 500,
+            transition: 'background 0.2s',
+            zIndex: 1000,
+          }}
+          onMouseOver={(e) => e.currentTarget.style.background = '#555'}
+          onMouseOut={(e) => e.currentTarget.style.background = '#333'}
+        >
+          管理画面
+        </Link>
       </header>
       <main className="container">
         <section className="feed" id="feed">
@@ -178,7 +213,18 @@ export default function Home() {
             return null;
           })}
         </section>
-        <PostList posts={posts} viewerKey={viewerKey} onChanged={refresh} />
+        <PostList posts={posts} viewerKey={viewerKey} onChanged={() => refresh(currentPage)} />
+        
+        {totalPages > 1 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
         <PostForm onSubmitted={refresh} />
         <section id="compose" className="modal">
           <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
@@ -242,7 +288,8 @@ export default function Home() {
               const j = await res.json();
               if(j?.ok){
                 setUploadMsg('アップロード完了');
-                await refresh();
+                setCurrentPage(1); // 新規投稿後は1ページ目に戻る
+                await refresh(1);
                 form.reset();
               } else {
                 setUploadMsg('アップロードに失敗しました');

@@ -103,6 +103,19 @@ export class PostsRepository {
     return result.rows.map(row => this.rowToStoredPost(row as any));
   }
   
+  // Get posts count
+  async getPostsCount(includeHidden?: boolean): Promise<number> {
+    const hiddenFilter = includeHidden ? '' : 'WHERE is_published = 1';
+    
+    const result = await db.execute({
+      sql: `SELECT COUNT(*) as count FROM posts ${hiddenFilter}`,
+      args: []
+    });
+    
+    const row = result.rows[0] as any;
+    return Number(row?.count || 0);
+  }
+
   // Get post by ID
   async getPost(id: string): Promise<StoredPost | null> {
     const result = await db.execute({

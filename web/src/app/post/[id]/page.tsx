@@ -4,14 +4,15 @@ import { buildArticleLd, buildVideoLd, buildSocialPostingLd, clampText } from '@
 
 type Params = { id: string };
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { id } = await params;
   const repo = new PostsRepository();
-  const post = await repo.getPost(params.id);
+  const post = await repo.getPost(id);
   if (!post) return { title: 'Not Found' };
   const title = post.title || '(無題)';
   const description = clampText(post.comment || post.title || '', 160);
   const ogImages = post.media?.url ? [{ url: post.media.url }] : undefined;
-  const url = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/post/${post.id}`;
+  const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://example.com'}/post/${post.id}`;
   return {
     title,
     description: description,
@@ -32,11 +33,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
-export default async function PostDetail({ params }: { params: Params }){
+export default async function PostDetail({ params }: { params: Promise<Params> }){
+  const { id } = await params;
   const repo = new PostsRepository();
-  const post = await repo.getPost(params.id);
+  const post = await repo.getPost(id);
   if (!post) return <main className="container"><h1>Not Found</h1></main>;
-  const canonical = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/post/${post.id}`;
+  const canonical = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://example.com'}/post/${post.id}`;
   const ld = post.media?.type === 'video'
     ? buildVideoLd({ title: post.title, url: post.media.url, thumbnailUrl: post.media.url })
     : (post.url

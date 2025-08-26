@@ -1,8 +1,33 @@
 {
+  "buildCommand": "cd web && npm run build",
+  "outputDirectory": "web/.next",
+  "installCommand": "cd web && npm ci --no-fund --no-audit",
+  "framework": "nextjs",
+  "regions": ["hnd1"],
+  "env": {
+    "NEXT_PUBLIC_BASE_URL": "@production_url",
+    "TURSO_DB_URL": "@turso_db_url",
+    "TURSO_AUTH_TOKEN": "@turso_auth_token",
+    "SESSION_SECRET": "@session_secret",
+    "ADMIN_PASSWORD": "@admin_password"
+  },
   "functions": {
-    "app/api/**/route.ts": { "memory": 1536, "maxDuration": 30 },
-    "app/api/**/route.js": { "memory": 1536, "maxDuration": 30 }
-  }
+    "web/src/app/api/cron/*.ts": {
+      "maxDuration": 60
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/feed-check",
+      "schedule": "0 */3 * * *"
+    },
+    {
+      "path": "/api/cron/promote",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/trending",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
-
-

@@ -8,7 +8,7 @@ export async function GET(_: NextRequest) {
   const top = await stats.computeTrendingScores(24 * 7);
   const ids = top.slice(0, 10).map(t => t.post_id);
   const posts = (await Promise.all(ids.map(id => postsRepo.getPost(id)))).filter(Boolean) as any[];
-  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://example.com';
   const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>週間ダイジェスト</title></head><body>${
     posts.map(p => `
       <article>

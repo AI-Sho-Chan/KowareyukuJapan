@@ -1,22 +1,22 @@
-import { db, formatDate } from './index';
+import { db } from './index';
 
 export class StatsRepository {
   async addEvent(postId: string, type: 'view'|'empathy'|'share', userFp?: string, ipHash?: string): Promise<void> {
     await db.execute({
-      sql: `INSERT INTO events (post_id, type, user_fp, ip_hash, at) VALUES (?, ?, ?, ?, ?)`,
-      args: [postId, type, userFp || null, ipHash || null, formatDate()],
+      sql: `INSERT INTO events (post_id, type, user_fp, ip_hash, created_at) VALUES (?, ?, ?, ?, ?)`,
+      args: [postId, type, userFp || null, ipHash || null, Math.floor(Date.now() / 1000)],
     });
     const col = type === 'view' ? 'views' : type === 'empathy' ? 'empathies' : 'shares';
     await db.execute({
       sql: `INSERT INTO post_stats (post_id, ${col}, last_event_at) VALUES (?, 1, ?)
             ON CONFLICT(post_id) DO UPDATE SET ${col} = ${col} + 1, last_event_at = excluded.last_event_at`,
-      args: [postId, formatDate()],
+      args: [postId, new Date().toISOString()],
     });
   }
 
   async recentEventsCount(postId: string, type: 'view'|'empathy'|'share', userFp: string, windowMinutes = 5): Promise<number> {
     const r = await db.execute({
-      sql: `SELECT COUNT(1) AS c FROM events WHERE post_id=? AND type=? AND user_fp=? AND at >= datetime('now', ?)`,
+      sql: `SELECT COUNT(1) AS c FROM events WHERE post_id=? AND type=? AND user_fp=? AND created_at >= unixepoch('now', ?)`,
       args: [postId, type, userFp, `-${windowMinutes} minutes`],
     });
     const row: any = r.rows[0] || { c: 0 };
@@ -29,8 +29,8 @@ export class StatsRepository {
     const r = await db.execute({
       sql: `
         WITH recent AS (
-          SELECT post_id, type, strftime('%s', 'now') - strftime('%s', at) AS age_sec
-          FROM events WHERE at >= datetime('now', ?) -- window
+          SELECT post_id, type, unixepoch('now') - created_at AS age_sec
+          FROM events WHERE created_at >= unixepoch('now', ?) -- window
         ),
         weighted AS (
           SELECT post_id,
