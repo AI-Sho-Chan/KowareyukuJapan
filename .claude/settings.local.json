@@ -26,7 +26,8 @@
       "Bash(done)",
       "Bash(node:*)",
       "Bash(git restore:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "WebFetch(domain:kowareyuku-japan.vercel.app)"
     ],
     "deny": [],
     "ask": []

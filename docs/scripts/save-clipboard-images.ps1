@@ -1,5 +1,6 @@
 Param(
-  [string]$OutDir = "docs\screenshots"
+  [string]$OutDir = "docs\screenshots",
+  [string[]]$Names
 )
 
 New-Item -ItemType Directory -Force $OutDir | Out-Null
@@ -14,11 +15,14 @@ function Get-ClipboardImage {
   }
 }
 
-$targets = @(
-  'vercel-deploy-details.png',
-  'vercel-404-1.png',
-  'vercel-404-2.png'
-)
+$targets = $Names
+if (-not $targets -or $targets.Count -eq 0) {
+  $targets = @(
+    'vercel-deploy-details.png',
+    'vercel-404-1.png',
+    'vercel-404-2.png'
+  )
+}
 
 $start = Get-Date
 $lastSig = ''
