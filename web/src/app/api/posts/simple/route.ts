@@ -26,9 +26,36 @@ export async function GET(req: NextRequest) {
       const countResult = await db.execute('SELECT COUNT(*) as total FROM posts');
       const total = Number(countResult.rows[0].total);
 
+      // Parse metadata_json to extract title
+      const posts = result.rows.map((row: any) => {
+        let title = row.url;
+        if (row.metadata_json) {
+          try {
+            const metadata = JSON.parse(row.metadata_json);
+            title = metadata.title || row.url;
+          } catch (e) {}
+        }
+        
+        // Parse tags
+        let tags = [];
+        if (row.tags) {
+          try {
+            tags = JSON.parse(row.tags);
+          } catch (e) {
+            tags = row.tags.split(',');
+          }
+        }
+        
+        return {
+          ...row,
+          title,
+          tags
+        };
+      });
+
       return NextResponse.json({
         ok: true,
-        posts: result.rows,
+        posts,
         pagination: {
           page,
           limit,
