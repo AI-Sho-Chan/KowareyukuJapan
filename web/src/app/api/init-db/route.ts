@@ -12,10 +12,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
     }
 
+    // 環境変数のデバッグ情報
+    const dbUrl = process.env.TURSO_DB_URL || process.env.TURSO_DATABASE_URL || '';
+    const authToken = process.env.TURSO_AUTH_TOKEN || '';
+    
+    console.log('DB URL:', dbUrl);
+    console.log('Auth Token exists:', !!authToken);
+    
+    if (!dbUrl || dbUrl === 'file:local.db') {
+      return NextResponse.json({ 
+        error: 'データベースURLが設定されていません',
+        debug: { dbUrl, hasAuthToken: !!authToken }
+      }, { status: 500 });
+    }
+
     // Turso DBクライアント初期化
     const db = createClient({
-      url: process.env.TURSO_DB_URL || process.env.TURSO_DATABASE_URL || '',
-      authToken: process.env.TURSO_AUTH_TOKEN || ''
+      url: dbUrl,
+      authToken: authToken
     });
 
     // スキーマ作成
