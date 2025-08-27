@@ -27,7 +27,12 @@
       "Bash(node:*)",
       "Bash(git restore:*)",
       "Bash(npx vercel:*)",
-      "WebFetch(domain:kowareyuku-japan.vercel.app)"
+      "WebFetch(domain:kowareyuku-japan.vercel.app)",
+      "Bash(git log:*)",
+      "Bash(git checkout:*)",
+      "Bash(rm:*)",
+      "Bash(do echo -n \"Port $port: \")",
+      "Bash(npm run tsx:*)"
     ],
     "deny": [],
     "ask": []

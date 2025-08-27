@@ -11,7 +11,36 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = (page - 1) * limit;
 
-    // デモデータを返す（データベースが初期化されるまで）
+    // データベースから実際のデータを取得を試みる
+    try {
+      const db = createClient({
+        url: process.env.TURSO_DATABASE_URL || process.env.TURSO_DB_URL || '',
+        authToken: process.env.TURSO_AUTH_TOKEN || ''
+      });
+
+      const result = await db.execute({
+        sql: 'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        args: [limit, offset]
+      });
+
+      const countResult = await db.execute('SELECT COUNT(*) as total FROM posts');
+      const total = Number(countResult.rows[0].total);
+
+      return NextResponse.json({
+        ok: true,
+        posts: result.rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (dbError) {
+      console.error('Database error, falling back to demo data:', dbError);
+    }
+
+    // フォールバック：デモデータを返す
     const demoPosts = [
       {
         id: '1',
