@@ -1,0 +1,22 @@
+﻿{
+  "mcpServers": {
+    "pieces": {
+      "url": "http://localhost:39300/model_context_protocol/2024-11-05/sse"
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_DB_PATH": "C:/AI/KowareyukuJapan/.cursor/semdb"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:/AI/KowareyukuJapan"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+   -                                                                                                                         名前       ID                                    バージョン ソース
+--------------------------------------------------------------------
+Pieces OS  9N905CT3FPLL                          Unknown    msstore
+Pieces CLI MeshIntelligentTechnologies.PiecesCLI 1.17.1     winget
