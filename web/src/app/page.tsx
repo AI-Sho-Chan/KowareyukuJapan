@@ -1,11 +1,77 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
 import XEmbedCard from "@/components/XEmbedCard";
-import TitleFetcher from "@/components/TitleFetcher";
+import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
 
 export default function Home() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/posts/simple')
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          setPosts(data.posts);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch posts:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  const renderPost = (post: any) => {
+    const url = post.url || '';
+    
+    // X/Twitter posts
+    if (url.includes('x.com') || url.includes('twitter.com')) {
+      return (
+        <XEmbedCard
+          key={post.id}
+          postId={post.id}
+          comment={post.comment}
+          statusUrl={url}
+        />
+      );
+    }
+    
+    // YouTube videos
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return (
+        <YouTubeEmbedCard
+          key={post.id}
+          postId={post.id}
+          title={post.title || 'YouTube動画'}
+          comment={post.comment}
+          tags={post.tags || ['動画']}
+          sourceUrl={url}
+          createdAt={post.created_at}
+        />
+      );
+    }
+    
+    // Regular articles/pages
+    return (
+      <InlineEmbedCard
+        key={post.id}
+        postId={post.id}
+        title={post.title || url}
+        comment={post.comment}
+        tags={post.tags || ['ニュース']}
+        sourceUrl={url}
+        thumbnailUrl=""
+        embedUrl={url}
+        kind="page"
+        alwaysOpen
+        createdAt={post.created_at}
+      />
+    );
+  };
+
   return (
     <>
       <header className="site-header">
@@ -13,77 +79,48 @@ export default function Home() {
           <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
           <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
         </div>
-        {/* 単一ページ構成のためタブは撤去 */}
       </header>
       <main className="container">
         <section className="feed" id="feed">
-          <InlineEmbedCard
-            postId="gd-91102"
-            title="現代ビジネスの記事"
-            comment="日本人を本当に苦しめているのは、政治家をも操る財務省。財務省を解体せよ！"
-            tags={["政治/制度"]}
-            sourceUrl="https://gendai.media/articles/-/91102"
-            thumbnailUrl="https://placehold.co/800x450?text=NEWS+OGP"
-            embedUrl="https://gendai.media/articles/-/91102"
-            kind="page"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://gendai.media/articles/-/91102" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="gd-91102"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <InlineEmbedCard
-            postId="nhk-001"
-            title="埼玉 三郷 小学生ひき逃げ事件 中国籍の運転手を起訴"
-            comment="出典: NHK 首都圏ニュース"
-            tags={["治安/マナー","ニュース"]}
-            sourceUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
-            thumbnailUrl="https://placehold.co/800x450?text=NHK+NEWS"
-            embedUrl="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html"
-            kind="page"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://www3.nhk.or.jp/shutoken-news/20250606/1000118293.html" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="nhk-001"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <InlineEmbedCard
-            postId="yt-001"
-            title="FNNプライムオンラインのニュース映像"
-            comment="サムネイルの再生ボタンから動画を再生できます"
-            tags={["動画","特集"]}
-            sourceUrl="https://www.youtube.com/watch?v=HKPfestn2iY"
-            thumbnailUrl="https://img.youtube.com/vi/HKPfestn2iY/hqdefault.jpg"
-            embedUrl="https://www.youtube.com/embed/HKPfestn2iY"
-            kind="youtube"
-            alwaysOpen
-            createdAt={Date.now()}
-          />
-          <TitleFetcher url="https://www.youtube.com/watch?v=HKPfestn2iY" fallback="" onTitle={(t)=>{
-            const el = document.querySelector('[data-post-id="yt-001"] .title');
-            if(el) el.textContent = t;
-          }} />
-          <XEmbedCard
-            postId="tw-001"
-            comment="もう中国人は一律入国禁止でいいだろ？沖縄乗っ取られる前に早く！"
-            statusUrl="https://x.com/La_Pla/status/1954718910584082931"
-          />
+          {loading ? (
+            <div style={{textAlign: 'center', padding: 50}}>
+              <p>読み込み中...</p>
+            </div>
+          ) : posts.length > 0 ? (
+            posts.map(post => renderPost(post))
+          ) : (
+            <div className="card" style={{padding: 20, textAlign: 'center'}}>
+              <p>まだ投稿がありません</p>
+            </div>
+          )}
         </section>
-        {/* 簡易投稿フォーム（URL/画像/動画、任意タイトル/50字コメント/ハンドル） */}
+        
+        {/* 投稿フォーム */}
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
           <h2 className="title">記録する</h2>
           <form onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
             const fd = new FormData(form);
-            const res = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
+            const res = await fetch('/api/posts', { 
+              method:'POST', 
+              body: fd, 
+              headers: { 
+                'x-client-key': localStorage.getItem('kj_owner') || 
+                  (localStorage.setItem('kj_owner', crypto.randomUUID()), 
+                  localStorage.getItem('kj_owner') as string) 
+              } 
+            });
             const j = await res.json();
-            if(j?.ok){ alert('投稿しました（デモ: 再読み込みで反映）'); location.reload(); } else { alert('投稿に失敗しました'); }
+            if(j?.ok){ 
+              alert('投稿しました'); 
+              location.reload(); 
+            } else { 
+              alert('投稿に失敗しました'); 
+            }
           }}>
             <label className="radio">URL
-              <input type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+              <input name="url" type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
               <label className="radio">動画／画像のアップロード（端末から選択）
@@ -106,7 +143,7 @@ export default function Home() {
           </form>
         </section>
       </main>
-      {/* 投稿導線（フローティング） */}
+      {/* フローティングボタン */}
       <a className="fab" href="#compose" aria-label="記録作成">＋記録</a>
     </>
   );
