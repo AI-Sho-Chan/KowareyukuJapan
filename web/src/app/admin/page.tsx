@@ -218,7 +218,6 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
-        </div>
 
         {/* 統計情報 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
