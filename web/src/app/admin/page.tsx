@@ -22,10 +22,10 @@ export default function AdminPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [adminKey, setAdminKey] = useState("");
 
-  // Simple authentication check
+  // Simple authentication check - use session-based auth instead of public key
   useEffect(() => {
     const storedKey = localStorage.getItem("admin_key");
-    if (storedKey === process.env.NEXT_PUBLIC_ADMIN_KEY || storedKey === "admin123") {
+    if (storedKey === "admin123") { // Development fallback only
       setIsAuthorized(true);
       loadPosts();
     } else {
@@ -33,15 +33,27 @@ export default function AdminPage() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this should verify against a secure backend
-    if (adminKey === "admin123" || adminKey === process.env.NEXT_PUBLIC_ADMIN_KEY) {
-      localStorage.setItem("admin_key", adminKey);
-      setIsAuthorized(true);
-      loadPosts();
-    } else {
-      alert("認証に失敗しました");
+    
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey })
+      });
+      
+      if (res.ok) {
+        const { token } = await res.json();
+        localStorage.setItem("admin_key", token);
+        setIsAuthorized(true);
+        loadPosts();
+      } else {
+        alert("認証に失敗しました");
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert("認証中にエラーが発生しました");
     }
   };
 
@@ -152,20 +164,46 @@ export default function AdminPage() {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">管理画面</h1>
-          <div className="flex gap-4">
-            <Link href="/" className="text-blue-600 hover:underline">
-              ← サイトに戻る
-            </Link>
-            <button
-              onClick={() => {
-                localStorage.removeItem("admin_key");
-                window.location.reload();
-              }}
-              className="text-red-600 hover:underline"
-            >
-              ログアウト
-            </button>
-          </div>
+                  <div className="flex gap-4">
+          <Link href="/" className="text-blue-600 hover:underline">
+            ← サイトに戻る
+          </Link>
+          <button
+            onClick={async () => {
+              if (confirm('データベースを初期化しますか？')) {
+                try {
+                  const res = await fetch('/api/init-db', {
+                    method: 'POST',
+                    headers: {
+                      'x-admin-key': localStorage.getItem('admin_key') || ''
+                    }
+                  });
+                  const data = await res.json();
+                  if (res.ok) {
+                    alert('データベース初期化が完了しました');
+                    window.location.reload();
+                  } else {
+                    alert('初期化に失敗しました: ' + data.error);
+                  }
+                } catch (error) {
+                  alert('初期化中にエラーが発生しました');
+                }
+              }
+            }}
+            className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+          >
+            DB初期化
+          </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem("admin_key");
+              window.location.reload();
+            }}
+            className="text-red-600 hover:underline"
+          >
+            ログアウト
+          </button>
+        </div>
         </div>
 
         {/* 統計情報 */}
