@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+export async function GET(req: NextRequest) {
+  return NextResponse.json({ 
+    message: '認証APIは稼働中です',
+    methods: ['POST']
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { adminKey } = await req.json();
