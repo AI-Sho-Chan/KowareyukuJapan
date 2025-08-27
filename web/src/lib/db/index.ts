@@ -3,9 +3,15 @@ import fs from 'fs';
 import path from 'path';
 
 // Initialize database client
+const isProd = process.env.NODE_ENV === 'production';
+const dbUrl = process.env.TURSO_DB_URL || process.env.TURSO_DATABASE_URL || (isProd ? '' : 'file:local.db');
+if (isProd && !dbUrl) {
+  // 明示的に本番での未設定を検知したい（上位で500にするため例外）
+  throw new Error('TURSO_DB_URL/TURSO_DATABASE_URL が未設定です（本番環境）');
+}
+
 export const db = createClient({
-  // Use local SQLite file in development, Turso in production
-  url: process.env.TURSO_DB_URL || 'file:local.db',
+  url: dbUrl,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
