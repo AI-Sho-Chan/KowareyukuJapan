@@ -41,7 +41,7 @@ async function initTursoDb() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS posts (
         id TEXT PRIMARY KEY,
-        url TEXT NOT NULL,
+        url TEXT,
         title TEXT,
         comment TEXT,
         handle TEXT,
@@ -49,11 +49,62 @@ async function initTursoDb() {
         metadata_json TEXT,
         owner_key TEXT,
         created_at INTEGER NOT NULL,
-        isPublished INTEGER DEFAULT 1,
-        reportCount INTEGER DEFAULT 0
+        updated_at INTEGER NOT NULL,
+        is_published INTEGER DEFAULT 1,
+        report_count INTEGER DEFAULT 0
       );
     `);
     console.log('Table "posts" ensured.');
+
+    // Create tags table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS tags (
+        id TEXT PRIMARY KEY,
+        name TEXT UNIQUE NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+    `);
+    console.log('Table "tags" ensured.');
+
+    // Create post_tags table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS post_tags (
+        post_id TEXT NOT NULL,
+        tag_id TEXT NOT NULL,
+        PRIMARY KEY (post_id, tag_id),
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('Table "post_tags" ensured.');
+
+    // Create media table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS media (
+        id TEXT PRIMARY KEY,
+        post_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        url TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+      );
+    `);
+    console.log('Table "media" ensured.');
+
+    // Insert sample tags
+    const sampleTags = [
+      '治安/マナー', 'ニュース', '政治/制度', '動画', '画像',
+      '外国人犯罪', '中国人', 'クルド人', '媚中政治家', '財務省',
+      '官僚', '左翼', '保守', '日本', '帰化人', '帰化人政治家'
+    ];
+
+    for (const tagName of sampleTags) {
+      await db.execute({
+        sql: 'INSERT OR IGNORE INTO tags (id, name, created_at) VALUES (?, ?, ?)',
+        args: [Math.random().toString(36).slice(2, 10), tagName, Date.now()]
+      });
+    }
+    console.log('Sample tags inserted.');
 
     // Insert sample data if table is empty
     const { rows: countRows } = await db.execute('SELECT COUNT(*) as count FROM posts');
@@ -61,16 +112,44 @@ async function initTursoDb() {
 
     if (postCount === 0) {
       console.log('Inserting sample data...');
+      const now = Date.now();
       const samplePosts = [
-        { id: '1', url: 'https://example.com/news1', comment: '日本の伝統文化の重要性について', tags: JSON.stringify(['ニュース', '日本']), owner_key: 'demo', created_at: Date.now() - 3600000 * 10 },
-        { id: '2', url: 'https://example.com/news2', comment: '少子化社会の安全保障', tags: JSON.stringify(['安全保障', '政治']), owner_key: 'demo', created_at: Date.now() - 3600000 * 20 },
-        { id: '3', url: 'https://example.com/video1', comment: '最新の経済動向についての解説動画', tags: JSON.stringify(['動画', '経済']), owner_key: 'demo', created_at: Date.now() - 3600000 * 30 },
+        { 
+          id: '1', 
+          url: 'https://example.com/news1', 
+          title: '日本の伝統文化の重要性について',
+          comment: '日本の伝統文化の重要性について', 
+          tags: ['ニュース', '日本'], 
+          owner_key: 'demo', 
+          created_at: now - 3600000 * 10,
+          updated_at: now - 3600000 * 10
+        },
+        { 
+          id: '2', 
+          url: 'https://example.com/news2', 
+          title: '少子化社会の安全保障',
+          comment: '少子化社会の安全保障', 
+          tags: ['安全保障', '政治'], 
+          owner_key: 'demo', 
+          created_at: now - 3600000 * 20,
+          updated_at: now - 3600000 * 20
+        },
+        { 
+          id: '3', 
+          url: 'https://example.com/video1', 
+          title: '最新の経済動向についての解説動画',
+          comment: '最新の経済動向についての解説動画', 
+          tags: ['動画', '経済'], 
+          owner_key: 'demo', 
+          created_at: now - 3600000 * 30,
+          updated_at: now - 3600000 * 30
+        },
       ];
 
       for (const post of samplePosts) {
         await db.execute({
-          sql: `INSERT INTO posts (id, url, comment, tags, owner_key, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-          args: [post.id, post.url, post.comment, post.tags, post.owner_key, post.created_at],
+          sql: `INSERT INTO posts (id, url, title, comment, tags, owner_key, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [post.id, post.url, post.title, post.comment, JSON.stringify(post.tags), post.owner_key, post.created_at, post.updated_at],
         });
       }
       console.log(`Inserted ${samplePosts.length} sample posts.`);

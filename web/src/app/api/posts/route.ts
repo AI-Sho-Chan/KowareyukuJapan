@@ -390,6 +390,17 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    console.log('=== POST CREATION START ===');
+    console.log('Creating post with data:', {
+      title,
+      url: url || undefined,
+      comment,
+      handle,
+      ownerKey,
+      tags,
+      hasMedia: !!mediaType
+    });
+
     const post = await postsRepo.createPost({
       title,
       url: url || undefined,
@@ -399,6 +410,9 @@ export async function POST(req: NextRequest) {
       tags,
       media: mediaType && mediaUrl ? { type: mediaType, url: mediaUrl } : undefined,
     });
+    
+    console.log('Post created successfully:', post.id);
+    console.log('=== POST CREATION END ===');
     
     // 監査ログ記録
     await AuditLogger.logPostCreate(post.id, ownerKey, ip, {
@@ -411,8 +425,15 @@ export async function POST(req: NextRequest) {
       { ok: true, post },
       { headers: getRateLimitHeaders(rateLimitResult) }
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error('=== POST CREATION ERROR ===');
     console.error('Error creating post:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      data: { title, url, comment, handle, ownerKey, tags }
+    });
+    console.error('=== POST CREATION ERROR END ===');
     return new Response(JSON.stringify({ ok: false, error: 'Failed to create post' }), { 
       status: 500,
       headers: { "content-type": "application/json" } 
