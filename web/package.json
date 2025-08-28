@@ -7,6 +7,7 @@
                     "build":  "next build",
                     "start":  "next start",
                     "start:prod":  "next start -p 3030",
+                    "preview":  "npm run build && npm run start:prod",
                     "lint":  "eslint",
                     "migrate-db":  "tsx src/scripts/migrate-to-db.ts"
                 },
