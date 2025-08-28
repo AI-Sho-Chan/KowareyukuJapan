@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "守ろうJAPAN",
+  title: "守ろう日本",
   description: "日本のために記録し、伝える",
   manifest: "/manifest.webmanifest",
 };

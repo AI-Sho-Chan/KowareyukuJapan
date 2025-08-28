@@ -1,7 +1,7 @@
-# KowareyukuJapan（守ろうJAPAN）プロジェクト引継書
+# KowareyukuJapan（守ろう日本）プロジェクト引継書
 
 ## プロジェクト概要
-- **プロジェクト名**: KowareyukuJapan（守ろうJAPAN）
+- **プロジェクト名**: KowareyukuJapan（守ろう日本）
 - **目的**: 日本を守るための情報共有プラットフォーム
 - **技術スタック**: Next.js 15.5.0, TypeScript, React, Tailwind CSS
 - **データベース**: Turso DB（SQLite Cloud）
@@ -84,7 +84,7 @@ import './styles.css';  // グローバルCSS読み込み
 <header className="site-header">
   <div className="site-brand">
     <Link href="/" className="brand-title">
-      守ろう<span className="site-accent">JAPAN</span>
+      守ろう<span className="site-accent">日本</span>
     </Link>
 ```
 

@@ -76,7 +76,7 @@ export default function Home() {
     <>
       <header className="site-header">
         <div className="site-brand">
-          <Link href="/" className="brand-title">守ろう<span className="site-accent">JAPAN</span></Link>
+          <Link href="/" className="brand-title">守ろう<span className="site-accent">日本</span></Link>
           <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
         </div>
       </header>

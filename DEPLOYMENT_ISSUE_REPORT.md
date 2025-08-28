@@ -1,7 +1,7 @@
 # Vercelデプロイ問題の詳細レポート
 
 ## 🎯 実行したいこと
-KowareyukuJapan（守ろうJAPAN）というNext.js 15アプリケーションをVercelにデプロイして公開したい。
+KowareyukuJapan（守ろう日本）というNext.js 15アプリケーションをVercelにデプロイして公開したい。
 
 ## 🔴 現在の問題
 Vercelでビルドエラーが発生し続けており、デプロイが失敗している。

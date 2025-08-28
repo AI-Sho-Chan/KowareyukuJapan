@@ -10,7 +10,7 @@ async function generateIcons() {
       <rect width="512" height="512" fill="#ffffff"/>
       <circle cx="256" cy="256" r="150" fill="#e60012"/>
       <text x="256" y="450" font-family="Arial" font-size="48" font-weight="bold" text-anchor="middle" fill="#333">
-        守ろうJAPAN
+        守ろう日本
       </text>
     </svg>
   `;
