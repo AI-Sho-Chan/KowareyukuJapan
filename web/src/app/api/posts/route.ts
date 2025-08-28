@@ -60,43 +60,26 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const offset = (page - 1) * limit;
     
-    // 簡易実装：一時的にデモデータを返す
-    const demoPosts = [
-      {
-        id: 'demo-1',
-        owner_key: 'ADMIN',
-        url: 'https://www.sankei.com/',
-        comment: 'サイト開設記念。日本を守るための情報共有プラットフォームとして活用してください。',
-        tags: ['ニュース', '日本'],
-        created_at: Date.now() - 86400000
-      },
-      {
-        id: 'demo-2',
-        owner_key: 'user-1',
-        url: 'https://www.youtube.com/watch?v=example',
-        comment: '日本の伝統文化について解説した動画です。',
-        tags: ['動画', '日本'],
-        created_at: Date.now() - 43200000
-      },
-      {
-        id: 'demo-3',
-        owner_key: 'user-2',
-        url: 'https://news.yahoo.co.jp/',
-        comment: '最新の政治・経済ニュースをチェック。',
-        tags: ['ニュース', '政治/制度'],
-        created_at: Date.now() - 3600000
-      }
-    ];
+    // 実際のデータベースから投稿を取得
+    const posts = await postsRepo.getAllPosts({
+      limit,
+      offset,
+      includeUnpublished: false
+    });
+    
+    // 総投稿数を取得
+    const total = await postsRepo.getPostsCount(false);
     
     return NextResponse.json({
       ok: true,
-      posts: demoPosts.slice((page - 1) * limit, page * limit),
+      posts,
       pagination: {
         page,
         limit,
-        total: demoPosts.length,
-        totalPages: Math.ceil(demoPosts.length / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     });
   } catch (error) {

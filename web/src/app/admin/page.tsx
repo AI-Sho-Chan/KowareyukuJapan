@@ -182,33 +182,6 @@ export default function AdminPage() {
               ← サイトに戻る
             </Link>
             <button
-              onClick={async () => {
-                if (confirm('データベースを初期化しますか？')) {
-                  try {
-                    const res = await fetch('/api/init-db', {
-                      method: 'POST',
-                      headers: {
-                        'x-admin-key': localStorage.getItem('admin_key') || ''
-                      }
-                    });
-                    const data = await res.json();
-                    if (res.ok) {
-                      alert('データベース初期化が完了しました');
-                      window.location.reload();
-                    } else {
-                      const debugInfo = data.debug ? `\n\nデバッグ情報:\n${JSON.stringify(data.debug, null, 2)}` : '';
-                      alert('初期化に失敗しました: ' + data.error + debugInfo);
-                    }
-                  } catch (error) {
-                    alert('初期化中にエラーが発生しました');
-                  }
-                }
-              }}
-              className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-            >
-              DB初期化
-            </button>
-            <button
               onClick={() => {
                 localStorage.removeItem("admin_key");
                 window.location.reload();
