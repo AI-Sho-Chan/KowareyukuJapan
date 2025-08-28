@@ -391,16 +391,18 @@ export async function POST(req: NextRequest) {
 
   try {
     console.log('=== POST CREATION START ===');
-    console.log('Creating post with data:', {
-      title,
-      url: url || undefined,
-      comment,
-      handle,
+    console.log('Request data:', {
+      url: url || 'undefined',
+      title: title || 'undefined',
+      comment: comment || 'undefined',
+      handle: handle || 'undefined',
       ownerKey,
-      tags,
-      hasMedia: !!mediaType
+      tags: tags || [],
+      hasMedia: !!mediaType,
+      mediaType: mediaType || 'none'
     });
 
+    console.log('Calling postsRepo.createPost...');
     const post = await postsRepo.createPost({
       title,
       url: url || undefined,
@@ -411,7 +413,16 @@ export async function POST(req: NextRequest) {
       media: mediaType && mediaUrl ? { type: mediaType, url: mediaUrl } : undefined,
     });
     
-    console.log('Post created successfully:', post.id);
+    console.log('Post created successfully:', {
+      id: post.id,
+      title: post.title,
+      url: post.url,
+      comment: post.comment,
+      handle: post.handle,
+      ownerKey: post.ownerKey,
+      tags: post.tags,
+      createdAt: post.createdAt
+    });
     console.log('=== POST CREATION END ===');
     
     // 監査ログ記録
@@ -431,6 +442,7 @@ export async function POST(req: NextRequest) {
     console.error('Error details:', {
       message: error.message,
       stack: error.stack,
+      name: error.name,
       data: { title, url, comment, handle, ownerKey, tags }
     });
     console.error('=== POST CREATION ERROR END ===');

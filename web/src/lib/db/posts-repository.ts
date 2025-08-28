@@ -12,30 +12,49 @@ export class PostsRepository {
     tags?: string[];
     media?: { type: 'image' | 'video'; url: string };
   }): Promise<StoredPost> {
+    console.log('=== PostsRepository.createPost START ===');
+    console.log('Input data:', data);
+    
     const id = generateId();
     const now = formatDate();
+    
+    console.log('Generated ID:', id);
+    console.log('Timestamp:', now);
     
     // Begin transaction
     const batch = [];
     
     // Insert post
+    const postInsertQuery = `INSERT INTO posts (id, title, url, comment, handle, owner_key, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const postInsertArgs = [id, data.title || null, data.url || null, data.comment || null, 
+               data.handle || '@guest', data.ownerKey, now, now];
+    
+    console.log('Post insert query:', postInsertQuery);
+    console.log('Post insert args:', postInsertArgs);
+    
     batch.push(
       db.execute({
-        sql: `INSERT INTO posts (id, title, url, comment, handle, owner_key, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [id, data.title || null, data.url || null, data.comment || null, 
-               data.handle || '@guest', data.ownerKey, now, now]
+        sql: postInsertQuery,
+        args: postInsertArgs
       })
     );
     
     // Insert tags if provided
     if (data.tags && data.tags.length > 0) {
+      console.log('Processing tags:', data.tags);
       for (const tagName of data.tags) {
+        const tagQuery = `INSERT INTO post_tags (post_id, tag_id)
+                  SELECT ?, id FROM tags WHERE name = ?`;
+        const tagArgs = [id, tagName];
+        
+        console.log('Tag query:', tagQuery);
+        console.log('Tag args:', tagArgs);
+        
         batch.push(
           db.execute({
-            sql: `INSERT INTO post_tags (post_id, tag_id)
-                  SELECT ?, id FROM tags WHERE name = ?`,
-            args: [id, tagName]
+            sql: tagQuery,
+            args: tagArgs
           })
         );
       }
@@ -43,21 +62,32 @@ export class PostsRepository {
     
     // Insert media if provided
     if (data.media) {
+      console.log('Processing media:', data.media);
       const mediaId = generateId();
+      const mediaQuery = `INSERT INTO media (id, post_id, type, url, created_at)
+                VALUES (?, ?, ?, ?, ?)`;
+      const mediaArgs = [mediaId, id, data.media.type, data.media.url, now];
+      
+      console.log('Media query:', mediaQuery);
+      console.log('Media args:', mediaArgs);
+      
       batch.push(
         db.execute({
-          sql: `INSERT INTO media (id, post_id, type, url, created_at)
-                VALUES (?, ?, ?, ?, ?)`,
-          args: [mediaId, id, data.media.type, data.media.url, now]
+          sql: mediaQuery,
+          args: mediaArgs
         })
       );
     }
     
+    console.log('Executing batch of', batch.length, 'queries...');
+    
     // Execute all queries
     await Promise.all(batch);
     
+    console.log('All queries executed successfully');
+    
     // Return the created post
-    return {
+    const result = {
       id,
       title: data.title || '',
       url: data.url,
@@ -68,6 +98,11 @@ export class PostsRepository {
       media: data.media,
       createdAt: now
     };
+    
+    console.log('Returning post:', result);
+    console.log('=== PostsRepository.createPost END ===');
+    
+    return result;
   }
   
   // Get all posts (with pagination)
