@@ -196,7 +196,8 @@ export default function AdminPage() {
                       alert('データベース初期化が完了しました');
                       window.location.reload();
                     } else {
-                      alert('初期化に失敗しました: ' + data.error);
+                      const debugInfo = data.debug ? `\n\nデバッグ情報:\n${JSON.stringify(data.debug, null, 2)}` : '';
+                      alert('初期化に失敗しました: ' + data.error + debugInfo);
                     }
                   } catch (error) {
                     alert('初期化中にエラーが発生しました');

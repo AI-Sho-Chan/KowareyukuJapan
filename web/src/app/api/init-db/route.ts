@@ -22,7 +22,11 @@ export async function POST(req: NextRequest) {
     if (!dbUrl || dbUrl === 'file:local.db') {
       return NextResponse.json({ 
         error: 'データベースURLが設定されていません',
-        debug: { dbUrl, hasAuthToken: !!authToken }
+        debug: { 
+          dbUrl, 
+          hasAuthToken: !!authToken,
+          message: 'TURSO_DB_URLが正しく設定されていません。Vercelダッシュボードで確認してください。'
+        }
       }, { status: 500 });
     }
 
@@ -98,14 +102,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       ok: true, 
       message: 'データベースの初期化が完了しました',
-      postsCount: samplePosts.length
+      postsCount: samplePosts.length,
+      debug: {
+        dbUrl: dbUrl.substring(0, 20) + '...',
+        hasAuthToken: !!authToken
+      }
     });
 
   } catch (error: any) {
     console.error('DB initialization error:', error);
     return NextResponse.json({ 
       error: 'データベース初期化に失敗しました',
-      message: error.message 
+      message: error.message,
+      debug: {
+        dbUrl: dbUrl.substring(0, 20) + '...',
+        hasAuthToken: !!authToken,
+        errorType: error.constructor.name
+      }
     }, { status: 500 });
   }
 }
