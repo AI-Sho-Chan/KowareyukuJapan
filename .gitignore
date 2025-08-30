@@ -1,1 +1,12 @@
 .vercel
+
+# Local env files (keep examples tracked)
+web/.env.local
+web/.env.staging
+web/.env.*.local
+!web/.env.local.example
+!web/.env.staging.example
+
+# Local logs
+logs/
+web/logs/

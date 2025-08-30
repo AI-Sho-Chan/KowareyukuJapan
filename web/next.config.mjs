@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === 'production';
 const isCI = process.env.CI === 'true';
 
@@ -10,6 +13,7 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: false,
   },
+  outputFileTracingRoot: __dirname,
   async headers() {
     // CSPを開発環境と本番環境で適用
     const isDev = !isProd;
@@ -17,7 +21,7 @@ const nextConfig = {
       "default-src 'self'",
       "frame-src https: data: https://platform.twitter.com https://www.youtube.com https://www.youtube-nocookie.com https://www.instagram.com https://www.tiktok.com https://www.threads.net https://embed.nicovideo.jp https://note.com",
       "img-src 'self' https: data: blob:",
-      "media-src https: blob:",
+      "media-src 'self' https: data: blob:",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://platform.twitter.com https://www.instagram.com https://www.tiktok.com https://www.threads.net",
       "style-src 'self' 'unsafe-inline'",
       "connect-src 'self'",

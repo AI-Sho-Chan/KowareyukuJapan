@@ -180,6 +180,7 @@ export class PostsRepository {
     comment?: string;
     tags?: string[];
     isPublished?: boolean;
+    handle?: string;
   }): Promise<boolean> {
     const updateFields = [];
     const args: any[] = [];
@@ -197,6 +198,11 @@ export class PostsRepository {
     if (updates.isPublished !== undefined) {
       updateFields.push('is_published = ?');
       args.push(updates.isPublished ? 1 : 0);
+    }
+
+    if (updates.handle !== undefined) {
+      updateFields.push('handle = ?');
+      args.push(updates.handle);
     }
     
     if (updateFields.length > 0) {

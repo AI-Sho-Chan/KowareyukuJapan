@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@libsql/client';
 import crypto from 'crypto';
 import { NGWordFilterV2 } from '@/lib/security';
+import { checkDynamicNG } from '@/lib/security/ngwords-dynamic';
 import { headers } from 'next/headers';
 
 export const runtime = 'nodejs';
@@ -33,7 +34,8 @@ export async function POST(
     
     // NGワードチェック
     const ngCheck = NGWordFilterV2.check(content);
-    if (ngCheck.isBlocked) {
+    const dyn = checkDynamicNG(content);
+    if (ngCheck.isBlocked || dyn.blocked) {
       return NextResponse.json(
         { error: '禁止ワードが含まれています' },
         { status: 400 }

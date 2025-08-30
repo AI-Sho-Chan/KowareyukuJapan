@@ -1,9 +1,9 @@
-/**
- * YouTube API統合
- * 保守系チャンネルの動画を定期取得
+﻿/**
+ * YouTube API邨ｱ蜷・
+ * 菫晏ｮ育ｳｻ繝√Ε繝ｳ繝阪Ν縺ｮ蜍慕判繧貞ｮ壽悄蜿門ｾ・
  */
 
-import { fetchUrlWithSsrfGuard } from '../ssrf.js';
+import { fetchUrlWithSsrfGuard } from '@/lib/ssrf';
 
 interface YouTubeChannel {
   id: string;
@@ -13,6 +13,7 @@ interface YouTubeChannel {
   maxPerHour: number;
 }
 
+// 逶｣隕門ｯｾ雎｡縺ｮ菫晏ｮ育ｳｻYouTube繝√Ε繝ｳ繝阪Ν
 // 監視対象の保守系YouTubeチャンネル
 export const YOUTUBE_CHANNELS: YouTubeChannel[] = [
   {
@@ -20,6 +21,13 @@ export const YOUTUBE_CHANNELS: YouTubeChannel[] = [
     name: '高橋洋一チャンネル',
     channelId: 'UC6ag81wMs4pnJjLuSJDzuVA',
     keywords: ['経済', '積極財政', '財務省批判', '保守'],
+    maxPerHour: 1
+  },
+  {
+    id: 'bunkajin-tv',
+    name: '文化人放送局',
+    channelId: 'UC7dXPammhcS6lrPzgq7WAPQ',
+    keywords: ['政治', 'ニュース', '保守'],
     maxPerHour: 1
   },
   {
@@ -36,10 +44,7 @@ export const YOUTUBE_CHANNELS: YouTubeChannel[] = [
     keywords: ['保守', 'ニュース', '政治'],
     maxPerHour: 1
   }
-];
-
-// 検索キーワード
-export const YOUTUBE_SEARCH_KEYWORDS = [
+];export const YOUTUBE_SEARCH_KEYWORDS = [
   '保守 日本',
   '反中国共産党',
   '積極財政',
@@ -49,7 +54,7 @@ export const YOUTUBE_SEARCH_KEYWORDS = [
   '媚中政治家',
   'ウイグル 人権',
   '憲法改正',
-  '国防強化'
+  '国防 強化'
 ];
 
 export interface YouTubeVideo {
@@ -64,8 +69,8 @@ export interface YouTubeVideo {
 }
 
 /**
- * YouTube Data APIを使用して動画を取得
- * Note: 実際の実装にはAPI KEYが必要
+ * YouTube Data API繧剃ｽｿ逕ｨ縺励※蜍慕判繧貞叙蠕・
+ * Note: 螳滄圀縺ｮ螳溯｣・↓縺ｯAPI KEY縺悟ｿ・ｦ・
  */
 export async function fetchYouTubeVideos(
   apiKey: string,
@@ -118,7 +123,7 @@ export async function fetchYouTubeVideos(
 }
 
 /**
- * YouTubeのRSSフィードから動画を取得（API KEY不要）
+ * YouTube縺ｮRSS繝輔ぅ繝ｼ繝峨°繧牙虚逕ｻ繧貞叙蠕暦ｼ・PI KEY荳崎ｦ・ｼ・
  */
 export async function fetchYouTubeChannelRSS(channelId: string): Promise<YouTubeVideo[]> {
   const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
@@ -163,7 +168,7 @@ export async function fetchYouTubeChannelRSS(channelId: string): Promise<YouTube
 }
 
 /**
- * 保守系チャンネルから最新動画を取得
+ * 菫晏ｮ育ｳｻ繝√Ε繝ｳ繝阪Ν縺九ｉ譛譁ｰ蜍慕判繧貞叙蠕・
  */
 export async function fetchConservativeYouTubeVideos(): Promise<YouTubeVideo[]> {
   const allVideos: YouTubeVideo[] = [];
@@ -171,7 +176,7 @@ export async function fetchConservativeYouTubeVideos(): Promise<YouTubeVideo[]> 
   for (const channel of YOUTUBE_CHANNELS) {
     try {
       const videos = await fetchYouTubeChannelRSS(channel.channelId);
-      // 1時間に1本の制限を適用
+      // 1譎る俣縺ｫ1譛ｬ縺ｮ蛻ｶ髯舌ｒ驕ｩ逕ｨ
       const recentVideos = videos.slice(0, channel.maxPerHour);
       allVideos.push(...recentVideos);
     } catch (error) {
@@ -179,8 +184,11 @@ export async function fetchConservativeYouTubeVideos(): Promise<YouTubeVideo[]> 
     }
   }
   
-  // 公開日時でソート
+  // 蜈ｬ髢区律譎ゅ〒繧ｽ繝ｼ繝・
   return allVideos.sort((a, b) => 
     new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
   );
 }
+
+
+

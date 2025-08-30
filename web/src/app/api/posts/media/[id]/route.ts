@@ -1,7 +1,11 @@
 import { loadMediaFromDisk, mediaStore } from "@/lib/store";
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }){
-  const { id } = await params;
+// Ensure Node.js runtime for streaming + fs access
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request, { params }: { params: { id: string } }){
+  const { id } = params;
   const range = (req.headers as any).get?.('range') as string | null || null;
   let media = mediaStore.get(id) || loadMediaFromDisk(id);
   if(!media) return new Response('Not Found',{status:404});
@@ -19,6 +23,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     if (m) {
       const start = Number(m[1]);
       const end = Math.min(buf.length - 1, m[2] ? Number(m[2]) : buf.length - 1);
+      if (start >= buf.length || start < 0) {
+        return new Response(null, {
+          status: 416,
+          headers: {
+            ...baseHeaders,
+            'content-range': `bytes */${buf.length}`,
+          }
+        });
+      }
       const chunk = buf.subarray(start, end + 1);
       return new Response(chunk, {
         status: 206,

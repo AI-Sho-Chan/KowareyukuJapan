@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from 'react';
 import { FIXED_TAGS } from './constants';
 
@@ -10,7 +10,7 @@ export default function PostForm({ onSubmitted }: Props){
 
   return (
     <section id="compose" className="card" style={{padding:12, marginTop:16}}>
-      <h2 className="title">記録する</h2>
+      <h2 className="title">險倬鹸縺吶ｋ</h2>
       <form method="post" encType="multipart/form-data" onSubmit={async (e)=>{
         e.preventDefault();
         const form = e.currentTarget as HTMLFormElement;
@@ -46,7 +46,7 @@ export default function PostForm({ onSubmitted }: Props){
         }
 
         try{
-          setUploading(true); setUploadMsg('アップロード中…');
+          setUploading(true); setUploadMsg('繧｢繝・・繝ｭ繝ｼ繝我ｸｭ窶ｦ');
           const fileInput = form.querySelector('input[name="file"]') as HTMLInputElement | null;
           const sel = fileInput?.files?.[0];
           if (sel && sel.type.startsWith('image/')) {
@@ -56,24 +56,24 @@ export default function PostForm({ onSubmitted }: Props){
           const r = await fetch('/api/posts', { method:'POST', body: fd, headers: { 'x-client-key': localStorage.getItem('kj_owner') || (localStorage.setItem('kj_owner', crypto.randomUUID()), localStorage.getItem('kj_owner') as string) } });
           const j = await r.json();
           if(j?.ok){
-            setUploadMsg('アップロード完了');
+            setUploadMsg('繧｢繝・・繝ｭ繝ｼ繝牙ｮ御ｺ・);
             await onSubmitted();
             form.reset();
           } else {
-            // NGワードエラーや他のエラーメッセージを表示
-            const errorMsg = j?.error || j?.message || 'アップロードに失敗しました';
+            // NG繝ｯ繝ｼ繝峨お繝ｩ繝ｼ繧・ｻ悶・繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ繧定｡ｨ遉ｺ
+            const errorMsg = j?.error || j?.message || '繧｢繝・・繝ｭ繝ｼ繝峨↓螟ｱ謨励＠縺ｾ縺励◆';
             setUploadMsg(errorMsg);
             alert(errorMsg);
           }
         } catch(error) {
-          // エラー処理を追加
-          console.error('投稿エラー:', error);
-          setUploadMsg('エラーが発生しました');
-          alert('エラーが発生しました。もう一度お試しください。');
+          // 繧ｨ繝ｩ繝ｼ蜃ｦ逅・ｒ霑ｽ蜉
+          console.error('謚慕ｨｿ繧ｨ繝ｩ繝ｼ:', error);
+          setUploadMsg('繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆');
+          alert('繧ｨ繝ｩ繝ｼ縺檎匱逕溘＠縺ｾ縺励◆縲ゅｂ縺・ｸ蠎ｦ縺願ｩｦ縺励￥縺縺輔＞縲・);
         } finally {
           setUploading(false);
-          // エラーメッセージは5秒後にクリア
-          if(uploadMsg && !uploadMsg.includes('完了')) {
+          // 繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ縺ｯ5遘貞ｾ後↓繧ｯ繝ｪ繧｢
+          if(uploadMsg && !uploadMsg.includes('螳御ｺ・)) {
             setTimeout(() => setUploadMsg(null), 5000);
           }
         }
@@ -82,21 +82,21 @@ export default function PostForm({ onSubmitted }: Props){
           <input name="url" type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
         </label>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
-          <label className="radio">動画／画像のアップロード（端末から選択）
+          <label className="radio">蜍慕判・冗判蜒上・繧｢繝・・繝ｭ繝ｼ繝会ｼ育ｫｯ譛ｫ縺九ｉ驕ｸ謚橸ｼ・
             <input name="file" type="file" accept="image/*,video/*" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'var(--muted)'}} />
           </label>
-          <label className="radio">タイトル（任意）
-            <input name="title" type="text" placeholder="任意のタイトル" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+          <label className="radio">繧ｿ繧､繝医Ν・井ｻｻ諢擾ｼ・
+            <input name="title" type="text" placeholder="莉ｻ諢上・繧ｿ繧､繝医Ν" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
           </label>
         </div>
-        <label className="radio" style={{marginTop:8}}>コメント（50字上限・任意）
-          <textarea name="comment" rows={2} maxLength={50} placeholder="あなたのコメント" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+        <label className="radio" style={{marginTop:8}}>繧ｳ繝｡繝ｳ繝茨ｼ・0蟄嶺ｸ企剞繝ｻ莉ｻ諢擾ｼ・
+          <textarea name="comment" rows={2} maxLength={50} placeholder="縺ゅ↑縺溘・繧ｳ繝｡繝ｳ繝・ style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
         </label>
-        <label className="radio" style={{marginTop:8}}>ハンドル（任意）
+        <label className="radio" style={{marginTop:8}}>繝上Φ繝峨Ν・井ｻｻ諢擾ｼ・
           <input name="handle" type="text" placeholder="@handle" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
         </label>
         <div style={{marginTop:8}}>
-          <div className="comment-label">カテゴリー（任意・複数可）</div>
+          <div className="comment-label">繧ｫ繝・ざ繝ｪ繝ｼ・井ｻｻ諢上・隍・焚蜿ｯ・・/div>
           <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
             {FIXED_TAGS.map(t=> (
               <label key={t} className="radio" style={{display:'inline-flex',alignItems:'center',gap:6}}>
@@ -106,13 +106,15 @@ export default function PostForm({ onSubmitted }: Props){
           </div>
         </div>
         <div className="modal-actions" style={{marginTop:12, display:'flex', alignItems:'center', gap:8}}>
-          <button className="btn" type="button">下書き</button>
-          <button className="btn primary" type="submit" disabled={uploading} aria-busy={uploading}>{uploading ? 'アップロード中…' : '記録'}</button>
-          {uploadMsg ? <small style={{color: uploadMsg.includes('完了') ? 'var(--muted)' : 'crimson'}}>{uploadMsg}</small> : null}
+          <button className="btn" type="button">荳区嶌縺・/button>
+          <button className="btn primary" type="submit" disabled={uploading} aria-busy={uploading}>{uploading ? '繧｢繝・・繝ｭ繝ｼ繝我ｸｭ窶ｦ' : '險倬鹸'}</button>
+          {uploadMsg ? <small style={{color: uploadMsg.includes('螳御ｺ・) ? 'var(--muted)' : 'crimson'}}>{uploadMsg}</small> : null}
         </div>
       </form>
     </section>
   );
 }
+
+
 
 

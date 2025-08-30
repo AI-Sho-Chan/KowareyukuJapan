@@ -1,5 +1,7 @@
 "use client";
+
 import { useEffect, useRef, useState } from 'react';
+import { normalizeInstagramUrl } from '@/lib/instagram';
 
 const MODE_KEY = 'data-ig-embed-mode';
 const WAIT_MS = 5000;
@@ -37,34 +39,38 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
     (async () => {
       const embedUrl = toEmbed(url); if (!embedUrl) { setFailed(true); return; }
 
-      // 先に Instagram 専用プローブを実施
+      // Instagram 専用プローブ（参考情報として取得。ここでは失敗確定にしない）
       try {
-        // 否定結果のローカルキャッシュ（24h）
         const cacheKey = `ig-probe-cache:${embedUrl}`;
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-          if (cached && Date.now() - (cached.ts as number) < 24*60*60*1000) {
+          if (cached && Date.now() - (cached.ts as number) < 10*60*1000) {
             setProbe(cached.data || null);
-            setFailed(true);
-            return;
           }
         } catch {}
-
         const pr = await fetch(`/api/instagram/probe?url=${encodeURIComponent(url)}`, { cache: 'no-store' }).then(r=>r.json());
         if (!pr?.ok) {
           setProbe({ unavailable: !!pr?.unavailable, blocked: !!pr?.blocked, status: pr?.status });
           try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: { unavailable: !!pr?.unavailable, blocked: !!pr?.blocked, status: pr?.status } })); } catch {}
-          setFailed(true); return;
         }
-      } catch { setFailed(true); return; }
+      } catch { /* ignore */ }
 
-      // 公式 widget をまず試行
+      // 公式ウィジェットをまず試す
       el.replaceChildren();
+      // プレースホルダー高さ（公式埋め込みの高さ決定までの潰れ防止）
+      el.style.minHeight = '360px';
       const bq = document.createElement('blockquote');
       bq.className = 'instagram-media';
-      bq.setAttribute('data-instgrm-permalink', url);
+      bq.setAttribute('data-instgrm-permalink', normalizeInstagramUrl(url));
       bq.setAttribute('data-instgrm-version', '14');
       bq.setAttribute('data-instgrm-captioned', '');
+      // 一部環境で <a> が無いと描画されないため、明示的に追加
+      const a = document.createElement('a');
+      a.href = normalizeInstagramUrl(url);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'View on Instagram';
+      bq.appendChild(a);
       el.appendChild(bq);
 
       const okScript = await ensureScript();
@@ -77,7 +83,7 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
               if (el.querySelector('iframe')) { clearTimeout(t); clearInterval(iv); r(true); }
             }, 150);
           });
-          if (ok) { el.setAttribute(MODE_KEY, 'official'); return; }
+          if (ok) { el.setAttribute(MODE_KEY, 'official'); el.style.minHeight = ''; return; }
         } catch {}
       }
 
@@ -93,13 +99,14 @@ export default function InstagramEmbedCard({ url }: { postId?: string; url: stri
       ifr.style.width = '100%'; ifr.style.maxWidth = '540px'; ifr.style.minHeight = '300px'; ifr.style.border = '0';
       el.replaceChildren(ifr);
       el.setAttribute(MODE_KEY, 'iframe');
+      el.style.minHeight = '';
     })().catch(() => setFailed(true));
   }, [url]);
 
   if (failed) {
     return <div className="instagram-embed">
       <p style={{ margin: 0 }}>
-        投稿者設定/年齢・地域制限/ログイン必須のため、サイト内表示できません。
+        投稿が年齢・地域制限、またはログイン制限等のため、サイト内で表示できません。
         <a href={url} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 6 }}>Instagramで見る</a>
       </p>
     </div>;

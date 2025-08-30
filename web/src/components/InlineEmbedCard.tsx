@@ -1,43 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { makeIntroFromExtract } from '@/lib/extract';
+import { useCallback, useMemo, useState } from "react";
+import InstagramEmbedCard from "@/components/InstagramEmbedCard";
 
 type Props = {
   postId: string;
   title: string;
   comment: string;
   tags: string[];
-  sourceUrl: string; // シェア/外部用URL
+  sourceUrl: string;
   thumbnailUrl?: string;
-  embedUrl?: string; // iframe表示用URL（未指定時はsourceUrl）
+  embedUrl?: string;
   kind: "youtube" | "page" | "image" | "video";
   autoOpen?: boolean;
   alwaysOpen?: boolean;
   showSourceLink?: boolean;
-  owner?: boolean;
-  onDelete?: () => void;
   createdAt?: number;
   handle?: string;
+  ownerKey?: string;
   adminHeader?: React.ReactNode;
   footerExtras?: React.ReactNode;
 };
 
 function onceGuard(key: string): boolean {
   const k = `kj_once_${key}`;
-  if (typeof localStorage === "undefined") return true;
+  if (typeof window === "undefined") return true;
   if (localStorage.getItem(k)) return false;
   localStorage.setItem(k, "1");
   return true;
-}
-
-function formatDateTime(ts?: number): string {
-  if (!ts) return "";
-  try {
-    return new Date(ts).toLocaleString("ja-JP", { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  } catch {
-    return "";
-  }
 }
 
 function formatHandle(h?: string): string {
@@ -46,195 +36,129 @@ function formatHandle(h?: string): string {
   return t.startsWith("@") ? t : `@${t}`;
 }
 
-// Preview utilities per spec
-const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./,''); } catch { return ''; } };
-const norm = (s: string = '') => s.toLowerCase().replace(/\s+/g,' ')
-  .replace(/[|｜\-–—:：。「」『』【】（）()\[\]"]/g,'').trim();
-const shouldShowDesc = (title?: string, desc?: string) => {
-  if (!desc) return false;
-  const d = desc.trim();
-  if (d.length < 40 || d.length > 220) return false;
-  const nt = norm(title || ''), nd = norm(d);
-  if (nt && (nd === nt || nd.startsWith(nt))) return false;
-  return true;
-};
+function formatDateTime(ts?: number): string {
+  if (!ts) return "";
+  try { return new Date(ts).toLocaleString("ja-JP"); } catch { return ""; }
+}
 
-export default function InlineEmbedCard(props: Props) {
-  const {
-    postId,
-    title,
-    comment,
-    tags,
-    sourceUrl,
-    thumbnailUrl,
-    embedUrl,
-    kind,
-    autoOpen,
-    alwaysOpen,
-    showSourceLink = true,
-    handle,
-    adminHeader,
-    footerExtras,
-  } = props;
-
+export default function InlineEmbedCard({
+  postId,
+  title,
+  comment,
+  tags,
+  sourceUrl,
+  thumbnailUrl,
+  embedUrl,
+  kind,
+  autoOpen,
+  alwaysOpen,
+  showSourceLink = true,
+  createdAt,
+  handle,
+  ownerKey,
+  adminHeader,
+  footerExtras,
+}: Props) {
   const [open, setOpen] = useState<boolean>(!!autoOpen || !!alwaysOpen);
   const [count, setCount] = useState<number>(0);
-  const [readable, setReadable] = useState<boolean>(false);
-  const [canEmbed, setCanEmbed] = useState<boolean>(true);
-  const [readerText, setReaderText] = useState<string | null>(null);
-  const [lp, setLp] = useState<{ ok?: boolean; title?: string|null; description?: string|null; image?: string|null; site?: string; url?: string }|null>(null);
-  const [lpText, setLpText] = useState<string | null>(null);
-  const [mode, setMode] = useState<'iframe'|'preview'|'reader'>('preview');
-  const reqRef = useRef(0);
-
-  useEffect(() => {
-    setOpen(!!autoOpen || !!alwaysOpen);
-  }, [autoOpen, alwaysOpen]);
 
   const resolvedEmbedUrl = useMemo(() => {
     if (kind === "youtube") {
-      return (embedUrl || sourceUrl).replace("watch?v=", "embed/") + "?rel=0";
+      const u = embedUrl || sourceUrl;
+      try {
+        const url = new URL(u);
+        let id = '';
+        if (url.hostname.includes('youtu.be')) id = url.pathname.replace(/^\//, '');
+        else id = url.searchParams.get('v') || '';
+        if (id) return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+      } catch {}
+      return u;
     }
+    try {
+      const u = embedUrl || sourceUrl;
+      const url = new URL(u);
+      if (url.hostname.toLowerCase().includes('instagram.com')) {
+        const m = url.pathname.match(/\/(p|reel|tv)\/([A-Za-z0-9_\-]+)/);
+        if (m) return `https://www.instagram.com/${m[1]}/${m[2]}/embed/captioned`;
+      }
+    } catch {}
     return embedUrl || sourceUrl;
   }, [embedUrl, sourceUrl, kind]);
 
-  useEffect(()=>{
-    const myId = ++reqRef.current;
-    (async()=>{
-      if (kind === 'image' || kind === 'video') { setCanEmbed(true); setMode('iframe'); return; }
-      try{
-        const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(resolvedEmbedUrl)}`).then(r=>r.json()).catch(()=>({ok:false,canEmbed:false}));
-        if (reqRef.current !== myId) return;
-        if(!ce?.ok || ce?.canEmbed === false){
-          const lpr = await fetch(`/api/link-preview?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
-          if (reqRef.current !== myId) return;
-          setLp(lpr?.ok ? lpr : null);
-          try{
-            const ex = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`).then(r=>r.json()).catch(()=>({ok:false}));
-            if (reqRef.current !== myId) return;
-            if (ex?.ok && typeof ex.text === 'string'){
-              setLpText(makeIntroFromExtract(ex.text as string, lpr?.title || undefined, 180));
-            } else setLpText(null);
-          }catch{ setLpText(null); }
-          setMode('preview');
-          return;
-        }
-        setCanEmbed(true); setMode('iframe');
-      }catch(_e){ if (reqRef.current === myId){ setCanEmbed(false); setMode('preview'); } }
-    })();
-    return ()=>{ reqRef.current++; };
-  },[resolvedEmbedUrl, sourceUrl, kind]);
+  const isInstagramPage = useMemo(() => {
+    try { return new URL(sourceUrl).hostname.toLowerCase().includes('instagram.com'); } catch { return false; }
+  }, [sourceUrl]);
+
+  const frameAllowedForPage = useMemo(() => {
+    if (kind !== 'page') return true;
+    try {
+      const h = new URL(sourceUrl).hostname.toLowerCase();
+      const blockHosts = ['news.yahoo.co.jp','yahoo.co.jp','yahoo.com','www3.nhk.or.jp','www.asahi.com','mainichi.jp','www.yomiuri.co.jp'];
+      if (blockHosts.some(b => h === b || h.endsWith('.' + b))) return false;
+      const allowHosts = new Set(['platform.twitter.com','www.youtube.com','www.youtube-nocookie.com','www.instagram.com','www.tiktok.com','www.threads.net','embed.nicovideo.jp','note.com']);
+      return allowHosts.has(h);
+    } catch { return false; }
+  }, [kind, sourceUrl]);
 
   const onShare = useCallback(async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({ title, url: sourceUrl });
-      } else {
-        await navigator.clipboard.writeText(sourceUrl);
-        alert("URLをコピーしました");
-      }
-    } catch (_) {}
+      if (navigator.share) await navigator.share({ title, url: sourceUrl });
+      else { await navigator.clipboard.writeText(sourceUrl); alert('URLをコピーしました'); }
+    } catch {}
   }, [title, sourceUrl]);
 
   const onEmpathize = useCallback(() => {
-    if (!onceGuard(`empathize_${postId}`)) {
-      alert("この投稿には既に共感済みです。");
-      return;
-    }
+    if (!onceGuard(`empathize_${postId}`)) { alert('この投稿には既に共感済みです'); return; }
     setCount((v) => v + 1);
-  }, [postId]);
-
-  const onRemoval = useCallback(() => {
-    if (!onceGuard(`removal_${postId}`)) {
-      alert("この投稿への削除要請は既に送信済みです。");
-      return;
-    }
-    alert("削除要請を受け付けました。");
   }, [postId]);
 
   return (
     <article className="card" data-post-id={postId}>
       {!alwaysOpen && (
-        <button
-          className="media"
-          type="button"
-          aria-label="埋め込みを開く"
-          onClick={() => setOpen((v) => !v)}
-        >
+        <button className="media" type="button" aria-label="埋め込みを開く" onClick={() => setOpen((v) => !v)}>
           {thumbnailUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={thumbnailUrl} alt="プレビュー" />
+            <img src={thumbnailUrl} alt="プレビュー" loading="lazy" />
           ) : (
-            <div style={{height: 8}} />
+            <div style={{ height: 8 }} />
           )}
         </button>
       )}
       <div className="card-body">
         {adminHeader}
         <h2 className="title">{title}</h2>
-        <div
-          className="embed"
-          aria-hidden={!(alwaysOpen || open)}
-          style={{ marginTop: 8, display: (alwaysOpen || open) ? "block" : "none", overflowX: "hidden" }}
-        >
-          {kind === "image" ? (
+        <div className="embed" aria-hidden={!(alwaysOpen || open)} style={{ marginTop: 8, display: (alwaysOpen || open) ? 'block' : 'none', overflowX: 'hidden' }}>
+          {kind === 'image' ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={resolvedEmbedUrl} alt="拡大画像" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
-          ) : kind === "video" ? (
-            <video src={resolvedEmbedUrl} controls playsInline style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
-          ) : mode === 'iframe' ? (
-            <iframe
-              src={resolvedEmbedUrl}
-              width="100%"
-              height={kind === "youtube" ? 315 : 600}
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="no-referrer"
-              sandbox="allow-scripts allow-same-origin allow-popups"
-              style={{
-                border: "1px solid var(--line)",
-                borderRadius: 12,
-                background: readable ? "#fff" : undefined,
-                filter: readable ? "invert(1) hue-rotate(180deg)" : undefined,
-              }}
-            />
-          ) : mode === 'reader' ? (
-            <div style={{border:'1px solid var(--line)',borderRadius:12,padding:12,background:'#fff'}}>
-              <pre style={{whiteSpace:'pre-wrap',fontFamily:'inherit',margin:0}}>{readerText || '(本文を取得できませんでした)'}</pre>
-            </div>
+            <img src={resolvedEmbedUrl} alt="拡大画像" loading="lazy" style={{ width: '100%', borderRadius: 12, border: '1px solid var(--line)' }} />
+          ) : kind === 'video' ? (
+            <video preload="metadata" src={resolvedEmbedUrl} controls playsInline style={{ width: '100%', borderRadius: 12, border: '1px solid var(--line)' }} />
+          ) : isInstagramPage ? (
+            <InstagramEmbedCard url={sourceUrl} />
+          ) : frameAllowedForPage ? (
+            <iframe src={resolvedEmbedUrl} width="100%" height={kind === 'youtube' ? 315 : 600} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="origin-when-cross-origin" allowFullScreen style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff' }} />
           ) : (
-            <div className="link-card">
-              <div className="meta">
-                {!lpText ? (
-                  <div className="site" style={{color:'var(--muted)',fontSize:12}}>{lp?.site || hostOf(sourceUrl)}</div>
-                ) : null}
-                {lpText ? (
-                  <p className="desc" style={{marginTop:8,color:'#111',fontSize:16,lineHeight:'1.8'}}>{lpText}</p>
-                ) : shouldShowDesc(lp?.title || undefined, lp?.description || undefined) ? (
-                  <p className="desc" style={{marginTop:8,color:'#111',fontSize:16,lineHeight:'1.8'}}>{lp!.description}</p>
-                ) : null}
-              </div>
+            <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff', padding: 12 }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--muted)' }}>このサイトは埋め込み表示に対応していません。</p>
+              <p style={{ marginTop: 8 }}><a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用先を開く</a></p>
             </div>
           )}
         </div>
-        <div className="meta" style={{marginTop:8}}>
-          <span className="handle">記録者：{formatHandle(handle)}</span>
-          <span className="tags">{tags.map((t) => `#${t}`).join("・")}</span>
-          {props.createdAt ? <time style={{marginLeft:8}}>{formatDateTime(props.createdAt)}</time> : null}
+        <div className="meta" style={{ marginTop: 8 }}>
+          <span className="handle">投稿者：{formatHandle(handle)}</span>
+          <span className="tags">{tags.map((t) => `#${t}`).join('・')}</span>
+          {createdAt ? <time style={{ marginLeft: 8 }}>{formatDateTime(createdAt)}</time> : null}
         </div>
-        <div className="comment-label">記録者のコメント</div>
-        <p className="comment">{comment || "(コメントなし)"}</p>
+        <div className="comment-label">投稿者のコメント</div>
+        <p className="comment">{comment || '(コメントなし)'}</p>
         <div className="actions">
-          <button className="btn primary" onClick={onEmpathize}>
-            共感する <span className="count">{count}</span>
-          </button>
+          <button className="btn primary" onClick={onEmpathize}>共感する <span className="count">{count}</span></button>
           <button className="btn" onClick={onShare}>シェア</button>
-          <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
+          {showSourceLink && <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">引用先</a>}
         </div>
         {footerExtras}
       </div>
     </article>
   );
 }
-
 

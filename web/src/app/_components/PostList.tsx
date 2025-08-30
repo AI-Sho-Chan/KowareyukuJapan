@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React from 'react';
 import XEmbedCard from "@/components/XEmbedCard";
 import YouTubeEmbedCard from "@/components/YouTubeEmbedCard";
@@ -48,9 +48,9 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
     await onChanged();
   }
   async function removePost(id: string){
-    if (!confirm(`この投稿(${id})を削除します。よろしいですか？`)) return;
+    if (!confirm(`縺薙・謚慕ｨｿ(${id})繧貞炎髯､縺励∪縺吶ゅｈ繧阪＠縺・〒縺吶°・歔)) return;
     const r = await fetch(`/api/posts/${id}`, { method: 'DELETE', headers: { 'x-owner-key': viewerKey } });
-    if (r.ok) await onChanged(); else alert('削除に失敗しました');
+    if (r.ok) await onChanged(); else alert('蜑企勁縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
   }
 
   return (
@@ -61,7 +61,7 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
 
         const TagEditor = !isOwner ? null : (
           <details style={{marginTop:6}}>
-            <summary style={{cursor:'pointer'}}>タグを編集</summary>
+            <summary style={{cursor:'pointer'}}>繧ｿ繧ｰ繧堤ｷｨ髮・/summary>
             <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:6}}>
               {FIXED_TAGS.map(t=>{
                 const checked = selected.has(t);
@@ -82,16 +82,16 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
         const OwnerActions = !isOwner ? null : (
           <div style={{display:'flex',gap:8,marginTop:8}}>
             <button className="btn" onClick={()=>{
-              const next = prompt('コメントを編集', p.comment || '') ?? undefined;
+              const next = prompt('繧ｳ繝｡繝ｳ繝医ｒ邱ｨ髮・, p.comment || '') ?? undefined;
               if (typeof next === 'string') updateComment(p.id, next);
-            }}>コメントを編集</button>
-            <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+            }}>繧ｳ繝｡繝ｳ繝医ｒ邱ｨ髮・/button>
+            <button className="btn" onClick={()=>removePost(p.id)}>蜑企勁</button>
           </div>
         );
         const AdminHeader = (
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-            <small style={{color:'var(--muted)'}}>管理番号: <code>{p.id}</code></small>
-            <button className="btn" onClick={()=>removePost(p.id)}>削除</button>
+            <small style={{color:'var(--muted)'}}>邂｡逅・分蜿ｷ: <code>{p.id}</code></small>
+            <button className="btn" onClick={()=>removePost(p.id)}>蜑企勁</button>
           </div>
         );
 
@@ -116,8 +116,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
 
         const commonMeta = (
           <div className="meta" style={{marginTop:8}}>
-            <span className="handle">記録者：{formatHandle(p.handle)}</span>
-            {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('・')}</span> : null}
+            <span className="handle">險倬鹸閠・ｼ嘴formatHandle(p.handle)}</span>
+            {p.tags?.length ? <span className="tags">{p.tags.map(t=>`#${t}`).join('繝ｻ')}</span> : null}
             {p.createdAt ? <time style={{marginLeft:8}}>{new Date(p.createdAt).toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</time> : null}
           </div>
         );
@@ -133,8 +133,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={280}>{() => <YouTubeEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -155,8 +155,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={300}>{() => <InstagramEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -177,8 +177,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={320}>{() => <TikTokEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -199,8 +199,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={260}>{() => <ThreadsEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -221,8 +221,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={260}>{() => <NicoVideoEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -243,8 +243,8 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                     <LazyMount minHeight={260}>{() => <NoteEmbedCard url={p.url!} />}</LazyMount>
                   </div>
                   {commonMeta}
-                  <div className="comment-label">記録者のコメント</div>
-                  <p className="comment">{p.comment || "(コメントなし)"}</p>
+                  <div className="comment-label">險倬鹸閠・・繧ｳ繝｡繝ｳ繝・/div>
+                  <p className="comment">{p.comment || "(繧ｳ繝｡繝ｳ繝医↑縺・"}</p>
                   <CardActions title={p.title} url={p.url!} />
                 </div>
               </article>
@@ -261,7 +261,7 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                 postId={p.id}
                 title={p.title}
                 comment={p.comment || ""}
-                tags={p.tags && p.tags.length ? p.tags : ["ユーザー投稿"]}
+                tags={p.tags && p.tags.length ? p.tags : ["繝ｦ繝ｼ繧ｶ繝ｼ謚慕ｨｿ"]}
                 sourceUrl={p.url || p.media.url}
                 thumbnailUrl={p.media.type === 'image' ? p.media.url : undefined}
                 embedUrl={p.media.url}
@@ -284,7 +284,7 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
                 postId={p.id}
                 title={p.title}
                 comment={p.comment || ""}
-                tags={p.tags && p.tags.length ? p.tags : ["リンク"]}
+                tags={p.tags && p.tags.length ? p.tags : ["繝ｪ繝ｳ繧ｯ"]}
                 sourceUrl={p.url}
                 embedUrl={p.url}
                 kind="page"
@@ -304,5 +304,7 @@ export default function PostList({ posts, viewerKey, onChanged }: Props){
     </section>
   );
 }
+
+
 
 

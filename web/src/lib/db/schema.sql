@@ -148,6 +148,18 @@ CREATE TABLE IF NOT EXISTS trending_daily (
 CREATE INDEX IF NOT EXISTS idx_events_post_created ON events(post_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_events_user_post_type_created ON events(user_fp, post_id, type, created_at);
 
+-- Moderation flags
+CREATE TABLE IF NOT EXISTS moderation_flags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reviewed BOOLEAN DEFAULT 0,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_mflags_post ON moderation_flags(post_id);
+
 -- Insert default tags
 INSERT OR IGNORE INTO tags (name, slug) VALUES 
   ('治安/マナー', 'security-manners'),

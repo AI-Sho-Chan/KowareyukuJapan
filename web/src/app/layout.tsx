@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "守ろう日本",
-  description: "日本のために記録し、伝える",
+  title: "\u5B88\u308D\u3046\u65E5\u672C",
+  description: "\u65E5\u672C\u306E\u305F\u3081\u306B\u8A18\u9332\u3057\u3001\u4F1D\u3048\u308B",
   manifest: "/manifest.webmanifest",
 };
 
@@ -25,11 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
   );
 }
+

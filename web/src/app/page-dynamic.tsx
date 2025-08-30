@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import InlineEmbedCard from "@/components/InlineEmbedCard";
@@ -45,9 +45,9 @@ export default function Home() {
         <YouTubeEmbedCard
           key={post.id}
           postId={post.id}
-          title={post.title || 'YouTube動画'}
+          title={post.title || 'YouTube蜍慕判'}
           comment={post.comment}
-          tags={post.tags || ['動画']}
+          tags={post.tags || ['蜍慕判']}
           sourceUrl={url}
           createdAt={post.created_at}
         />
@@ -61,7 +61,7 @@ export default function Home() {
         postId={post.id}
         title={post.title || url}
         comment={post.comment}
-        tags={post.tags || ['ニュース']}
+        tags={post.tags || ['繝九Η繝ｼ繧ｹ']}
         sourceUrl={url}
         thumbnailUrl=""
         embedUrl={url}
@@ -76,28 +76,28 @@ export default function Home() {
     <>
       <header className="site-header">
         <div className="site-brand">
-          <Link href="/" className="brand-title">守ろう<span className="site-accent">日本</span></Link>
-          <p className="brand-copy" style={{fontSize:14}}>日本のために記録し、伝える</p>
+          <Link href="/" className="brand-title">螳医ｍ縺・span className="site-accent">譌･譛ｬ</span></Link>
+          <p className="brand-copy" style={{fontSize:14}}>譌･譛ｬ縺ｮ縺溘ａ縺ｫ險倬鹸縺励∽ｼ昴∴繧・/p>
         </div>
       </header>
       <main className="container">
         <section className="feed" id="feed">
           {loading ? (
             <div style={{textAlign: 'center', padding: 50}}>
-              <p>読み込み中...</p>
+              <p>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>
             </div>
           ) : posts.length > 0 ? (
             posts.map(post => renderPost(post))
           ) : (
             <div className="card" style={{padding: 20, textAlign: 'center'}}>
-              <p>まだ投稿がありません</p>
+              <p>縺ｾ縺謚慕ｨｿ縺後≠繧翫∪縺帙ｓ</p>
             </div>
           )}
         </section>
         
-        {/* 投稿フォーム */}
+        {/* 謚慕ｨｿ繝輔か繝ｼ繝 */}
         <section id="compose" className="card" style={{padding:12, marginTop:16}}>
-          <h2 className="title">記録する</h2>
+          <h2 className="title">險倬鹸縺吶ｋ</h2>
           <form onSubmit={async (e)=>{
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
@@ -113,38 +113,39 @@ export default function Home() {
             });
             const j = await res.json();
             if(j?.ok){ 
-              alert('投稿しました'); 
+              alert('謚慕ｨｿ縺励∪縺励◆'); 
               location.reload(); 
             } else { 
-              alert('投稿に失敗しました'); 
+              alert('謚慕ｨｿ縺ｫ螟ｱ謨励＠縺ｾ縺励◆'); 
             }
           }}>
             <label className="radio">URL
               <input name="url" type="url" placeholder="https://..." style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
-              <label className="radio">動画／画像のアップロード（端末から選択）
+              <label className="radio">蜍慕判・冗判蜒上・繧｢繝・・繝ｭ繝ｼ繝会ｼ育ｫｯ譛ｫ縺九ｉ驕ｸ謚橸ｼ・
                 <input name="file" type="file" accept="image/*,video/*" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'var(--muted)'}} />
               </label>
-              <label className="radio">タイトル（任意）
-                <input name="title" type="text" placeholder="任意のタイトル" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+              <label className="radio">繧ｿ繧､繝医Ν・井ｻｻ諢擾ｼ・
+                <input name="title" type="text" placeholder="莉ｻ諢上・繧ｿ繧､繝医Ν" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
               </label>
             </div>
-            <label className="radio" style={{marginTop:8}}>コメント（50字上限・任意）
-              <textarea name="comment" rows={2} maxLength={50} placeholder="あなたのコメント" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
+            <label className="radio" style={{marginTop:8}}>繧ｳ繝｡繝ｳ繝茨ｼ・0蟄嶺ｸ企剞繝ｻ莉ｻ諢擾ｼ・
+              <textarea name="comment" rows={2} maxLength={50} placeholder="縺ゅ↑縺溘・繧ｳ繝｡繝ｳ繝・ style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
-            <label className="radio" style={{marginTop:8}}>ハンドル（任意）
+            <label className="radio" style={{marginTop:8}}>繝上Φ繝峨Ν・井ｻｻ諢擾ｼ・
               <input name="handle" type="text" placeholder="@handle" style={{width:'100%',padding:10,borderRadius:10,border:'1px solid var(--line)',background:'#fff',color:'#111'}} />
             </label>
             <div className="modal-actions" style={{marginTop:12}}>
-              <button className="btn">下書き</button>
-              <button className="btn primary" type="submit">記録</button>
+              <button className="btn">荳区嶌縺・/button>
+              <button className="btn primary" type="submit">險倬鹸</button>
             </div>
           </form>
         </section>
       </main>
-      {/* フローティングボタン */}
-      <a className="fab" href="#compose" aria-label="記録作成">＋記録</a>
+      {/* 繝輔Ο繝ｼ繝・ぅ繝ｳ繧ｰ繝懊ち繝ｳ */}
+      <a className="fab" href="#compose" aria-label="險倬鹸菴懈・">・玖ｨ倬鹸</a>
     </>
   );
 }
+
