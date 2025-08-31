@@ -50,7 +50,10 @@ export async function GET(req: NextRequest) {
       try {
         const raw = fs.readFileSync(localFile, 'utf8');
         const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) local = arr;
+        if (Array.isArray(arr)) {
+          // Frontの表示基準と合わせ、公開済みのみ取り込む
+          local = arr.filter((p: any) => p?.is_published === 1 || p?.isPublished === true);
+        }
       } catch {}
 
       const combined = [...local, ...posts];
@@ -76,7 +79,7 @@ export async function GET(req: NextRequest) {
       try {
         const raw = fs.readFileSync(filePath, 'utf8');
         const arr = JSON.parse(raw);
-        if (Array.isArray(arr)) items = arr;
+        if (Array.isArray(arr)) items = arr.filter((p: any) => p?.is_published === 1 || p?.isPublished === true);
       } catch {}
       const sliced = items.slice(offset, offset + limit);
       return NextResponse.json({ ok: true, posts: sliced, pagination: { page, limit, total: items.length, totalPages: Math.ceil(items.length / limit) } });

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "dmhnd3t2",
+    "keyword": "迷惑外国人",
+    "enabled": true,
+    "minIntervalMinutes": 60
+  },
+  {
+    "id": "f8utgozg",
+    "keyword": "外国人犯罪",
+    "enabled": true,
+    "minIntervalMinutes": 60
+  },
+  {
+    "id": "pmxddslh",
+    "keyword": "日本の美しい文化と伝統",
+    "enabled": true,
+    "minIntervalMinutes": 60
+  }
+]

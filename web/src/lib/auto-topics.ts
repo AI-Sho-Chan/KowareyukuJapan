@@ -29,7 +29,13 @@ export function loadTopics(): AutoTopic[] {
 
 export function saveTopics(items: AutoTopic[]): void {
   ensureDir();
-  fs.writeFileSync(TOPICS_FILE, JSON.stringify(items, null, 2), 'utf8');
+  try {
+    const buf = Buffer.from(JSON.stringify(items, null, 2), 'utf8');
+    fs.writeFileSync(TOPICS_FILE, buf);
+  } catch {
+    // 最低限のフォールバック
+    fs.writeFileSync(TOPICS_FILE, JSON.stringify(items, null, 2), 'utf8');
+  }
 }
 
 export function appendLog(line: string): void {

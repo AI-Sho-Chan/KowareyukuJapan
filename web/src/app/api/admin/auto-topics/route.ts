@@ -12,7 +12,14 @@ export async function GET(req: NextRequest){
 
 export async function POST(req: NextRequest){
   if(!verifyAdminSession(req)) return NextResponse.json({ ok:false, error:'unauthorized' }, { status:401 });
-  const body = await req.json().catch(()=>({} as any));
+  // 文字化け対策: UTF-8で明示的にパース
+  let body: any = {};
+  try {
+    const txt = await req.text();
+    body = JSON.parse(txt);
+  } catch {
+    body = await req.json().catch(()=>({} as any));
+  }
   const keyword = String(body.keyword||'').trim();
   const min = Math.max(10, Math.min(1440, Number(body.minIntervalMinutes||60)));
   if(!keyword) return NextResponse.json({ ok:false, error:'keyword required' }, { status:400 });
@@ -35,4 +42,3 @@ export async function DELETE(req: NextRequest){
   saveTopics(next);
   return NextResponse.json({ ok:true, topics: next });
 }
-

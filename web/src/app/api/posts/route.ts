@@ -39,11 +39,13 @@ export async function GET(req: NextRequest) {
   try {
     const q = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(q.get('page') || '1'));
-    const limit = Math.min(50, Math.max(1, parseInt(q.get('limit') || '20')));
+    // 既定は20件、上限を1000件まで拡大（管理画面と整合）
+    const limit = Math.min(1000, Math.max(1, parseInt(q.get('limit') || '20')));
     const offset = (page - 1) * limit;
 
     // DB取得（タイムアウト付き）→ 失敗/遅延時はローカルJSONへフォールバック
-    const timeoutMs = 2000;
+    // DB優先で整合性を保つため、タイムアウトを少し長めに
+    const timeoutMs = 5000;
     const dbPromise = (async () => {
       await setupDatabase();
       const posts = await postsRepo.getAllPosts({ limit, offset, includeUnpublished: false });
@@ -58,7 +60,7 @@ export async function GET(req: NextRequest) {
     try {
       const res = await Promise.race([dbPromise, timeout]) as { posts: any[]; total: number };
       posts = res.posts; total = res.total;
-      return NextResponse.json({ ok: true, posts, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } });
+      return NextResponse.json({ ok: true, posts, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }, fallback: false });
     } catch (e: any) {
       // ローカルJSONフォールバック
       try {

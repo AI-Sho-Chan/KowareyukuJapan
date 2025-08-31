@@ -1,19 +1,27 @@
 import { initializeDatabase } from './index';
 
-// Initialize database on server startup
+// Avoid re-initializing DB on every request (Next.js dev/serverless env)
+let inited = false;
+let initPromise: Promise<void> | null = null;
+
 export async function setupDatabase() {
-  console.log('Setting up database...');
-  
-  try {
-    await initializeDatabase();
-    console.log('Database setup completed successfully');
-  } catch (error) {
-    console.error('Database setup failed:', error);
-    // In production, you might want to handle this differently
-    if (process.env.NODE_ENV === 'production') {
-      throw error;
+  if (inited) return;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    console.log('Setting up database...');
+    try {
+      await initializeDatabase();
+      inited = true;
+      console.log('Database setup completed successfully');
+    } catch (error) {
+      console.error('Database setup failed:', error);
+      // In production, surface the error to fail fast
+      if (process.env.NODE_ENV === 'production') throw error;
+    } finally {
+      initPromise = null;
     }
-  }
+  })();
+  return initPromise;
 }
 
 // Run initialization if this file is executed directly

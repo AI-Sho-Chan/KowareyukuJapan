@@ -41,17 +41,21 @@ export default function Home() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/posts", { cache: "no-store" });
+        const res = await fetch("/api/posts?page=1&limit=200", { cache: "no-store" });
         let data: any = null;
         try { data = await res.json(); } catch {}
         let merged: any[] = Array.isArray(data?.posts) ? data.posts : [];
-        try {
-          const r2 = await fetch("/api/posts/simple", { cache: "no-store" });
-          const j2 = await r2.json().catch(() => null);
-          if (j2?.ok && Array.isArray(j2.posts)) {
-            merged = [...j2.posts, ...merged].filter((p: any, i: number, self: any[]) => self.findIndex((q: any) => q.id === p.id) === i);
-          }
-        } catch {}
+        // DB取得が失敗/フォールバック時のみ simple を併用
+        const shouldUseSimple = !res.ok || data?.fallback === true || !Array.isArray(data?.posts);
+        if (shouldUseSimple || merged.length === 0) {
+          try {
+            const r2 = await fetch("/api/posts/simple", { cache: "no-store" });
+            const j2 = await r2.json().catch(() => null);
+            if (j2?.ok && Array.isArray(j2.posts)) {
+              merged = [...j2.posts, ...merged].filter((p: any, i: number, self: any[]) => self.findIndex((q: any) => q.id === p.id) === i);
+            }
+          } catch {}
+        }
         if (merged.length > 0) {
           const normalized = merged.map((p: any) => ({
             ...p,
