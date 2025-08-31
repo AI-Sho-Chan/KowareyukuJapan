@@ -10,6 +10,7 @@ export default function AdminConsole(){
   const [posts, setPosts] = useState<Post[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [words, setWords] = useState<string[]>([]);
+  const [ngCounts, setNgCounts] = useState<Record<string, number>>({});
   const [newWord, setNewWord] = useState('');
   const [summary, setSummary] = useState<any>(null);
   const [flags, setFlags] = useState<any[]>([]);
@@ -41,7 +42,7 @@ export default function AdminConsole(){
   async function logout(){ await fetch('/api/auth?logout=1'); location.reload(); }
 
   async function reloadPosts(){ const params = new URLSearchParams(); if(query) params.set('q', query); if(handleFilter) params.set('handle', handleFilter); if(dateFilter) params.set('date', dateFilter); if(sourceFilter.length) params.set('source', sourceFilter.join(',')); const j = await fetch('/api/admin/posts/list?'+params.toString()).then(r=>r.json()).catch(()=>({posts:[]})); const arr = Array.isArray(j.posts)? j.posts as Post[]:[]; setPosts(arr); })); const arr = Array.isArray(j.posts)? j.posts as Post[]:[]; setPosts(arr); }
-  async function reloadWords(){ const j = await fetch('/api/admin/ngwords').then(r=>r.json()).catch(()=>({words:[]})); setWords(Array.isArray(j.words)?j.words:[]); }
+  async function reloadWords(){ const j = await fetch('/api/admin/ngwords').then(r=>r.json()).catch(()=>({words:[]})); setWords(Array.isArray(j.words)?j.words:[]); setNgCounts(j.counts||{}); })); setWords(Array.isArray(j.words)?j.words:[]); }
   async function reloadSummary(){ const j = await fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>null); setSummary(j?.summary||null); }
   async function reloadFlags(){ const j = await fetch('/api/admin/moderation/scan').then(r=>r.json()).catch(()=>({items:[]})); setFlags(Array.isArray(j.items)?j.items:[]); }
   async function reloadTopics(){ const j = await fetch('/api/admin/auto-topics').then(r=>r.json()).catch(()=>null); setTopics(Array.isArray(j?.topics)? j.topics: []); }
@@ -178,7 +179,7 @@ export default function AdminConsole(){
               {words.map((w,i)=> (
                 <tr key={`${i}-${w}`}>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{i+1}</td>
-                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{w}</td>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{w} {ngCounts[w]? (”í’e:) : ''}</td>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>
                     <button className="btn" onClick={()=>removeWord(w)}>å‰Šé™¤</button>
                   </td>
@@ -258,4 +259,6 @@ export default function AdminConsole(){
     </main>
   );
 }
+
+
 
