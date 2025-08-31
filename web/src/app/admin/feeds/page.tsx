@@ -163,26 +163,16 @@ export default function AdminFeedsPage() {
     <div className="admin-container" style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
       <h1>繝輔ぅ繝ｼ繝臥ｮ｡逅・/h1>
       
-      <div style={{ marginBottom: 20, display: 'flex', gap: 10 }}>
-        <button 
-          onClick={() => setShowAddForm(!showAddForm)}
-          style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-        >
-          譁ｰ隕上ヵ繧｣繝ｼ繝芽ｿｽ蜉
-        </button>
-        <button 
-          onClick={runFeedCheck}
-          style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-        >
-          謇句虚螳溯｡・
-        </button>
-        <button 
-          onClick={() => { loadFeeds(); loadLogs(); }}
-          style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
-        >
-          譖ｴ譁ｰ
-        </button>
-      </div>
+      
+      {/* YouTubeチャンネル追加（ID/URL対応） */}
+      <form onSubmit={async (e)=>{ e.preventDefault(); const f=e.currentTarget as HTMLFormElement; const fd=new FormData(f); const channel=String(fd.get('channel')||''); const name=String(fd.get('name')||''); const r= await fetch('/api/admin/feeds/youtube',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ channel, name })}); if(r.ok){ alert('YouTubeチャンネルを登録しました'); f.reset(); await loadFeeds(); } else { alert('追加に失敗しました'); } }} style={{ background:'#f8f9fa', padding:12, borderRadius:8, marginBottom:12 }}>
+        <h3 style={{marginTop:0}}>YouTubeチャンネルを追加</h3>
+        <div style={{display:'grid', gridTemplateColumns:'2fr 2fr auto', gap:8}}>
+          <input name="channel" placeholder="チャンネルURL または ID" required />
+          <input name="name" placeholder="表示名 (任意)" />
+          <button className="btn" type="submit">追加</button>
+        </div>
+      </form>
 
       {showAddForm && (
         <form onSubmit={handleAddFeed} style={{ background: '#f8f9fa', padding: 20, borderRadius: 8, marginBottom: 20 }}>
@@ -329,5 +319,6 @@ export default function AdminFeedsPage() {
     </div>
   );
 }
+
 
 
