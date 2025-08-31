@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@libsql/client';
-import { appendLog } from '@/lib/auto-topics';
+import { appendLog, loadTopics, saveTopics, AutoTopic } from '@/lib/auto-topics';
 import { PostsRepository } from '@/lib/db/posts-repository';
 import { fetchYouTubeChannelRSS, fetchYouTubeVideos } from '@/lib/feed/youtube';
 
@@ -45,6 +45,7 @@ export async function GET(req: NextRequest){
     if (recent.rows.length > 0) { appendLog('skip: rate_limit'); return NextResponse.json({ ok:true, skipped:'rate_limit' }); }
   } catch {}
 
+  // 1) Try priority channels via RSS
   for (const ch of PREF_CHANNELS) {
     const cid = await resolveChannelIdIfNeeded(ch);
     if (!cid) continue;
@@ -70,6 +71,47 @@ export async function GET(req: NextRequest){
         return NextResponse.json({ ok:false, error:String(e?.message||e) }, { status:500 });
       }
     }
+  }
+
+  // 2) Try saved auto-topics via YouTube Data API searches
+  const apiKey = process.env.YOUTUBE_API_KEY || '';
+  if (apiKey) {
+    const topics = loadTopics().filter(t => t.enabled !== false);
+    for (const t of topics) {
+      // min interval check
+      const minMs = Math.max(10, t.minIntervalMinutes || 60) * 60 * 1000;
+      if (t.lastPostedAt && Date.now() - t.lastPostedAt < minMs) {
+        appendLog(`skip_topic: rate_limit ${t.keyword}`);
+        continue;
+      }
+      try {
+        const vids = await fetchYouTubeVideos(apiKey, undefined, t.keyword, 3);
+        for (const v of vids) {
+          const watchUrl = `https://www.youtube.com/watch?v=${v.id}`;
+          const exists = await db.execute({ sql: `SELECT id FROM posts WHERE url = ? OR url = ? LIMIT 1`, args: [watchUrl, `https://youtu.be/${v.id}`] });
+          if (exists.rows.length > 0) continue;
+          await postsRepo.createPost({
+            title: v.title,
+            url: watchUrl,
+            comment: undefined,
+            handle: '@運営',
+            ownerKey: 'ADMIN_OPERATOR',
+            tags: ['動画','ニュース'],
+            media: undefined,
+          });
+          appendLog(`topic_post: ${t.keyword} | ${v.title} | ${watchUrl}`);
+          // persist lastPostedAt
+          t.lastPostedAt = Date.now();
+          try { saveTopics(topics as AutoTopic[]); } catch {}
+          return NextResponse.json({ ok:true, posted: { topic: t.keyword, title: v.title, url: watchUrl } });
+        }
+        appendLog(`skip_topic: no_match ${t.keyword}`);
+      } catch (e:any) {
+        appendLog(`error_topic: ${t.keyword} | ${String(e?.message||e)}`);
+      }
+    }
+  } else {
+    appendLog('skip: missing YOUTUBE_API_KEY for topics');
   }
 
   appendLog('skip: no_new_video');

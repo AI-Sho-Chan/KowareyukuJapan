@@ -18,7 +18,9 @@ export const db = createClient({
 // Initialize database schema
 export async function initializeDatabase() {
   try {
-    const schemaPath = path.join(process.cwd(), 'src', 'lib', 'db', 'schema.sql');
+    const baseDir = path.join(process.cwd(), 'src', 'lib', 'db');
+    const devSchema = path.join(baseDir, 'schema.dev.sql');
+    const schemaPath = (!isProd && fs.existsSync(devSchema)) ? devSchema : path.join(baseDir, 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
     // Split by semicolon and execute each statement

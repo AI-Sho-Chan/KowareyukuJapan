@@ -16,13 +16,17 @@ export default function AdminConsole(){
   const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
   const [notes, setNotes] = useState<{ lastUpdated: number; markdown: string } | null>(null);
+  const [topics, setTopics] = useState<{ id:string; keyword:string; enabled:boolean; minIntervalMinutes:number }[]>([]);
+  const [newTopic, setNewTopic] = useState('');
+  const [newTopicMin, setNewTopicMin] = useState(60);
+  const [logs, setLogs] = useState<string[]>([]);
 
   useEffect(()=>{
     (async()=>{
       const ok = await fetch('/api/admin/analytics').then(r=>r.ok).catch(()=>false);
       setAuth(ok?'ok':'ng');
       if(ok){
-        await Promise.all([reloadPosts(), reloadWords(), reloadSummary(), reloadFlags()]);
+        await Promise.all([reloadPosts(), reloadWords(), reloadSummary(), reloadFlags(), reloadTopics(), reloadLogs()]);
         try { const j = await fetch('/api/admin/notes').then(r=>r.json()); if(j?.ok) setNotes(j.notes); } catch {}
       }
     })();
@@ -40,6 +44,11 @@ export default function AdminConsole(){
   async function reloadWords(){ const j = await fetch('/api/admin/ngwords').then(r=>r.json()).catch(()=>({words:[]})); setWords(Array.isArray(j.words)?j.words:[]); }
   async function reloadSummary(){ const j = await fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>null); setSummary(j?.summary||null); }
   async function reloadFlags(){ const j = await fetch('/api/admin/moderation/scan').then(r=>r.json()).catch(()=>({items:[]})); setFlags(Array.isArray(j.items)?j.items:[]); }
+  async function reloadTopics(){ const j = await fetch('/api/admin/auto-topics').then(r=>r.json()).catch(()=>null); setTopics(Array.isArray(j?.topics)? j.topics: []); }
+  async function reloadLogs(){ const j = await fetch('/api/admin/auto-topics/logs?n=200').then(r=>r.json()).catch(()=>null); setLogs(Array.isArray(j?.lines)? j.lines: []); }
+  async function addTopic(){ const kw = newTopic.trim(); if(!kw) return; const r = await fetch('/api/admin/auto-topics', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ keyword: kw, minIntervalMinutes: newTopicMin }) }); if(r.ok){ setNewTopic(''); await reloadTopics(); } }
+  async function removeTopic(id:string, keyword:string){ const params = new URLSearchParams(); params.set('id', id); params.set('keyword', keyword); const r = await fetch('/api/admin/auto-topics?'+params.toString(), { method:'DELETE' }); if(r.ok){ await reloadTopics(); } }
+  async function clearLogs(){ const r = await fetch('/api/admin/auto-topics/logs', { method:'DELETE' }); if(r.ok){ await reloadLogs(); } }
 
   async function bulk(action:'hide'|'publish'|'delete'){
     if(selected.size===0){ alert('対象がありません'); return; }
@@ -65,6 +74,10 @@ export default function AdminConsole(){
     const q = query.toLowerCase();
     return posts.filter(p => (p.title||'').toLowerCase().includes(q) || (p.comment||'').toLowerCase().includes(q) || (p.url||'').toLowerCase().includes(q));
   },[posts, query]);
+
+  const ev = summary?.events || {};
+  const evToday = summary?.eventsToday || {};
+  const evMax = Math.max(ev.view||0, ev.empathy||0, ev.share||0, 1);
 
   if(auth!=='ok'){
     return (
@@ -174,6 +187,51 @@ export default function AdminConsole(){
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* 自動トピック（YouTube検索キーワード） */}
+      <section className="card" style={{padding:12, marginTop:12}}>
+        <h2 className="title">自動トピック管理（YouTube検索）</h2>
+        <div style={{display:'flex', gap:8, alignItems:'center'}}>
+          <input value={newTopic} onChange={e=>setNewTopic(e.currentTarget.value)} placeholder="キーワードを追加 (例: 外国人犯罪)" style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <input type="number" value={newTopicMin} onChange={e=>setNewTopicMin(Number(e.currentTarget.value||60))} min={10} max={1440} style={{width:120, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <span style={{color:'var(--muted)'}}>分間隔</span>
+          <button className="btn" onClick={addTopic}>追加</button>
+        </div>
+        <div style={{marginTop:8}}>
+          <table style={{width:'100%', borderCollapse:'collapse'}}>
+            <thead>
+              <tr>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>#</th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>キーワード</th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>間隔(分)</th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topics.map((t,i)=> (
+                <tr key={t.id}>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{i+1}</td>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{t.keyword}</td>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{t.minIntervalMinutes}</td>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>
+                    <button className="btn" onClick={()=>removeTopic(t.id, t.keyword)}>削除</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 自動投稿ログ */}
+      <section className="card" style={{padding:12, marginTop:12}}>
+        <h2 className="title">自動投稿ログ</h2>
+        <div className="modal-actions" style={{marginBottom:8}}>
+          <button className="btn" onClick={reloadLogs}>再読込</button>
+          <button className="btn" onClick={clearLogs}>クリア</button>
+        </div>
+        <pre style={{whiteSpace:'pre-wrap', background:'#111', color:'#eee', padding:8, borderRadius:8, maxHeight:240, overflow:'auto'}}>{logs.join('\n')}</pre>
       </section>
 
       {/* アンチ投稿スキャン */}

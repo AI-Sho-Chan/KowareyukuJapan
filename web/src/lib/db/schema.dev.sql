@@ -1,0 +1,142 @@
+-- Minimal, clean schema for local development
+
+-- Posts table (main content)
+CREATE TABLE IF NOT EXISTS posts (
+  id TEXT PRIMARY KEY,
+  title TEXT,
+  url TEXT,
+  comment TEXT,
+  handle TEXT DEFAULT '@guest',
+  owner_key TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  is_published BOOLEAN DEFAULT 1,
+  view_count INTEGER DEFAULT 0,
+  share_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  report_count INTEGER DEFAULT 0
+);
+
+-- Tags table
+CREATE TABLE IF NOT EXISTS tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Post tags relation
+CREATE TABLE IF NOT EXISTS post_tags (
+  post_id TEXT NOT NULL,
+  tag_id INTEGER NOT NULL,
+  PRIMARY KEY (post_id, tag_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+-- Media table
+CREATE TABLE IF NOT EXISTS media (
+  id TEXT PRIMARY KEY,
+  post_id TEXT,
+  type TEXT NOT NULL CHECK(type IN ('image', 'video')),
+  url TEXT NOT NULL,
+  r2_key TEXT,
+  size INTEGER,
+  width INTEGER,
+  height INTEGER,
+  duration INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- Audit log table
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  action TEXT NOT NULL,
+  target_type TEXT NOT NULL,
+  target_id TEXT,
+  admin_id TEXT,
+  metadata TEXT,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Reports table
+CREATE TABLE IF NOT EXISTS reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id TEXT NOT NULL,
+  reason TEXT,
+  reporter_ip TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  resolved_at DATETIME,
+  resolved_by TEXT,
+  action_taken TEXT,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- Rate limiting table
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT PRIMARY KEY,
+  count INTEGER DEFAULT 0,
+  window_start DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Events and aggregates
+CREATE TABLE IF NOT EXISTS events (
+  id TEXT PRIMARY KEY,
+  post_id TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('view','empathy','share')),
+  user_fp TEXT,
+  ip_hash TEXT,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_stats (
+  post_id TEXT PRIMARY KEY,
+  views INTEGER DEFAULT 0,
+  empathies INTEGER DEFAULT 0,
+  shares INTEGER DEFAULT 0,
+  last_event_at INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS trending_daily (
+  date TEXT NOT NULL,
+  post_id TEXT NOT NULL,
+  score REAL NOT NULL,
+  rank INTEGER NOT NULL,
+  PRIMARY KEY(date, post_id)
+);
+
+-- Moderation flags
+CREATE TABLE IF NOT EXISTS moderation_flags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  reviewed BOOLEAN DEFAULT 0,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- Useful indexes
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_owner_key ON posts(owner_key);
+CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(is_published, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_media_post_id ON media(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_tags_post_id ON post_tags(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_tags_tag_id ON post_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_reports_post_id ON reports(post_id);
+CREATE INDEX IF NOT EXISTS idx_events_post_created ON events(post_id, created_at);
+
+-- Default tags (dev)
+INSERT OR IGNORE INTO tags (name, slug) VALUES
+  ('治安・マナー', 'security-manners'),
+  ('ニュース', 'news'),
+  ('政治/制度', 'politics-system'),
+  ('動画', 'video'),
+  ('画像', 'image'),
+  ('日本', 'japan');
+

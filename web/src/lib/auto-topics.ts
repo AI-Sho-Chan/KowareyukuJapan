@@ -1,7 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export type AutoTopic = { id: string; keyword: string; enabled: boolean; minIntervalMinutes: number };
+export type AutoTopic = {
+  id: string;
+  keyword: string;
+  enabled: boolean;
+  minIntervalMinutes: number;
+  // Optional runtime fields for scheduling
+  lastRunAt?: number;
+  lastPostedAt?: number;
+};
 
 const DATA_DIR = path.join(process.cwd(), '.data');
 const TOPICS_FILE = path.join(DATA_DIR, 'auto-topics.json');
@@ -39,3 +47,7 @@ export function readLogs(maxLines = 200): string[] {
   } catch { return []; }
 }
 
+export function clearLogs(): void {
+  ensureDir();
+  try { fs.writeFileSync(LOG_FILE, '', 'utf8'); } catch {}
+}
