@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@libsql/client';
 import { Normalizer } from '@/lib/feed/normalizer';
 import crypto from 'crypto';
@@ -7,14 +7,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-// Cronジョブ認証�E�Eercel Cron用�E�E
+// Cron繧ｸ繝ｧ繝冶ｪ崎ｨｼ・・ercel Cron逕ｨ・・
 function verifyCronRequest(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
   if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
     return true;
   }
   
-  // 開発環墁E��は許可
+  // 髢狗匱迺ｰ蠅・〒縺ｯ險ｱ蜿ｯ
   if (process.env.NODE_ENV === 'development') {
     return true;
   }
@@ -23,7 +23,7 @@ function verifyCronRequest(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  // Cron認証チェチE��
+  // Cron隱崎ｨｼ繝√ぉ繝・け
   if (!verifyCronRequest(request)) {
     return NextResponse.json(
       { error: 'Unauthorized' },
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
 
-    // pendingスチE�EタスのアイチE��を取得（最新100件�E�E
+    // pending繧ｹ繝・・繧ｿ繧ｹ縺ｮ繧｢繧､繝・Β繧貞叙蠕暦ｼ域怙譁ｰ100莉ｶ・・
     const pendingItems = await db.execute(`
       SELECT 
         fi.*,
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         const sourceCategory = item.source_category as string;
         const sourceConfig = item.source_config as string | null;
         
-        // 設定から�E動承認判宁E
+        // 險ｭ螳壹°繧芽・蜍墓価隱榊愛螳・
         let autoApprove = false;
         if (sourceConfig) {
           try {
@@ -79,18 +79,18 @@ export async function GET(request: NextRequest) {
           } catch {}
         }
 
-        // カチE��リによる自動承認（ニュースは基本皁E��自動承認！E
+        // 繧ｫ繝・ざ繝ｪ縺ｫ繧医ｋ閾ｪ蜍墓価隱搾ｼ医ル繝･繝ｼ繧ｹ縺ｯ蝓ｺ譛ｬ逧・↓閾ｪ蜍墓価隱搾ｼ・
         if (sourceCategory === 'news') {
           autoApprove = true;
         }
 
         if (!autoApprove) {
-          // 自動承認でなぁE��合�EスキチE�E
+          // 閾ｪ蜍墓価隱阪〒縺ｪ縺・ｴ蜷医・繧ｹ繧ｭ繝・・
           results.skipped++;
           continue;
         }
 
-        // URLからサイトタイプを判宁E
+        // URL縺九ｉ繧ｵ繧､繝医ち繧､繝励ｒ蛻､螳・
         let postType = 'web';
         const urlLower = url.toLowerCase();
         if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
@@ -103,14 +103,14 @@ export async function GET(request: NextRequest) {
           postType = 'tiktok';
         }
 
-        // サマリー生�E
+        // 繧ｵ繝槭Μ繝ｼ逕滓・
         const summary = content || Normalizer.generateSummary(title);
 
-        // 埋め込み可否チェチE���E�簡易版�E�E
+        // 蝓九ａ霎ｼ縺ｿ蜿ｯ蜷ｦ繝√ぉ繝・け・育ｰ｡譏鍋沿・・
         let embedStatus = 'unknown';
         let probeJson = null;
 
-        // 既存�E埋め込みチェチE��APIを呼び出す（�E部呼び出し！E
+        // 譌｢蟄倥・蝓九ａ霎ｼ縺ｿ繝√ぉ繝・けAPI繧貞他縺ｳ蜃ｺ縺呻ｼ亥・驛ｨ蜻ｼ縺ｳ蜃ｺ縺暦ｼ・
         try {
           const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/can-embed?url=${encodeURIComponent(url)}`);
           if (response.ok) {
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
             probeJson = JSON.stringify(result);
           }
         } catch (e) {
-          // エラーは無要E
+          // 繧ｨ繝ｩ繝ｼ縺ｯ辟｡隕・
         }
 
         // Only publish embeddable sources
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
 
         // posts insert
         const postId = crypto.randomUUID();
-        const systemOwnerKey = 'ADMIN_OPERATOR'; // 運営による自動投稿
+        const systemOwnerKey = 'ADMIN_OPERATOR'; // 驕句霧縺ｫ繧医ｋ閾ｪ蜍墓兜遞ｿ
         
         await db.execute({
           sql: `INSERT INTO posts (
@@ -143,23 +143,23 @@ export async function GET(request: NextRequest) {
             postType,
             title,
             summary,
-            null, // サムネイルは後で生�E
+            null, // 繧ｵ繝繝阪う繝ｫ縺ｯ蠕後〒逕滓・
             embedStatus,
             probeJson,
             tagsJson,
-            'published', // 自動承認なので即公閁E
+            'published', // 閾ｪ蜍墓価隱阪↑縺ｮ縺ｧ蜊ｳ蜈ｬ髢・
             publishedAt,
             Math.floor(Date.now() / 1000),
           ],
         });
 
-        // feed_itemのスチE�Eタスを更新
+        // feed_item縺ｮ繧ｹ繝・・繧ｿ繧ｹ繧呈峩譁ｰ
         await db.execute({
           sql: `UPDATE feed_items SET status = 'approved' WHERE id = ?`,
           args: [itemId],
         });
 
-        // post_statsレコードを初期匁E
+        // post_stats繝ｬ繧ｳ繝ｼ繝峨ｒ蛻晄悄蛹・
         await db.execute({
           sql: `INSERT OR IGNORE INTO post_stats (post_id, views, empathies, shares) VALUES (?, 0, 0, 0)`,
           args: [postId],
@@ -201,8 +201,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 手動実行用POSTエンド�EインチE
+// 謇句虚螳溯｡檎畑POST繧ｨ繝ｳ繝峨・繧､繝ｳ繝・
 export async function POST(request: NextRequest) {
   return GET(request);
 }
+
 

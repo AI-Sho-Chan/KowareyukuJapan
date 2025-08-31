@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
@@ -37,7 +37,7 @@ export default function AdminConsole(){
     e.preventDefault();
     const r = await fetch('/api/auth', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ adminKey }) });
     if(r.ok){ setAuth('ok'); await Promise.all([reloadPosts(), reloadWords(), reloadSummary(), reloadFlags()]); }
-    else alert('認証に失敗しました');
+    else alert('隱崎ｨｼ縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
   }
   async function logout(){ await fetch('/api/auth?logout=1'); location.reload(); }
 
@@ -52,12 +52,12 @@ export default function AdminConsole(){
   async function clearLogs(){ const r = await fetch('/api/admin/auto-topics/logs', { method:'DELETE' }); if(r.ok){ await reloadLogs(); } }
 
   async function bulk(action:'hide'|'publish'|'delete'){
-    if(selected.size===0){ alert('対象がありません'); return; }
-    if(action==='delete' && !confirm('選択した投稿を削除します。よろしぁE��すか�E�E)) return;
+    if(selected.size===0){ alert('蟇ｾ雎｡縺後≠繧翫∪縺帙ｓ'); return; }
+    if(action==='delete' && !confirm('驕ｸ謚槭＠縺滓兜遞ｿ繧貞炎髯､縺励∪縺吶ゅｈ繧阪＠縺・〒縺吶°・・)) return;
     const ids = Array.from(selected);
     const r = await fetch('/api/admin/posts/bulk', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ action, ids }) });
     if(r.ok){ await reloadPosts(); setSelected(new Set()); }
-    else alert('一括処琁E��失敗しました');
+    else alert('荳諡ｬ蜃ｦ逅・↓螟ｱ謨励＠縺ｾ縺励◆');
   }
   async function addWord(){ if(!newWord.trim()) return; const r= await fetch('/api/admin/ngwords', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ action:'add', word:newWord.trim() }) }); if(r.ok){ setNewWord(''); await reloadWords(); } }
   async function removeWord(w:string){ const r= await fetch('/api/admin/ngwords', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ action:'remove', word:w }) }); if(r.ok){ await reloadWords(); } }
@@ -66,7 +66,7 @@ export default function AdminConsole(){
       setScanning(true);
       const r = await fetch('/api/admin/moderation/scan', { method:'POST' });
       if(r.ok){ await reloadFlags(); }
-      else alert('スキャンに失敁E);
+      else alert('繧ｹ繧ｭ繝｣繝ｳ縺ｫ螟ｱ謨・);
     } finally { setScanning(false); }
   }
 
@@ -83,16 +83,16 @@ export default function AdminConsole(){
   if(auth!=='ok'){
     return (
       <main className="container" style={{maxWidth:560, padding:16}}>
-        <h1 className="title">管琁E��グイン</h1>
+        <h1 className="title">邂｡逅・Ο繧ｰ繧､繝ｳ</h1>
         <form onSubmit={login} className="card" style={{padding:16, marginTop:12}}>
-          <label className="radio">管琁E��ー
+          <label className="radio">邂｡逅・く繝ｼ
             <input type="password" value={adminKey} onChange={e=>setAdminKey(e.currentTarget.value)} style={{ width:'100%', padding:10, borderRadius:10, border:'1px solid var(--line)', background:'#fff', color:'#111' }} />
           </label>
           <div className="modal-actions" style={{marginTop:12}}>
-            <button className="btn primary" type="submit">ログイン</button>
+            <button className="btn primary" type="submit">繝ｭ繧ｰ繧､繝ｳ</button>
           </div>
         </form>
-        <p style={{marginTop:12}}><Link href="/">サイトに戻めE/Link></p>
+        <p style={{marginTop:12}}><Link href="/">繧ｵ繧､繝医↓謌ｻ繧・/Link></p>
       </main>
     );
   }
@@ -100,32 +100,32 @@ export default function AdminConsole(){
   return (
     <main className="container" style={{padding:16}}>
       <header className="site-header" style={{position:'static', marginBottom:12}}>
-        <div className="site-brand"><h1 className="brand-title">管琁E��ンソール</h1></div>
+        <div className="site-brand"><h1 className="brand-title">邂｡逅・さ繝ｳ繧ｽ繝ｼ繝ｫ</h1></div>
       </header>
 
-      {/* 概要E*/}
+      {/* 讎りｦ・*/}
       <section className="card" style={{padding:12}}>
-        <h2 className="title">ダチE��ュボ�EチE/h2>
+        <h2 className="title">繝繝・す繝･繝懊・繝・/h2>
         <div style={{display:'flex', gap:12, flexWrap:'wrap', marginTop:8}}>
-          <div className="notice"><div className="notice-title">総投稿</div><div>{summary?.postsTotal ?? posts.length}</div></div>
-          <div className="notice"><div className="notice-title">非�E閁E/div><div>{summary?.postsHidden ?? 0}</div></div>
-          <div className="notice"><div className="notice-title">イベント（累計！E/div><div>view:{summary?.events?.view||0} empathy:{summary?.events?.empathy||0} share:{summary?.events?.share||0}</div></div>
-          <div className="notice"><div className="notice-title">今日</div><div>view:{summary?.eventsToday?.view||0} empathy:{summary?.eventsToday?.empathy||0} share:{summary?.eventsToday?.share||0}</div></div>
-          <div style={{marginLeft:'auto'}}><button className="btn" onClick={logout}>ログアウチE/button></div>
+          <div className="notice"><div className="notice-title">邱乗兜遞ｿ</div><div>{summary?.postsTotal ?? posts.length}</div></div>
+          <div className="notice"><div className="notice-title">髱槫・髢・/div><div>{summary?.postsHidden ?? 0}</div></div>
+          <div className="notice"><div className="notice-title">繧､繝吶Φ繝茨ｼ育ｴｯ險茨ｼ・/div><div>view:{summary?.events?.view||0} empathy:{summary?.events?.empathy||0} share:{summary?.events?.share||0}</div></div>
+          <div className="notice"><div className="notice-title">莉頑律</div><div>view:{summary?.eventsToday?.view||0} empathy:{summary?.eventsToday?.empathy||0} share:{summary?.eventsToday?.share||0}</div></div>
+          <div style={{marginLeft:'auto'}}><button className="btn" onClick={logout}>繝ｭ繧ｰ繧｢繧ｦ繝・/button></div>
         </div>
       </section>
 
-      {/* 投稿一覧�E�E��括操佁E*/}
+      {/* 謚慕ｨｿ荳隕ｧ・・ｸ諡ｬ謫堺ｽ・*/}
       <section className="card" style={{padding:12, marginTop:12}}>
-        <h2 className="title">投稿管琁E/h2>
+        <h2 className="title">謚慕ｨｿ邂｡逅・/h2>
         <div style={{display:'flex', gap:8, alignItems:'center'}}>
-          <input placeholder="検索" value={query} onChange={e=>setQuery(e.currentTarget.value)} style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
-          <button className="btn" onClick={()=>bulk('hide')}>非�E閁E/button>
-          <button className="btn" onClick={()=>bulk('publish')}>再�E閁E/button>
-          <button className="btn" onClick={()=>bulk('delete')}>削除</button>
-          <button className="btn" onClick={()=>{ const s=new Set(selected); filtered.forEach(p=>s.add(p.id)); setSelected(s); }}>絞込を�E選抁E/button>
-          <button className="btn" onClick={()=>setSelected(new Set())}>選択解除</button>
-          <button className="btn" onClick={()=>{ const data = JSON.stringify(filtered, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'posts.json'; a.click(); URL.revokeObjectURL(a.href); }}>JSON書き�EぁE/button>
+          <input placeholder="讀懃ｴ｢" value={query} onChange={e=>setQuery(e.currentTarget.value)} style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <button className="btn" onClick={()=>bulk('hide')}>髱槫・髢・/button>
+          <button className="btn" onClick={()=>bulk('publish')}>蜀榊・髢・/button>
+          <button className="btn" onClick={()=>bulk('delete')}>蜑企勁</button>
+          <button className="btn" onClick={()=>{ const s=new Set(selected); filtered.forEach(p=>s.add(p.id)); setSelected(s); }}>邨櫁ｾｼ繧貞・驕ｸ謚・/button>
+          <button className="btn" onClick={()=>setSelected(new Set())}>驕ｸ謚櫁ｧ｣髯､</button>
+          <button className="btn" onClick={()=>{ const data = JSON.stringify(filtered, null, 2); const blob = new Blob([data], {type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'posts.json'; a.click(); URL.revokeObjectURL(a.href); }}>JSON譖ｸ縺榊・縺・/button>
         </div>
         <div style={{marginTop:8}}>
           {filtered.map(p=> (
@@ -136,52 +136,52 @@ export default function AdminConsole(){
                 <div style={{fontSize:12, color:'var(--muted)'}}>{p.url}</div>
               </div>
               <div style={{display:'flex', gap:6, alignItems:'center'}}>
-                <span className="pill">{p.is_published===0?'非�E閁E:'公閁E}</span>
-                <button className="btn" onClick={()=>bulk('hide').then(()=>{})} title="非�E開にする" disabled={!selected.has(p.id)} style={{display:'none'}} />
-                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('hide'); }}>非�E閁E/button>
-                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('publish'); }}>再�E閁E/button>
-                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('delete'); }}>削除</button>
+                <span className="pill">{p.is_published===0?'髱槫・髢・:'蜈ｬ髢・}</span>
+                <button className="btn" onClick={()=>bulk('hide').then(()=>{})} title="髱槫・髢九↓縺吶ｋ" disabled={!selected.has(p.id)} style={{display:'none'}} />
+                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('hide'); }}>髱槫・髢・/button>
+                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('publish'); }}>蜀榊・髢・/button>
+                <button className="btn" onClick={()=>{ setSelected(new Set([p.id])); bulk('delete'); }}>蜑企勁</button>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* NGワード管琁E*/}
+      {/* NG繝ｯ繝ｼ繝臥ｮ｡逅・*/}
       <section className="card" style={{padding:12, marginTop:12}}>
-        <h2 className="title">NGワード管琁E/h2>
+        <h2 className="title">NG繝ｯ繝ｼ繝臥ｮ｡逅・/h2>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center', marginBottom:6, color:'var(--muted)'}}>
-          <span>現在 {words.length} 件</span>
-          <button className="btn" onClick={async()=>{ const r=await fetch('/api/admin/ngwords/seed', { method:'POST' }); const j = await r.json().catch(()=>null); if(j?.ok){ await reloadWords(); alert(`初期セチE��を投入しました�E�合訁E${j.words?.length||0} 件�E�`); } else { alert('投�Eに失敗しました'); } }}>基準セチE��を投入</button>
+          <span>迴ｾ蝨ｨ {words.length} 莉ｶ</span>
+          <button className="btn" onClick={async()=>{ const r=await fetch('/api/admin/ngwords/seed', { method:'POST' }); const j = await r.json().catch(()=>null); if(j?.ok){ await reloadWords(); alert(`蛻晄悄繧ｻ繝・ヨ繧呈兜蜈･縺励∪縺励◆・亥粋險・${j.words?.length||0} 莉ｶ・荏); } else { alert('謚募・縺ｫ螟ｱ謨励＠縺ｾ縺励◆'); } }}>蝓ｺ貅悶そ繝・ヨ繧呈兜蜈･</button>
         </div>
         <div style={{display:'flex', gap:8}}>
-          <input value={newWord} onChange={e=>setNewWord(e.currentTarget.value)} placeholder="NGワードを追加" style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
-          <button className="btn" onClick={addWord}>追加</button>
+          <input value={newWord} onChange={e=>setNewWord(e.currentTarget.value)} placeholder="NG繝ｯ繝ｼ繝峨ｒ霑ｽ蜉" style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <button className="btn" onClick={addWord}>霑ｽ蜉</button>
         </div>
         <div style={{marginTop:8, display:'flex', gap:8}}>
-          <input id="ngtest" placeholder="チE��ストで判定テスチE style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <input id="ngtest" placeholder="繝・く繧ｹ繝医〒蛻､螳壹ユ繧ｹ繝・ style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
           <button className="btn" onClick={async()=>{
             const el = document.getElementById('ngtest') as HTMLInputElement|null; const text = el?.value||'';
             const r = await fetch('/api/admin/ngwords/test', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ text }) });
-            const j = await r.json().catch(()=>null); alert(j?.blocked ? 'ブロチE��対象' : 'OK');
-          }}>チE��チE/button>
+            const j = await r.json().catch(()=>null); alert(j?.blocked ? '繝悶Ο繝・け蟇ｾ雎｡' : 'OK');
+          }}>繝・せ繝・/button>
         </div>
         <div style={{marginTop:8}}>
           <table style={{width:'100%', borderCollapse:'collapse'}}>
             <thead>
               <tr>
                 <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>#</th>
-                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>NGワーチE/th>
-                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>操佁E/th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>NG繝ｯ繝ｼ繝・/th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>謫堺ｽ・/th>
               </tr>
             </thead>
             <tbody>
               {words.map((w,i)=> (
                 <tr key={`${i}-${w}`}>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{i+1}</td>
-                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{w} {ngCounts[w]? (��e:) : ''}</td>
+                  <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{w} {ngCounts[w]? (被弾:) : ''}</td>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>
-                    <button className="btn" onClick={()=>removeWord(w)}>削除</button>
+                    <button className="btn" onClick={()=>removeWord(w)}>蜑企勁</button>
                   </td>
                 </tr>
               ))}
@@ -190,23 +190,23 @@ export default function AdminConsole(){
         </div>
       </section>
 
-      {/* 自動トピック�E�EouTube検索キーワード！E*/}
+      {/* 閾ｪ蜍輔ヨ繝斐ャ繧ｯ・・ouTube讀懃ｴ｢繧ｭ繝ｼ繝ｯ繝ｼ繝会ｼ・*/}
       <section className="card" style={{padding:12, marginTop:12}}>
-        <h2 className="title">自動トピック管琁E��EouTube検索�E�E/h2>
+        <h2 className="title">閾ｪ蜍輔ヨ繝斐ャ繧ｯ邂｡逅・ｼ・ouTube讀懃ｴ｢・・/h2>
         <div style={{display:'flex', gap:8, alignItems:'center'}}>
-          <input value={newTopic} onChange={e=>setNewTopic(e.currentTarget.value)} placeholder="キーワードを追加 (侁E 外国人犯罪)" style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
+          <input value={newTopic} onChange={e=>setNewTopic(e.currentTarget.value)} placeholder="繧ｭ繝ｼ繝ｯ繝ｼ繝峨ｒ霑ｽ蜉 (萓・ 螟門嵜莠ｺ迥ｯ鄂ｪ)" style={{flex:1, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
           <input type="number" value={newTopicMin} onChange={e=>setNewTopicMin(Number(e.currentTarget.value||60))} min={10} max={1440} style={{width:120, padding:8, border:'1px solid var(--line)', borderRadius:8}} />
-          <span style={{color:'var(--muted)'}}>刁E��隁E/span>
-          <button className="btn" onClick={addTopic}>追加</button>
+          <span style={{color:'var(--muted)'}}>蛻・俣髫・/span>
+          <button className="btn" onClick={addTopic}>霑ｽ蜉</button>
         </div>
         <div style={{marginTop:8}}>
           <table style={{width:'100%', borderCollapse:'collapse'}}>
             <thead>
               <tr>
                 <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>#</th>
-                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>キーワーチE/th>
-                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>間隔(刁E</th>
-                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>操佁E/th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>繧ｭ繝ｼ繝ｯ繝ｼ繝・/th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>髢馴囈(蛻・</th>
+                <th style={{textAlign:'left', padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>謫堺ｽ・/th>
               </tr>
             </thead>
             <tbody>
@@ -216,7 +216,7 @@ export default function AdminConsole(){
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{t.keyword}</td>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>{t.minIntervalMinutes}</td>
                   <td style={{padding:'6px 8px', borderBottom:'1px solid var(--line)'}}>
-                    <button className="btn" onClick={()=>removeTopic(t.id, t.keyword)}>削除</button>
+                    <button className="btn" onClick={()=>removeTopic(t.id, t.keyword)}>蜑企勁</button>
                   </td>
                 </tr>
               ))}
@@ -225,21 +225,21 @@ export default function AdminConsole(){
         </div>
       </section>
 
-      {/* 自動投稿ログ */}
+      {/* 閾ｪ蜍墓兜遞ｿ繝ｭ繧ｰ */}
       <section className="card" style={{padding:12, marginTop:12}}>
-        <h2 className="title">自動投稿ログ</h2>
+        <h2 className="title">閾ｪ蜍墓兜遞ｿ繝ｭ繧ｰ</h2>
         <div className="modal-actions" style={{marginBottom:8}}>
-          <button className="btn" onClick={reloadLogs}>再読込</button>
-          <button className="btn" onClick={clearLogs}>クリア</button>
+          <button className="btn" onClick={reloadLogs}>蜀崎ｪｭ霎ｼ</button>
+          <button className="btn" onClick={clearLogs}>繧ｯ繝ｪ繧｢</button>
         </div>
         <pre style={{whiteSpace:'pre-wrap', background:'#111', color:'#eee', padding:8, borderRadius:8, maxHeight:240, overflow:'auto'}}>{logs.join('\n')}</pre>
       </section>
 
-      {/* アンチ投稿スキャン */}
+      {/* 繧｢繝ｳ繝∵兜遞ｿ繧ｹ繧ｭ繝｣繝ｳ */}
       <section className="card" style={{padding:12, marginTop:12}}>
-        <h2 className="title">アンチ投稿 自動判宁E/h2>
+        <h2 className="title">繧｢繝ｳ繝∵兜遞ｿ 閾ｪ蜍募愛螳・/h2>
         <div className="modal-actions" style={{marginBottom:8}}>
-          <button className="btn" type="button" onClick={rescan} aria-busy={scanning} disabled={scanning}>{scanning ? '実行中…' : 'スキャン実衁E}</button>
+          <button className="btn" type="button" onClick={rescan} aria-busy={scanning} disabled={scanning}>{scanning ? '螳溯｡御ｸｭ窶ｦ' : '繧ｹ繧ｭ繝｣繝ｳ螳溯｡・}</button>
         </div>
         <div>
           {flags.map(f => (
@@ -255,10 +255,11 @@ export default function AdminConsole(){
         </div>
       </section>
 
-      <footer style={{marginTop:16}}><Link href="/">サイトに戻めE/Link></footer>
+      <footer style={{marginTop:16}}><Link href="/">繧ｵ繧､繝医↓謌ｻ繧・/Link></footer>
     </main>
   );
 }
+
 
 
 

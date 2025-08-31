@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -33,7 +33,7 @@ export default function AdminFeedsPage() {
   const [selectedFeed, setSelectedFeed] = useState<string | null>(null);
   const [stats, setStats] = useState<{ posted: Record<string, number>; collected: Record<string, number> }>({ posted: {}, collected: {} });
 
-  // フィード一覧取征E
+  // 繝輔ぅ繝ｼ繝我ｸ隕ｧ蜿門ｾ・
   const loadFeeds = async () => {
     try {
       const res = await fetch('/api/admin/feeds');
@@ -47,7 +47,7 @@ export default function AdminFeedsPage() {
     }
   };
 
-  // フィードログ取征E
+  // 繝輔ぅ繝ｼ繝峨Ο繧ｰ蜿門ｾ・
   const loadLogs = async (feedId?: string) => {
     try {
       const url = feedId 
@@ -68,7 +68,7 @@ export default function AdminFeedsPage() {
     loadLogs();
   }, []);
 
-  // フィード追加
+  // 繝輔ぅ繝ｼ繝芽ｿｽ蜉
   const handleAddFeed = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -94,11 +94,11 @@ export default function AdminFeedsPage() {
       }
     } catch (error) {
       console.error('Failed to add feed:', error);
-      alert('フィード�E追加に失敗しました');
+      alert('繝輔ぅ繝ｼ繝峨・霑ｽ蜉縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
     }
   };
 
-  // フィード有効/無効刁E��替ぁE
+  // 繝輔ぅ繝ｼ繝画怏蜉ｹ/辟｡蜉ｹ蛻・ｊ譖ｿ縺・
   const toggleFeed = async (feedId: string, enabled: boolean) => {
     try {
       const res = await fetch(`/api/admin/feeds/${feedId}`, {
@@ -115,9 +115,9 @@ export default function AdminFeedsPage() {
     }
   };
 
-  // フィード削除
+  // 繝輔ぅ繝ｼ繝牙炎髯､
   const deleteFeed = async (feedId: string) => {
-    if (!confirm('こ�Eフィードを削除しますか�E�E)) return;
+    if (!confirm('縺薙・繝輔ぅ繝ｼ繝峨ｒ蜑企勁縺励∪縺吶°・・)) return;
     
     try {
       const res = await fetch(`/api/admin/feeds/${feedId}`, {
@@ -132,14 +132,14 @@ export default function AdminFeedsPage() {
     }
   };
 
-  // 手動実衁E
+  // 謇句虚螳溯｡・
   const runFeedCheck = async () => {
-    if (!confirm('フィードチェチE��を手動実行しますか�E�E)) return;
+    if (!confirm('繝輔ぅ繝ｼ繝峨メ繧ｧ繝・け繧呈焔蜍募ｮ溯｡後＠縺ｾ縺吶°・・)) return;
     
     try {
       const res = await fetch('/api/cron/feed-check', { method: 'POST' });
       if (res.ok) {
-        alert('フィードチェチE��を開始しました');
+        alert('繝輔ぅ繝ｼ繝峨メ繧ｧ繝・け繧帝幕蟋九＠縺ｾ縺励◆');
         setTimeout(() => {
           loadFeeds();
           loadLogs();
@@ -153,43 +153,43 @@ export default function AdminFeedsPage() {
   if (loading) {
     return (
       <div className="admin-container">
-        <h1>フィード管琁E/h1>
-        <p>読み込み中...</p>
+        <h1>繝輔ぅ繝ｼ繝臥ｮ｡逅・/h1>
+        <p>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>
       </div>
     );
   }
 
   return (
     <div className="admin-container" style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>フィード管琁E/h1>
+      <h1>繝輔ぅ繝ｼ繝臥ｮ｡逅・/h1>
       
       
-      {/* YouTube�`�����l���ǉ��iID/URL�Ή��j */}
-      <form onSubmit={async (e)=>{ e.preventDefault(); const f=e.currentTarget as HTMLFormElement; const fd=new FormData(f); const channel=String(fd.get('channel')||''); const name=String(fd.get('name')||''); const r= await fetch('/api/admin/feeds/youtube',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ channel, name })}); if(r.ok){ alert('YouTube�`�����l����o�^���܂���'); f.reset(); await loadFeeds(); } else { alert('�ǉ��Ɏ��s���܂���'); } }} style={{ background:'#f8f9fa', padding:12, borderRadius:8, marginBottom:12 }}>
-        <h3 style={{marginTop:0}}>YouTube�`�����l����ǉ�</h3>
+      {/* YouTubeチャンネル追加（ID/URL対応） */}
+      <form onSubmit={async (e)=>{ e.preventDefault(); const f=e.currentTarget as HTMLFormElement; const fd=new FormData(f); const channel=String(fd.get('channel')||''); const name=String(fd.get('name')||''); const r= await fetch('/api/admin/feeds/youtube',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ channel, name })}); if(r.ok){ alert('YouTubeチャンネルを登録しました'); f.reset(); await loadFeeds(); } else { alert('追加に失敗しました'); } }} style={{ background:'#f8f9fa', padding:12, borderRadius:8, marginBottom:12 }}>
+        <h3 style={{marginTop:0}}>YouTubeチャンネルを追加</h3>
         <div style={{display:'grid', gridTemplateColumns:'2fr 2fr auto', gap:8}}>
-          <input name="channel" placeholder="�`�����l��URL �܂��� ID" required />
-          <input name="name" placeholder="�\���� (�C��)" />
-          <button className="btn" type="submit">�ǉ�</button>
+          <input name="channel" placeholder="チャンネルURL または ID" required />
+          <input name="name" placeholder="表示名 (任意)" />
+          <button className="btn" type="submit">追加</button>
         </div>
       </form>
 
       {showAddForm && (
         <form onSubmit={handleAddFeed} style={{ background: '#f8f9fa', padding: 20, borderRadius: 8, marginBottom: 20 }}>
-          <h3>新規フィード追加</h3>
+          <h3>譁ｰ隕上ヵ繧｣繝ｼ繝芽ｿｽ蜉</h3>
           <div style={{ display: 'grid', gap: 10 }}>
-            <input name="name" placeholder="フィード名" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <input name="url" type="url" placeholder="フィードURL" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="name" placeholder="繝輔ぅ繝ｼ繝牙錐" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="url" type="url" placeholder="繝輔ぅ繝ｼ繝蔚RL" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
             <select name="type" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }}>
               <option value="rss">RSS</option>
               <option value="atom">Atom</option>
               <option value="json">JSON Feed</option>
             </select>
-            <input name="category" placeholder="カチE��リー" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <input name="interval" type="number" placeholder="チェチE��間隔�E��E�E�E defaultValue="30" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="category" placeholder="繧ｫ繝・ざ繝ｪ繝ｼ" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="interval" type="number" placeholder="繝√ぉ繝・け髢馴囈・亥・・・ defaultValue="30" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="submit" style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>追加</button>
-              <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>キャンセル</button>
+              <button type="submit" style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>霑ｽ蜉</button>
+              <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
             </div>
           </div>
         </form>
@@ -197,16 +197,16 @@ export default function AdminFeedsPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
         <div>
-          <h2>フィード一覧</h2>
+          <h2>繝輔ぅ繝ｼ繝我ｸ隕ｧ</h2>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8f9fa' }}>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>名前</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>カチE��リー</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>状慁E/th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>エラー</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>最終チェチE��</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>操佁E/th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>蜷榊燕</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>繧ｫ繝・ざ繝ｪ繝ｼ</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>迥ｶ諷・/th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>繧ｨ繝ｩ繝ｼ</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>譛邨ゅメ繧ｧ繝・け</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>謫堺ｽ・/th>
               </tr>
             </thead>
             <tbody>
@@ -225,14 +225,14 @@ export default function AdminFeedsPage() {
                       color: 'white',
                       fontSize: 12
                     }}>
-                      {feed.enabled ? '有効' : '無効'}
+                      {feed.enabled ? '譛牙柑' : '辟｡蜉ｹ'}
                     </span>
                   </td>
                   <td style={{ padding: 10 }}><div style={{ fontSize: 12, color: '#333' }}>posted: {stats.posted[feed.id] || 0} / collected: {stats.collected[feed.id] || 0}</div></td>
                   <td style={{ padding: 10 }}>
                     {feed.last_checked_at 
                       ? new Date(feed.last_checked_at * 1000).toLocaleString('ja-JP')
-                      : '未実衁E}
+                      : '譛ｪ螳溯｡・}
                   </td>
                   <td style={{ padding: 10 }}>
                     <div style={{ display: 'flex', gap: 5 }}>
@@ -248,7 +248,7 @@ export default function AdminFeedsPage() {
                           cursor: 'pointer'
                         }}
                       >
-                        {feed.enabled ? '無効匁E : '有効匁E}
+                        {feed.enabled ? '辟｡蜉ｹ蛹・ : '譛牙柑蛹・}
                       </button>
                       <button 
                         onClick={() => { setSelectedFeed(feed.id); loadLogs(feed.id); }}
@@ -262,7 +262,7 @@ export default function AdminFeedsPage() {
                           cursor: 'pointer'
                         }}
                       >
-                        ログ
+                        繝ｭ繧ｰ
                       </button>
                       <button 
                         onClick={() => deleteFeed(feed.id)}
@@ -276,7 +276,7 @@ export default function AdminFeedsPage() {
                           cursor: 'pointer'
                         }}
                       >
-                        削除
+                        蜑企勁
                       </button>
                     </div>
                   </td>
@@ -287,7 +287,7 @@ export default function AdminFeedsPage() {
         </div>
 
         <div>
-          <h2>最近�Eログ</h2>
+          <h2>譛霑代・繝ｭ繧ｰ</h2>
           <div style={{ maxHeight: 500, overflow: 'auto' }}>
             {logs.map(log => (
               <div key={log.id} style={{ 
@@ -301,14 +301,14 @@ export default function AdminFeedsPage() {
                   {new Date(log.created_at * 1000).toLocaleString('ja-JP')}
                 </div>
                 <div>
-                  取征E {log.items_found}件 / 新要E {log.items_new}件
+                  蜿門ｾ・ {log.items_found}莉ｶ / 譁ｰ隕・ {log.items_new}莉ｶ
                 </div>
                 <div style={{ fontSize: 12, color: '#6c757d' }}>
-                  処琁E��閁E {log.duration_ms}ms
+                  蜃ｦ逅・凾髢・ {log.duration_ms}ms
                 </div>
                 {log.error && (
                   <div style={{ color: '#dc3545', fontSize: 12, marginTop: 5 }}>
-                    エラー: {log.error}
+                    繧ｨ繝ｩ繝ｼ: {log.error}
                   </div>
                 )}
               </div>
@@ -319,6 +319,7 @@ export default function AdminFeedsPage() {
     </div>
   );
 }
+
 
 
 
