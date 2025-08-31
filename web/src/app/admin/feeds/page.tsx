@@ -31,15 +31,15 @@ export default function AdminFeedsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedFeed, setSelectedFeed] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ posted: Record<string, number>; collected: Record<string, number> }>({ posted: {}, collected: {} });
 
-  // フィード一覧取得
+  // フィード一覧取征E
   const loadFeeds = async () => {
     try {
       const res = await fetch('/api/admin/feeds');
       if (res.ok) {
         const data = await res.json();
-        setFeeds(data.feeds || []);
-      }
+        \n      try { const s = await fetch('/api/admin/feeds/stats').then(r=>r.json()); if (s?.ok) setStats({ posted: s.posted||{}, collected: s.collected||{} }); } catch {}
     } catch (error) {
       console.error('Failed to load feeds:', error);
     } finally {
@@ -47,7 +47,7 @@ export default function AdminFeedsPage() {
     }
   };
 
-  // フィードログ取得
+  // フィードログ取征E
   const loadLogs = async (feedId?: string) => {
     try {
       const url = feedId 
@@ -94,11 +94,11 @@ export default function AdminFeedsPage() {
       }
     } catch (error) {
       console.error('Failed to add feed:', error);
-      alert('フィードの追加に失敗しました');
+      alert('フィード�E追加に失敗しました');
     }
   };
 
-  // フィード有効/無効切り替え
+  // フィード有効/無効刁E��替ぁE
   const toggleFeed = async (feedId: string, enabled: boolean) => {
     try {
       const res = await fetch(`/api/admin/feeds/${feedId}`, {
@@ -117,7 +117,7 @@ export default function AdminFeedsPage() {
 
   // フィード削除
   const deleteFeed = async (feedId: string) => {
-    if (!confirm('このフィードを削除しますか？')) return;
+    if (!confirm('こ�Eフィードを削除しますか�E�E)) return;
     
     try {
       const res = await fetch(`/api/admin/feeds/${feedId}`, {
@@ -132,14 +132,14 @@ export default function AdminFeedsPage() {
     }
   };
 
-  // 手動実行
+  // 手動実衁E
   const runFeedCheck = async () => {
-    if (!confirm('フィードチェックを手動実行しますか？')) return;
+    if (!confirm('フィードチェチE��を手動実行しますか�E�E)) return;
     
     try {
       const res = await fetch('/api/cron/feed-check', { method: 'POST' });
       if (res.ok) {
-        alert('フィードチェックを開始しました');
+        alert('フィードチェチE��を開始しました');
         setTimeout(() => {
           loadFeeds();
           loadLogs();
@@ -153,7 +153,7 @@ export default function AdminFeedsPage() {
   if (loading) {
     return (
       <div className="admin-container">
-        <h1>フィード管理</h1>
+        <h1>フィード管琁E/h1>
         <p>読み込み中...</p>
       </div>
     );
@@ -161,7 +161,7 @@ export default function AdminFeedsPage() {
 
   return (
     <div className="admin-container" style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>フィード管理</h1>
+      <h1>フィード管琁E/h1>
       
       <div style={{ marginBottom: 20, display: 'flex', gap: 10 }}>
         <button 
@@ -174,7 +174,7 @@ export default function AdminFeedsPage() {
           onClick={runFeedCheck}
           style={{ padding: '8px 16px', background: '#28a745', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}
         >
-          手動実行
+          手動実衁E
         </button>
         <button 
           onClick={() => { loadFeeds(); loadLogs(); }}
@@ -195,8 +195,8 @@ export default function AdminFeedsPage() {
               <option value="atom">Atom</option>
               <option value="json">JSON Feed</option>
             </select>
-            <input name="category" placeholder="カテゴリー" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <input name="interval" type="number" placeholder="チェック間隔（分）" defaultValue="30" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="category" placeholder="カチE��リー" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <input name="interval" type="number" placeholder="チェチE��間隔�E��E�E�E defaultValue="30" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="submit" style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>追加</button>
               <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>キャンセル</button>
@@ -212,11 +212,11 @@ export default function AdminFeedsPage() {
             <thead>
               <tr style={{ background: '#f8f9fa' }}>
                 <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>名前</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>カテゴリー</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>状態</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>カチE��リー</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>状慁E/th>
                 <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>エラー</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>最終チェック</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>操作</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>最終チェチE��</th>
+                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>操佁E/th>
               </tr>
             </thead>
             <tbody>
@@ -238,15 +238,11 @@ export default function AdminFeedsPage() {
                       {feed.enabled ? '有効' : '無効'}
                     </span>
                   </td>
-                  <td style={{ padding: 10 }}>
-                    {feed.error_count > 0 && (
-                      <span style={{ color: '#dc3545' }}>{feed.error_count}</span>
-                    )}
-                  </td>
+                  <td style={{ padding: 10 }}><div style={{ fontSize: 12, color: '#333' }}>posted: {stats.posted[feed.id] || 0} / collected: {stats.collected[feed.id] || 0}</div></td>
                   <td style={{ padding: 10 }}>
                     {feed.last_checked_at 
                       ? new Date(feed.last_checked_at * 1000).toLocaleString('ja-JP')
-                      : '未実行'}
+                      : '未実衁E}
                   </td>
                   <td style={{ padding: 10 }}>
                     <div style={{ display: 'flex', gap: 5 }}>
@@ -262,7 +258,7 @@ export default function AdminFeedsPage() {
                           cursor: 'pointer'
                         }}
                       >
-                        {feed.enabled ? '無効化' : '有効化'}
+                        {feed.enabled ? '無効匁E : '有効匁E}
                       </button>
                       <button 
                         onClick={() => { setSelectedFeed(feed.id); loadLogs(feed.id); }}
@@ -301,7 +297,7 @@ export default function AdminFeedsPage() {
         </div>
 
         <div>
-          <h2>最近のログ</h2>
+          <h2>最近�Eログ</h2>
           <div style={{ maxHeight: 500, overflow: 'auto' }}>
             {logs.map(log => (
               <div key={log.id} style={{ 
@@ -315,10 +311,10 @@ export default function AdminFeedsPage() {
                   {new Date(log.created_at * 1000).toLocaleString('ja-JP')}
                 </div>
                 <div>
-                  取得: {log.items_found}件 / 新規: {log.items_new}件
+                  取征E {log.items_found}件 / 新要E {log.items_new}件
                 </div>
                 <div style={{ fontSize: 12, color: '#6c757d' }}>
-                  処理時間: {log.duration_ms}ms
+                  処琁E��閁E {log.duration_ms}ms
                 </div>
                 {log.error && (
                   <div style={{ color: '#dc3545', fontSize: 12, marginTop: 5 }}>
@@ -333,3 +329,5 @@ export default function AdminFeedsPage() {
     </div>
   );
 }
+
+
