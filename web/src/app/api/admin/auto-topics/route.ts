@@ -7,12 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest){
   if(!verifyAdminSession(req)) return NextResponse.json({ ok:false, error:'unauthorized' }, { status:401 });
-  return NextResponse.json({ ok:true, topics: loadTopics() });
+  const { readLogs } = await import('@/lib/auto-topics'); const topics = loadTopics(); const lines = readLogs(400); const recent: Record<string, Array<{ title:string; url:string }>> = {}; for (const line of lines) { const m = line.match(/topic_post:\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(https?:\/\/\S+)/); if (m) { const key = m[1]; const title = m[2]; const url = m[3]; (recent[key] ||= []).push({ title, url }); } } return NextResponse.json({ ok:true, topics, recent });
 }
 
 export async function POST(req: NextRequest){
   if(!verifyAdminSession(req)) return NextResponse.json({ ok:false, error:'unauthorized' }, { status:401 });
-  // 文字化け対策: UTF-8で明示的にパース
+  // 斁E��化け対筁E UTF-8で明示皁E��パ�Eス
   let body: any = {};
   try {
     const txt = await req.text();
@@ -42,3 +42,4 @@ export async function DELETE(req: NextRequest){
   saveTopics(next);
   return NextResponse.json({ ok:true, topics: next });
 }
+
