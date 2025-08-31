@@ -9,7 +9,11 @@ export async function GET(req: NextRequest){
   try{
     if(!verifyAdminSession(req)) return NextResponse.json({ ok:false, error:'unauthorized' }, { status:401 });
     const q = req.nextUrl.searchParams.get('q')?.toLowerCase() || '';
-    const rows = await db.execute({ sql: `SELECT id, title, url, comment, handle, owner_key, created_at, is_published FROM posts ORDER BY created_at DESC LIMIT 1000`, args: [] });
+    const includeAll = req.nextUrl.searchParams.get('include') === 'all';
+    const sql = includeAll
+      ? `SELECT id, title, url, comment, handle, owner_key, created_at, is_published FROM posts ORDER BY created_at DESC LIMIT 1000`
+      : `SELECT id, title, url, comment, handle, owner_key, created_at, is_published FROM posts WHERE is_published = 1 ORDER BY created_at DESC LIMIT 1000`;
+    const rows = await db.execute({ sql, args: [] });
     let posts = (rows.rows as any[]).map(r => ({
       id: r.id,
       title: r.title,
@@ -26,4 +30,3 @@ export async function GET(req: NextRequest){
     return NextResponse.json({ ok:false, error:String(e?.message||e) }, { status:500 });
   }
 }
-
