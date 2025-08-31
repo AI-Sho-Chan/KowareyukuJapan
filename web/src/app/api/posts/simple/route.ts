@@ -22,11 +22,11 @@ export async function GET(req: NextRequest) {
       });
 
       const result = await db.execute({
-        sql: 'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?',
+        sql: 'SELECT * FROM posts WHERE is_published = 1 ORDER BY created_at DESC LIMIT ? OFFSET ?',
         args: [limit, offset]
       });
 
-      const countResult = await db.execute('SELECT COUNT(*) as total FROM posts');
+      const countResult = await db.execute('SELECT COUNT(*) as total FROM posts WHERE is_published = 1');
       const total = Number((countResult.rows[0] as any).total);
 
       const posts = (result.rows as any[]).map((row) => {

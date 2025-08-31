@@ -10,3 +10,9 @@ web/.env.*.local
 # Local logs
 logs/
 web/logs/
+
+# App runtime logs and temp artifacts
+web/.__logs/
+web/.data/*.log
+web/.data/*.tmp
+web/.data/tmp/

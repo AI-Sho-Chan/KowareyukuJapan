@@ -25,8 +25,8 @@ export class PostsRepository {
     const batch = [];
     
     // Insert post
-    const postInsertQuery = `INSERT INTO posts (id, title, url, comment, handle, owner_key, created_at, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const postInsertQuery = `INSERT INTO posts (id, title, url, comment, handle, owner_key, created_at, updated_at, is_published)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`;
     const postInsertArgs = [id, data.title || null, data.url || null, data.comment || null, 
                data.handle || '@guest', data.ownerKey, now, now];
     
