@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const FILE = path.join(process.cwd(), '.data', 'ngwords.json');
+const HITS_FILE = path.join(process.cwd(), '.data', 'ngword-hits.json');
 
 export function loadDynamicNG(): string[] {
   try {
@@ -26,3 +27,17 @@ export function checkDynamicNG(text: string): { blocked: boolean; word?: string 
   return { blocked: false };
 }
 
+export function loadNgHitCounts(): Record<string, number> {
+  try {
+    const raw = fs.readFileSync(HITS_FILE, 'utf8');
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === 'object' ? obj as Record<string, number> : {};
+  } catch { return {}; }
+}
+
+export function recordNgHit(word: string): void {
+  try { fs.mkdirSync(path.dirname(HITS_FILE), { recursive: true }); } catch {}
+  const counts = loadNgHitCounts();
+  counts[word] = (counts[word] || 0) + 1;
+  try { fs.writeFileSync(HITS_FILE, JSON.stringify(counts, null, 2), 'utf8'); } catch {}
+}

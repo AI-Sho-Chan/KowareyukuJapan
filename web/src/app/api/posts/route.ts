@@ -20,14 +20,14 @@ function getOwnerKey(req: NextRequest): string {
 }
 
 const FIXED_TAGS = [
-  '治安・マナー','ニュース','政治/制度','動画','画像',
+  '治安�Eマナー','ニュース','政治/制度','動画','画僁E,
   '外国人犯罪','中国人','クルド人','媚中政治家','財務省',
-  '官僚','左翼','保守','日本','帰化人','帰化人政治家'
+  '官�E','左翼','保宁E,'日本','帰化人','帰化人政治家'
 ];
 
 function autoTags(input: { url?: string | null; mediaType?: 'image'|'video'; }): string[] {
   const t: string[] = [];
-  if (input.mediaType === 'image') t.push('画像');
+  if (input.mediaType === 'image') t.push('画僁E);
   if (input.mediaType === 'video') t.push('動画');
   const url = (input.url || '').toLowerCase();
   if (/nhk|yomiuri|asahi|mainichi|nikkei|yahoo/.test(url)) t.push('ニュース');
@@ -39,11 +39,10 @@ export async function GET(req: NextRequest) {
   try {
     const q = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(q.get('page') || '1'));
-    // 既定は20件、上限を1000件まで拡大（管理画面と整合）
-    const limit = Math.min(1000, Math.max(1, parseInt(q.get('limit') || '20')));
+    // 既定�E20件、上限めE000件まで拡大�E�管琁E��面と整合！E    const limit = Math.min(1000, Math.max(1, parseInt(q.get('limit') || '20')));
     const offset = (page - 1) * limit;
 
-    // DB取得（タイムアウト付き）→ 失敗/遅延時はローカルJSONへフォールバック
+    // DB取得（タイムアウト付き�E��E 失敁E遁E��時�EローカルJSONへフォールバック
     // DB優先で整合性を保つため、タイムアウトを少し長めに
     const timeoutMs = 5000;
     const dbPromise = (async () => {
@@ -72,8 +71,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ ok: true, posts: sliced, pagination: { page, limit, total: items.length, totalPages: Math.ceil(items.length / limit) }, fallback: true });
       } catch (e2) {
         console.error('GET /api/posts local fallback failed', e2);
-        throw e; // 元のエラーを上位で処理
-      }
+        throw e; // 允E�Eエラーを上位で処琁E      }
     }
   } catch (e) {
     console.error('GET /api/posts error', e);
@@ -97,7 +95,7 @@ export async function POST(req: NextRequest) {
   if (!title && url) {
     try { const meta = await fetchMeta(url); if (meta?.title) title = meta.title; } catch {}
   }
-  if (!title && !url) title = '（無題）';
+  if (!title && !url) title = '�E�無題！E;
 
   // Prepare tags
   let tags: string[] | undefined = undefined;
@@ -164,7 +162,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // NGワード（強化版）チェック: タイトル/コメント/URL
+    // NGワード（強化版�E�チェチE��: タイトル/コメンチEURL
     try {
       const { NGWordFilterV2 } = await import('@/lib/security');
       const { checkDynamicNG } = await import('@/lib/security/ngwords-dynamic');
@@ -172,7 +170,7 @@ export async function POST(req: NextRequest) {
       const ng = (NGWordFilterV2 as any).check?.(target);
       const dyn = checkDynamicNG(target);
       if (ng?.blocked || dyn.blocked) {
-        return NextResponse.json({ ok: false, error: '禁止ワードが含まれています' }, { status: 400 });
+        return NextResponse.json({ ok: false, error: '禁止ワードが含まれてぁE��ぁE }, { status: 400 });
       }
     } catch {}
 
@@ -217,3 +215,4 @@ export async function POST(req: NextRequest) {
     }
   }
 }
+
