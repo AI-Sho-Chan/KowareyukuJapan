@@ -5,8 +5,8 @@ function toEmbed(u: string): string | null {
   try{
     const url = new URL(u.replace('http://','https://'));
     if (!/note\.com$/.test(url.hostname)) return null;
-    // パスの例: /@user/n/xxxxxxxx | /notes/xxxxxxxx
-    const m = url.pathname.match(/\/(?:@[^/]+\/n|notes)\/([A-Za-z0-9_-]+)/);
+    // パスの侁E /@user/n/xxxxxxxx | /notes/xxxxxxxx
+    const m = url.pathname.match(/\/(?:@?[^^/]+/n|notes)\/([A-Za-z0-9_-]+)/);
     if (!m) return null;
     return `https://note.com/embed/notes/${m[1]}`;
   }catch{ return null; }
@@ -43,10 +43,11 @@ export default function NoteEmbedCard({ url }: { url: string }){
     <div className="note-embed">
       {preview?.image ? <img src={preview.image} alt="プレビュー" style={{maxWidth:'100%',borderRadius:8}}/> : null}
       {preview?.title ? <p className="comment" style={{fontWeight:700, marginTop:6}}>{preview.title}</p> : null}
-      <p style={{margin:0}}>プレビューのみ。<a href={url} target="_blank" rel="noopener noreferrer">noteで見る</a></p>
+      <p style={{margin:0}}>プレビューのみ、Ea href={url} target="_blank" rel="noopener noreferrer">noteで見る</a></p>
     </div>
   );
   return <div ref={host} className="note-embed"/>;
 }
+
 
 
