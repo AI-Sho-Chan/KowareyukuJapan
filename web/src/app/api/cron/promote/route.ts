@@ -7,14 +7,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-// Cronジョブ認証（Vercel Cron用）
+// Cronジョブ認証�E�Eercel Cron用�E�E
 function verifyCronRequest(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization');
   if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
     return true;
   }
   
-  // 開発環境では許可
+  // 開発環墁E��は許可
   if (process.env.NODE_ENV === 'development') {
     return true;
   }
@@ -23,7 +23,7 @@ function verifyCronRequest(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  // Cron認証チェック
+  // Cron認証チェチE��
   if (!verifyCronRequest(request)) {
     return NextResponse.json(
       { error: 'Unauthorized' },
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
 
-    // pendingステータスのアイテムを取得（最新100件）
+    // pendingスチE�EタスのアイチE��を取得（最新100件�E�E
     const pendingItems = await db.execute(`
       SELECT 
         fi.*,
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
         const sourceCategory = item.source_category as string;
         const sourceConfig = item.source_config as string | null;
         
-        // 設定から自動承認判定
+        // 設定から�E動承認判宁E
         let autoApprove = false;
         if (sourceConfig) {
           try {
@@ -79,18 +79,18 @@ export async function GET(request: NextRequest) {
           } catch {}
         }
 
-        // カテゴリによる自動承認（ニュースは基本的に自動承認）
+        // カチE��リによる自動承認（ニュースは基本皁E��自動承認！E
         if (sourceCategory === 'news') {
           autoApprove = true;
         }
 
         if (!autoApprove) {
-          // 自動承認でない場合はスキップ
+          // 自動承認でなぁE��合�EスキチE�E
           results.skipped++;
           continue;
         }
 
-        // URLからサイトタイプを判定
+        // URLからサイトタイプを判宁E
         let postType = 'web';
         const urlLower = url.toLowerCase();
         if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) {
@@ -103,14 +103,14 @@ export async function GET(request: NextRequest) {
           postType = 'tiktok';
         }
 
-        // サマリー生成
+        // サマリー生�E
         const summary = content || Normalizer.generateSummary(title);
 
-        // 埋め込み可否チェック（簡易版）
+        // 埋め込み可否チェチE���E�簡易版�E�E
         let embedStatus = 'unknown';
         let probeJson = null;
 
-        // 既存の埋め込みチェックAPIを呼び出す（内部呼び出し）
+        // 既存�E埋め込みチェチE��APIを呼び出す（�E部呼び出し！E
         try {
           const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/can-embed?url=${encodeURIComponent(url)}`);
           if (response.ok) {
@@ -119,10 +119,13 @@ export async function GET(request: NextRequest) {
             probeJson = JSON.stringify(result);
           }
         } catch (e) {
-          // エラーは無視
+          // エラーは無要E
         }
 
-        // postsテーブルに昇格
+        // Only publish embeddable sources
+        if (embedStatus !== 'ok') { results.skipped++; continue; }
+
+        // posts insert
         const postId = crypto.randomUUID();
         const systemOwnerKey = 'ADMIN_OPERATOR'; // 運営による自動投稿
         
@@ -140,23 +143,23 @@ export async function GET(request: NextRequest) {
             postType,
             title,
             summary,
-            null, // サムネイルは後で生成
+            null, // サムネイルは後で生�E
             embedStatus,
             probeJson,
             tagsJson,
-            'published', // 自動承認なので即公開
+            'published', // 自動承認なので即公閁E
             publishedAt,
             Math.floor(Date.now() / 1000),
           ],
         });
 
-        // feed_itemのステータスを更新
+        // feed_itemのスチE�Eタスを更新
         await db.execute({
           sql: `UPDATE feed_items SET status = 'approved' WHERE id = ?`,
           args: [itemId],
         });
 
-        // post_statsレコードを初期化
+        // post_statsレコードを初期匁E
         await db.execute({
           sql: `INSERT OR IGNORE INTO post_stats (post_id, views, empathies, shares) VALUES (?, 0, 0, 0)`,
           args: [postId],
@@ -198,7 +201,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 手動実行用POSTエンドポイント
+// 手動実行用POSTエンド�EインチE
 export async function POST(request: NextRequest) {
   return GET(request);
 }
+

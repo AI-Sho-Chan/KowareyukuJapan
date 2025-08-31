@@ -19,7 +19,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id } = await params;
     const body = await req.json().catch(() => ({} as any));
-    const type = (body?.type || '').toString();
+    // 互換性: body.type もしくは body.event_type を受け付ける
+    const type = (body?.type || body?.event_type || '').toString();
     
     if (!['view','empathy','share'].includes(type)) {
       return NextResponse.json({ ok:false, error:'bad_type' }, { status:400 });
@@ -42,8 +43,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const ipHash = ip ? hashIP(ip) : undefined;
     await stats.addEvent(id, type as any, fp, ipHash);
-    
-    return NextResponse.json({ ok:true });
+    // 直後の最新統計を返す（UI即時反映用）
+    const { db } = await import('@/lib/db');
+    const r = await db.execute({ sql: `SELECT views, empathies, shares FROM post_stats WHERE post_id = ?`, args: [id] });
+    const s = r.rows[0] || { views: 0, empathies: 0, shares: 0 };
+    return NextResponse.json({ ok:true, stats: s });
   } catch (error) {
     console.error('Event tracking error:', error);
     return NextResponse.json(

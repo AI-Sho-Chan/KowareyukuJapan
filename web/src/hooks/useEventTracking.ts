@@ -51,7 +51,7 @@ export function useEventTracking(postId: string | null) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          event_type: eventType,
+          type: eventType,
           fingerprint: fingerprintRef.current,
           session_id: sessionIdRef.current,
           metadata: options?.metadata
