@@ -18,6 +18,7 @@ export default function AdminConsole(){
   const [handleFilter, setHandleFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState<string[]>([]);
+  const [attachFilter, setAttachFilter] = useState<string[]>([]);
   const [notes, setNotes] = useState<{ lastUpdated: number; markdown: string } | null>(null);
   const [topics, setTopics] = useState<{ id:string; keyword:string; enabled:boolean; minIntervalMinutes:number }[]>([]);
   const [newTopic, setNewTopic] = useState('');
@@ -49,6 +50,7 @@ export default function AdminConsole(){
     if(handleFilter) params.set('handle', handleFilter);
     if(dateFilter) params.set('date', dateFilter);
     if(sourceFilter.length) params.set('source', sourceFilter.join(','));
+    if(attachFilter.length) params.set('has', attachFilter.join(','));
     const url = '/api/admin/posts/list' + (params.toString() ? ('?'+params.toString()) : '');
     const j = await fetch(url).then(r=>r.json()).catch(()=>({posts:[]}));
     const arr = Array.isArray(j.posts)? j.posts as Post[]:[]; setPosts(arr);
@@ -130,6 +132,20 @@ export default function AdminConsole(){
                     setSourceFilter(prev => checked ? Array.from(new Set([...prev, s])) : prev.filter(x => x !== s));
                   }}
                 /> {s}
+              </label>
+            ))}
+          </div>
+          <div style={{display:'flex', gap:10, alignItems:'center'}}>
+            {[
+              { key:'image', label:'画像' },
+              { key:'video', label:'動画' },
+              { key:'comment', label:'コメントあり' },
+            ].map(o => (
+              <label key={o.key} style={{fontSize:12}}>
+                <input type="checkbox" checked={attachFilter.includes(o.key)} onChange={e=>{
+                  const checked = (e.currentTarget as HTMLInputElement).checked;
+                  setAttachFilter(prev => checked ? Array.from(new Set([...prev, o.key])) : prev.filter(x => x !== o.key));
+                }} /> {o.label}
               </label>
             ))}
           </div>

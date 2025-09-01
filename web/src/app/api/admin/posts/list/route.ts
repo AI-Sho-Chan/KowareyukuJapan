@@ -14,6 +14,8 @@ export async function GET(req: NextRequest){
     const byDate = sp.get('date') || ''; // YYYY-MM-DD
     const sourcesParam = sp.get('source') || '';
     const sources = sourcesParam ? sourcesParam.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean) : [];
+    const hasParam = sp.get('has') || '';
+    const has = hasParam ? hasParam.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean) : [];
     const includeAll = req.nextUrl.searchParams.get('include') === 'all';
     const sql = includeAll
       ? `SELECT id, title, url, comment, handle, owner_key, created_at, is_published FROM posts ORDER BY created_at DESC LIMIT 1000`
@@ -44,6 +46,22 @@ export async function GET(req: NextRequest){
     if(byHandle){ posts = posts.filter(p => (p.handle||'').toLowerCase().includes(byHandle)); }
     if(byDate){ posts = posts.filter(p => { const d = new Date(p.createdAt||''); if (isNaN(d.getTime())) return false; const s = d.toISOString().slice(0,10); return s === byDate; }); }
     if(sources.length){ posts = posts.filter(p => sources.includes(deriveSource(p.url))); }
+
+    // attachment filters (has=image,video,comment)
+    if (has.length) {
+      const isImageUrl = (u?: string) => /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u||'');
+      const isVideoUrl = (u?: string) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u||'');
+      posts = posts.filter(p => {
+        const img = isImageUrl(p.url);
+        const vid = isVideoUrl(p.url);
+        const hasComment = !!(p.comment && p.comment.trim());
+        return (
+          (has.includes('image') ? img : true) &&
+          (has.includes('video') ? vid : true) &&
+          (has.includes('comment') ? hasComment : true)
+        );
+      });
+    }
 
     return NextResponse.json({ ok:true, posts });
   } catch(e:any){

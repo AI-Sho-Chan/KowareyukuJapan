@@ -164,7 +164,14 @@ export async function GET(
       url: process.env.TURSO_DB_URL || 'file:local.db',
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
-    
+    // count only mode
+    const onlyCount = request.nextUrl.searchParams.get('count') === '1';
+    if (onlyCount) {
+      const c = await db.execute({ sql: `SELECT COUNT(*) as c FROM comments WHERE post_id = ?`, args: [postId] });
+      const n = Number((c.rows[0] as any)?.c || 0);
+      return NextResponse.json({ ok: true, count: n });
+    }
+
     const comments = await db.execute({
       sql: `SELECT id, author_name, content, created_at
             FROM comments
