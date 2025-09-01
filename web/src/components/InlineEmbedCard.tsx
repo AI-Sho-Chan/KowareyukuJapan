@@ -173,10 +173,11 @@ export default function InlineEmbedCard({
         <div className="actions">
           <button className="btn primary" onClick={onEmpathize}>Empathize <span className="count">{count}</span></button>
           <button className="btn" onClick={onShare}>Share</button>
-          {showSourceLink && <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">Source</a>}
+          {showSourceLink && <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">Source</a>}\n          <a className="btn" href={`/post/${postId}`}>詳細</a>
         </div>
         {footerExtras}
       </div>
     </article>
   );
 }
+

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { PostsRepository } from '@/lib/db/posts-repository';
 import { buildArticleLd, buildVideoLd, buildSocialPostingLd, clampText } from '@/lib/seo/schema';
+import CommentsBox from '@/components/CommentsBox';
 
 type Params = { id: string };
 
@@ -63,6 +64,8 @@ export default async function PostDetail({ params }: { params: Promise<Params> }
           {post.comment && <p style={{marginTop:12}}>{post.comment}</p>}
         </div>
       </article>
+      {/* コメント */}
+      <CommentsBox postId={post.id} ownerKey={(post as any).ownerKey} />
     </main>
   );
 }

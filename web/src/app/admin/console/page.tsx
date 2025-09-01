@@ -122,7 +122,14 @@ export default function AdminConsole(){
           <div style={{display:'flex', gap:10, alignItems:'center'}}>
             {['x','instagram','youtube','nhk','note','web'].map(s => (
               <label key={s} style={{fontSize:12}}>
-                <input type="checkbox" checked={sourceFilter.includes(s)} onChange={e=> setSourceFilter(v => e.currentTarget.checked ? Array.from(new Set([...v,s])) : v.filter(x=>x!==s)) } /> {s}
+                <input
+                  type="checkbox"
+                  checked={sourceFilter.includes(s)}
+                  onChange={(e)=>{
+                    const checked = (e.currentTarget as HTMLInputElement).checked;
+                    setSourceFilter(prev => checked ? Array.from(new Set([...prev, s])) : prev.filter(x => x !== s));
+                  }}
+                /> {s}
               </label>
             ))}
           </div>
@@ -253,4 +260,3 @@ export default function AdminConsole(){
     </main>
   );
 }
-
