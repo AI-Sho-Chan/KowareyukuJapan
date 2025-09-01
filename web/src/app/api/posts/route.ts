@@ -1,4 +1,4 @@
-export const runtime = 'nodejs';
+﻿export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -7,11 +7,6 @@ import { fetchMeta } from '@/lib/metadata';
 import { PostsRepository } from '@/lib/db/posts-repository';
 import { setupDatabase } from '@/lib/db/init';
 import { saveMediaToDisk } from '@/lib/store';
-import ffmpeg from 'fluent-ffmpeg';
-import ffmpegStatic from 'ffmpeg-static';
-import ffprobeStatic from 'ffprobe-static';
-import fs from 'node:fs';
-import path from 'node:path';
 
 const postsRepo = new PostsRepository();
 
@@ -19,31 +14,23 @@ function getOwnerKey(req: NextRequest): string {
   return req.headers.get('x-client-key') || 'anon';
 }
 
-const FIXED_TAGS = [
-  '治安�Eマナー','ニュース','政治/制度','動画','画僁E,
-  '外国人犯罪','中国人','クルド人','媚中政治家','財務省',
-  '官�E','左翼','保宁E,'日本','帰化人','帰化人政治家'
-];
-
-function autoTags(input: { url?: string | null; mediaType?: 'image'|'video'; }): string[] {
-  const t: string[] = [];
-  if (input.mediaType === 'image') t.push('画僁E);
-  if (input.mediaType === 'video') t.push('動画');
+function autoTags(input: { url?: string | null; mediaType?: 'image'|'video' }): string[] {
+  const tags: string[] = [];
+  if (input.mediaType === 'image') tags.push('画像');
+  if (input.mediaType === 'video') tags.push('動画');
   const url = (input.url || '').toLowerCase();
-  if (/nhk|yomiuri|asahi|mainichi|nikkei|yahoo/.test(url)) t.push('ニュース');
-  if (/youtube\.com|youtu\.be/.test(url)) t.push('動画');
-  return Array.from(new Set(t)).slice(0, 3);
+  if (/nhk|yomiuri|asahi|mainichi|nikkei|yahoo/.test(url)) tags.push('ニュース');
+  if (/youtube\.com|youtu\.be/.test(url)) tags.push('動画');
+  return Array.from(new Set(tags)).slice(0, 3);
 }
 
 export async function GET(req: NextRequest) {
   try {
     const q = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(q.get('page') || '1'));
-    // 既定�E20件、上限めE000件まで拡大�E�管琁E��面と整合！E    const limit = Math.min(1000, Math.max(1, parseInt(q.get('limit') || '20')));
+    const limit = Math.min(1000, Math.max(1, parseInt(q.get('limit') || '20')));
     const offset = (page - 1) * limit;
 
-    // DB取得（タイムアウト付き�E��E 失敁E遁E��時�EローカルJSONへフォールバック
-    // DB優先で整合性を保つため、タイムアウトを少し長めに
     const timeoutMs = 5000;
     const dbPromise = (async () => {
       await setupDatabase();
@@ -51,18 +38,17 @@ export async function GET(req: NextRequest) {
       const total = await postsRepo.getPostsCount(false);
       return { posts, total };
     })();
-
     const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), timeoutMs));
 
-    let posts: any[] = [];
-    let total = 0;
     try {
       const res = await Promise.race([dbPromise, timeout]) as { posts: any[]; total: number };
-      posts = res.posts; total = res.total;
+      const { posts, total } = res;
       return NextResponse.json({ ok: true, posts, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) }, fallback: false });
-    } catch (e: any) {
-      // ローカルJSONフォールバック
+    } catch {
+      // Fallback to local JSON (development only)
       try {
+        const fs = await import('node:fs');
+        const path = await import('node:path');
         const dataDir = path.join(process.cwd(), '.data');
         const filePath = path.join(dataDir, 'posts.json');
         let items: any[] = [];
@@ -71,7 +57,8 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ ok: true, posts: sliced, pagination: { page, limit, total: items.length, totalPages: Math.ceil(items.length / limit) }, fallback: true });
       } catch (e2) {
         console.error('GET /api/posts local fallback failed', e2);
-        throw e; // 允E�Eエラーを上位で処琁E      }
+        return NextResponse.json({ ok: false, error: 'Failed to fetch posts' }, { status: 500 });
+      }
     }
   } catch (e) {
     console.error('GET /api/posts error', e);
@@ -95,85 +82,29 @@ export async function POST(req: NextRequest) {
   if (!title && url) {
     try { const meta = await fetchMeta(url); if (meta?.title) title = meta.title; } catch {}
   }
-  if (!title && !url) title = '�E�無題！E;
+  if (!title) title = url || '';
 
   // Prepare tags
   let tags: string[] | undefined = undefined;
   if (tagsRaw.length > 0) {
-    tags = tagsRaw.filter((t) => FIXED_TAGS.includes(t));
+    tags = tagsRaw.slice(0, 5);
   } else {
     tags = autoTags({ url, mediaType: undefined });
   }
 
-  // Optional media upload (dev convenience)
+  // Optional media upload (save as-is)
   let media: { type: 'image'|'video'; url: string } | undefined;
   const file = form.get('file') as File | null;
   if (file && file.size > 0) {
     const buf = Buffer.from(await file.arrayBuffer());
-    let ct = (file.type as string) || 'application/octet-stream';
-    const name = (file.name || '').toLowerCase();
-    const isVideo = /^video\//i.test(ct) || /\.(mp4|webm|mov|m4v|avi)$/i.test(name);
-    const id = Math.random().toString(36).slice(2, 10) + '-m';
-
-    if (isVideo) {
-      // Try to transcode to MP4 (H.264/AAC) for compatibility
-      try {
-        if (ffmpegStatic) (ffmpeg as any).setFfmpegPath(ffmpegStatic as any);
-        if ((ffprobeStatic as any)?.path) (ffmpeg as any).setFfprobePath((ffprobeStatic as any).path);
-        const tmpDir = path.join(process.cwd(), '.data', 'tmp');
-        fs.mkdirSync(tmpDir, { recursive: true });
-        const inPath = path.join(tmpDir, `${id}-in`);
-        const outPath = path.join(tmpDir, `${id}-out.mp4`);
-        fs.writeFileSync(inPath, buf);
-
-        await new Promise<void>((resolve, reject) => {
-          let cmd = (ffmpeg as any)(inPath)
-            .videoCodec('libx264')
-            .audioCodec('aac')
-            .outputOptions([
-              '-movflags +faststart', // place moov atom at the front for fast metadata
-              '-preset veryfast',     // speed/size tradeoff
-              '-crf 23',              // quality (lower is better)
-              '-pix_fmt yuv420p',     // broad compatibility
-              '-vf scale=-2:720',     // cap height at 720, keep aspect ratio
-              '-ac 2',                // stereo
-              '-ar 48000'             // 48kHz audio
-            ])
-            .format('mp4')
-            .output(outPath);
-          cmd.on('end', () => resolve()).on('error', (e: any) => reject(e)).run();
-        });
-
-        const out = fs.readFileSync(outPath);
-        saveMediaToDisk(id, 'video/mp4', ownerKey, out);
-        media = { type: 'video', url: `/api/posts/media/${id}` };
-        ct = 'video/mp4';
-        try { fs.unlinkSync(inPath); fs.unlinkSync(outPath); } catch {}
-      } catch {
-        // Fallback: save original
-        saveMediaToDisk(id, ct, ownerKey, buf);
-        media = { type: 'video', url: `/api/posts/media/${id}` };
-      }
-    } else {
-      // Image as-is
-      saveMediaToDisk(id, ct, ownerKey, buf);
-      media = { type: 'image', url: `/api/posts/media/${id}` };
-    }
+    const ct = (file.type as string) || 'application/octet-stream';
+    const mediaId = Math.random().toString(36).slice(2, 10) + '-m';
+    saveMediaToDisk(mediaId, ct, ownerKey, buf);
+    const isVideo = /^video\//i.test(ct);
+    media = { type: isVideo ? 'video' : 'image', url: `/api/posts/media/${mediaId}` };
   }
 
   try {
-    // NGワード（強化版�E�チェチE��: タイトル/コメンチEURL
-    try {
-      const { NGWordFilterV2 } = await import('@/lib/security');
-      const { checkDynamicNG } = await import('@/lib/security/ngwords-dynamic');
-      const target = [title || '', comment || '', url || ''].join(' ');
-      const ng = (NGWordFilterV2 as any).check?.(target);
-      const dyn = checkDynamicNG(target);
-      if (ng?.blocked || dyn.blocked) {
-        return NextResponse.json({ ok: false, error: '禁止ワードが含まれてぁE��ぁE }, { status: 400 });
-      }
-    } catch {}
-
     const post = await postsRepo.createPost({
       title,
       url,
@@ -187,8 +118,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.warn('DB create failed, falling back to local JSON:', (error as any)?.message);
     try {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
       const dataDir = path.join(process.cwd(), '.data');
-      fs.mkdirSync(dataDir, { recursive: true });
+      try { fs.mkdirSync(dataDir, { recursive: true }); } catch {}
       const filePath = path.join(dataDir, 'posts.json');
       let arr: any[] = [];
       try { const raw = fs.readFileSync(filePath, 'utf8'); const j = JSON.parse(raw); if (Array.isArray(j)) arr = j; } catch {}
@@ -201,8 +134,8 @@ export async function POST(req: NextRequest) {
         owner_key: ownerKey,
         tags,
         media,
-        created_at: Date.now(),
-        updated_at: Date.now(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
         is_published: 1,
         report_count: 0,
       };
@@ -215,4 +148,3 @@ export async function POST(req: NextRequest) {
     }
   }
 }
-
