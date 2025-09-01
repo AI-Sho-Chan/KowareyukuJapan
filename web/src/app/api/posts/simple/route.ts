@@ -4,6 +4,7 @@ import { fetchMeta } from '@/lib/metadata';
 import fs from 'fs';
 import path from 'path';
 import { saveMediaToDisk } from '@/lib/store';
+import { guardUpload } from '@/lib/security/upload-guard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -118,10 +119,13 @@ export async function POST(req: NextRequest) {
     if (file && file.size > 0) {
       const buf = Buffer.from(await file.arrayBuffer());
       const ct = (file.type as string) || 'application/octet-stream';
+      const safe = await guardUpload(buf, ct, (file as any).name || undefined);
+      if (!safe.ok) {
+        return NextResponse.json({ ok:false, error: safe.error || 'invalid file' }, { status: 400 });
+      }
       const mediaId = `${id}-m`;
-      saveMediaToDisk(mediaId, ct, 'local', buf);
-      const isVideo = /^video\//i.test(ct);
-      media = { type: isVideo ? 'video' : 'image', id: mediaId, url: `/api/posts/media/${mediaId}` };
+      saveMediaToDisk(mediaId, safe.contentType || ct, 'local', buf);
+      media = { type: safe.normalizedType!, id: mediaId, url: `/api/posts/media/${mediaId}` };
     }
     // Try to resolve title from URL if not provided
     let resolvedTitle = title;

@@ -7,6 +7,7 @@ import { fetchMeta } from '@/lib/metadata';
 import { PostsRepository } from '@/lib/db/posts-repository';
 import { setupDatabase } from '@/lib/db/init';
 import { saveMediaToDisk } from '@/lib/store';
+import { guardUpload } from '@/lib/security/upload-guard';
 
 const postsRepo = new PostsRepository();
 
@@ -92,16 +93,19 @@ export async function POST(req: NextRequest) {
     tags = autoTags({ url, mediaType: undefined });
   }
 
-  // Optional media upload (save as-is)
+  // Optional media upload with security guard
   let media: { type: 'image'|'video'; url: string } | undefined;
   const file = form.get('file') as File | null;
   if (file && file.size > 0) {
     const buf = Buffer.from(await file.arrayBuffer());
     const ct = (file.type as string) || 'application/octet-stream';
+    const safe = await guardUpload(buf, ct, (file as any).name || undefined);
+    if (!safe.ok) {
+      return NextResponse.json({ ok:false, error: safe.error || 'invalid file' }, { status: 400 });
+    }
     const mediaId = Math.random().toString(36).slice(2, 10) + '-m';
-    saveMediaToDisk(mediaId, ct, ownerKey, buf);
-    const isVideo = /^video\//i.test(ct);
-    media = { type: isVideo ? 'video' : 'image', url: `/api/posts/media/${mediaId}` };
+    saveMediaToDisk(mediaId, safe.contentType || ct, ownerKey, buf);
+    media = { type: safe.normalizedType!, url: `/api/posts/media/${mediaId}` };
   }
 
   try {
