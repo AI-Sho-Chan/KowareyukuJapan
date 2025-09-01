@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo } from "react";
 import { useEventTracking } from "@/hooks/useEventTracking";
@@ -42,22 +42,23 @@ export default function XEmbedCard({ postId, title = '', comment, statusUrl, han
           {embedSrc ? (
             <iframe src={embedSrc} width="100%" height={360} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; web-share" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" style={{border:'0',borderRadius:12}} />
           ) : (
-            <a href={statusUrl} target="_blank" rel="noopener noreferrer">Xで見る</a>
+            <a href={statusUrl} target="_blank" rel="noopener noreferrer">X縺ｧ隕九ｋ</a>
           )}
         </div>
         <div className="meta" style={{marginTop:8}}>
-          <span className="handle">投稿者：{formatHandle(handle)}</span>
-          {Array.isArray(tags) && tags.length ? (<span className="tags">{tags.map(t=>`#${t}`).join('・')}</span>) : null}
+          <span className="handle">謚慕ｨｿ閠・ｼ嘴formatHandle(handle)}</span>
+          {Array.isArray(tags) && tags.length ? (<span className="tags">{tags.map(t=>`#${t}`).join('繝ｻ')}</span>) : null}
           {createdAt ? <time style={{marginLeft:8}}>{formatDateTime(createdAt)}</time> : null}
         </div>
-        <div className="comment-label">投稿者のコメント</div>
-        <p className="comment">{comment || '(コメントなし)'}</p>
+        <div className="comment-label">謚慕ｨｿ閠・・繧ｳ繝｡繝ｳ繝・/div>
+        <p className="comment">{comment || '(繧ｳ繝｡繝ｳ繝医↑縺・'}</p>
         <div className="actions" style={{marginTop:8}}>
-          <a className="btn" href={statusUrl} target="_blank" rel="noopener noreferrer">シェア</a>
-          <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">引用元へ</a>
+          <a className="btn" href={statusUrl} target="_blank" rel="noopener noreferrer">繧ｷ繧ｧ繧｢</a>
+          <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">蠑慕畑蜈・∈</a>
         </div>
         {footerExtras}
       </div>
     </article>
   );
 }
+

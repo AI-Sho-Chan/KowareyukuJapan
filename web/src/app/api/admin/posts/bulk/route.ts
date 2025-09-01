@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminSession } from '@/lib/admin-auth';
 import { PostsRepository } from '@/lib/db/posts-repository';
+import { db } from '@/lib/db';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,11 +24,15 @@ export async function POST(req: NextRequest) {
       }
       return NextResponse.json({ ok: true, changed });
     } else if (action === 'delete') {
+      // ソフト削除: 公開停止 + hidden ステータス（is_deleted 列があれば 1 ）
       for (const id of ids) {
-        await repo.deletePost(String(id));
-        changed++;
+        try {
+          await db.execute({ sql: `UPDATE posts SET is_published = 0, status = 'hidden', updated_at = CURRENT_TIMESTAMP WHERE id = ?`, args: [String(id)] });
+          try { await db.execute({ sql: `UPDATE posts SET is_deleted = 1 WHERE id = ?`, args: [String(id)] }); } catch { /* ignore if column missing */ }
+          changed++;
+        } catch {}
       }
-      return NextResponse.json({ ok: true, changed });
+      return NextResponse.json({ ok: true, changed, softDeleted: true });
     } else {
       return NextResponse.json({ ok: false, error: 'invalid action' }, { status: 400 });
     }
@@ -35,4 +40,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: String(e?.message||e) }, { status: 500 });
   }
 }
-
