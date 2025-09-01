@@ -96,22 +96,24 @@ export default function InlineEmbedCard({
     try { return new URL(sourceUrl).hostname.toLowerCase().includes('note.com'); } catch { return false; }
   }, [sourceUrl]);
 
-  const frameAllowedForPage = useMemo(() => {
-    if (kind !== 'page') return true;
-    try {
-      const h = new URL(sourceUrl).hostname.toLowerCase();
-      const blockHosts = ['news.yahoo.co.jp','yahoo.co.jp','yahoo.com','www3.nhk.or.jp','www.asahi.com','mainichi.jp','www.yomiuri.co.jp'];
-      if (blockHosts.some(b => h === b || h.endsWith('.' + b))) return false;
-      const allowHosts = new Set(['platform.twitter.com','www.youtube.com','www.youtube-nocookie.com','www.instagram.com','www.tiktok.com','www.threads.net','embed.nicovideo.jp','note.com']);
-      return allowHosts.has(h);
-    } catch { return false; }
+  // Allow iframe only if endpoint reports embeddable
+  const [canEmbedPage, setCanEmbedPage] = useState(true);
+  useEffect(() => {
+    (async () => {
+      if (kind !== 'page') { setCanEmbedPage(true); return; }
+      try {
+        const r = await fetch(`/api/can-embed?url=${encodeURIComponent(sourceUrl)}`, { cache: 'force-cache' });
+        const j = await r.json().catch(() => null);
+        setCanEmbedPage(!!j?.ok && j.canEmbed !== false);
+      } catch { setCanEmbedPage(false); }
+    })();
   }, [kind, sourceUrl]);
 
   // iFrame不可のサイト向け: 抜粋テキストを取得（先頭200文字）
   const [excerpt, setExcerpt] = useState<string>('');
   useEffect(() => {
     (async () => {
-      if (kind === 'page' && !frameAllowedForPage) {
+      if (kind === 'page' && !canEmbedPage) {
         try {
           const r = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`, { cache: 'no-store' });
           const j = await r.json().catch(() => null);
@@ -124,7 +126,7 @@ export default function InlineEmbedCard({
         setExcerpt('');
       }
     })();
-  }, [kind, frameAllowedForPage, sourceUrl]);
+  }, [kind, canEmbedPage, sourceUrl]);
 
   const onShare = useCallback(async () => {
     try {
@@ -173,7 +175,7 @@ export default function InlineEmbedCard({
             <video preload="metadata" src={resolvedEmbedUrl} controls playsInline style={{ width: '100%', borderRadius: 12, border: '1px solid var(--line)' }} />
           ) : isInstagramPage ? (
             <InstagramEmbedCard url={sourceUrl} />
-          ) : frameAllowedForPage ? (
+          ) : canEmbedPage ? (
             <iframe src={resolvedEmbedUrl} width="100%" height={kind === 'youtube' ? 315 : 600} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="origin-when-cross-origin" allowFullScreen style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff' }} />
           ) : (
             <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff', padding: 12 }}>
