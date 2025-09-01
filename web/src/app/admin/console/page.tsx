@@ -15,6 +15,9 @@ export default function AdminConsole(){
   const [flags, setFlags] = useState<any[]>([]);
   const [scanning, setScanning] = useState(false);
   const [query, setQuery] = useState('');
+  const [handleFilter, setHandleFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<string[]>([]);
   const [notes, setNotes] = useState<{ lastUpdated: number; markdown: string } | null>(null);
   const [topics, setTopics] = useState<{ id:string; keyword:string; enabled:boolean; minIntervalMinutes:number }[]>([]);
   const [newTopic, setNewTopic] = useState('');
@@ -40,7 +43,16 @@ export default function AdminConsole(){
   }
   async function logout(){ await fetch('/api/auth?logout=1'); location.reload(); }
 
-  async function reloadPosts(){ const j = await fetch('/api/admin/posts/list').then(r=>r.json()).catch(()=>({posts:[]})); const arr = Array.isArray(j.posts)? j.posts as Post[]:[]; setPosts(arr); }
+  async function reloadPosts(){
+    const params = new URLSearchParams();
+    if(query) params.set('q', query);
+    if(handleFilter) params.set('handle', handleFilter);
+    if(dateFilter) params.set('date', dateFilter);
+    if(sourceFilter.length) params.set('source', sourceFilter.join(','));
+    const url = '/api/admin/posts/list' + (params.toString() ? ('?'+params.toString()) : '');
+    const j = await fetch(url).then(r=>r.json()).catch(()=>({posts:[]}));
+    const arr = Array.isArray(j.posts)? j.posts as Post[]:[]; setPosts(arr);
+  }
   async function reloadWords(){ const j = await fetch('/api/admin/ngwords').then(r=>r.json()).catch(()=>({words:[]})); setWords(Array.isArray(j.words)?j.words:[]); }
   async function reloadSummary(){ const j = await fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>null); setSummary(j?.summary||null); }
   async function reloadFlags(){ const j = await fetch('/api/admin/moderation/scan').then(r=>r.json()).catch(()=>({items:[]})); setFlags(Array.isArray(j.items)?j.items:[]); }
@@ -104,6 +116,18 @@ export default function AdminConsole(){
       {/* 投稿一覧 */}
       <section className="card" style={{padding:12, marginTop:12}}>
         <h2 className="title">投稿一覧</h2>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 2fr auto', gap:8, marginBottom:8}}>
+          <input placeholder="ハンドル名 (@不要)" value={handleFilter} onChange={e=>setHandleFilter(e.currentTarget.value)} />
+          <input type="date" value={dateFilter} onChange={e=>setDateFilter(e.currentTarget.value)} />
+          <div style={{display:'flex', gap:10, alignItems:'center'}}>
+            {['x','instagram','youtube','nhk','note','web'].map(s => (
+              <label key={s} style={{fontSize:12}}>
+                <input type="checkbox" checked={sourceFilter.includes(s)} onChange={e=> setSourceFilter(v => e.currentTarget.checked ? Array.from(new Set([...v,s])) : v.filter(x=>x!==s)) } /> {s}
+              </label>
+            ))}
+          </div>
+          <button className="btn" onClick={reloadPosts}>検索</button>
+        </div>
         <div className="modal-actions" style={{marginBottom:8}}>
           <button className="btn" onClick={()=>bulk('publish')}>公開</button>
           <button className="btn" onClick={()=>bulk('hide')}>非公開</button>
