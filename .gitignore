@@ -16,3 +16,5 @@ web/.__logs/
 web/.data/*.log
 web/.data/*.tmp
 web/.data/tmp/
+web/.server-*.pid
+web/server*.log
