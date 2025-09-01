@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -17,11 +17,11 @@ export default function DeletedPostsPage(){
   return (
     <main className="container" style={{padding:12}}>
       <h1>削除済み（アーカイブ）投稿</h1>
-      {loading ? <p>読み込み中…</p> : items.length===0 ? <p>項目なし</p> : (
+      {loading ? <p>読み込み中…</p> : items.length===0 ? <p>データがありません</p> : (
         <div className="list">
           {items.map(p => (
             <div key={p.id} className="list-item" style={{padding:8, borderBottom:'1px solid var(--line)'}}>
-              <div style={{fontWeight:700}}>{p.title || p.url}</div>
+              <div style={{fontWeight:700}}>{(() => { const u=(p.url||'').toLowerCase(); const isX = u.includes('x.com')||u.includes('twitter.com'); const isIG = u.includes('instagram.com'); const first=(p.comment||'').split('\n')[0]||''; return (isX||isIG) ? (p.title||first||p.url) : (p.title||p.url); })()}</div>
               <div style={{fontSize:12, color:'var(--muted)'}}>{p.url}</div>
               <div style={{fontSize:12}}>{new Date(p.created_at).toLocaleString('ja-JP')}</div>
             </div>
@@ -31,4 +31,3 @@ export default function DeletedPostsPage(){
     </main>
   );
 }
-

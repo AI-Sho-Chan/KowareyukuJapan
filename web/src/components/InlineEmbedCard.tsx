@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import InstagramEmbedCard from "@/components/InstagramEmbedCard";
@@ -107,17 +107,36 @@ export default function InlineEmbedCard({
     } catch { return false; }
   }, [kind, sourceUrl]);
 
+  // iFrame不可のサイト向け: 抜粋テキストを取得（先頭200文字）
+  const [excerpt, setExcerpt] = useState<string>('');
+  useEffect(() => {
+    (async () => {
+      if (kind === 'page' && !frameAllowedForPage) {
+        try {
+          const r = await fetch(`/api/article-extract?url=${encodeURIComponent(sourceUrl)}`, { cache: 'no-store' });
+          const j = await r.json().catch(() => null);
+          if (j?.ok && typeof j.text === 'string') {
+            const s = j.text.trim().replace(/\s+/g, ' ');
+            setExcerpt(s.slice(0, 200));
+          }
+        } catch {}
+      } else {
+        setExcerpt('');
+      }
+    })();
+  }, [kind, frameAllowedForPage, sourceUrl]);
+
   const onShare = useCallback(async () => {
     try {
       const t = title || (comment || '').split('\n')[0] || '';
       if (navigator.share) await navigator.share({ title: t, url: sourceUrl });
-      else { await navigator.clipboard.writeText(sourceUrl); alert('URL copied'); }
+      else { await navigator.clipboard.writeText(sourceUrl); alert('URLをコピーしました'); }
       try { await trackShare(postId); } catch {}
     } catch {}
   }, [title, comment, sourceUrl, trackShare, postId]);
 
-  const onEmpathize = useCallback(async () => {
-    if (!onceGuard(`empathize_${postId}`)) { alert('Already empathized'); return; }
+  const onEmpathy = useCallback(async () => {
+    if (!onceGuard(`empathy_${postId}`)) { alert('既にカウント済み'); return; }
     setCount((v) => v + 1);
     try { const s = await trackEmpathy(postId); if (s?.empathies != null) setCount(Number(s.empathies)); } catch {}
   }, [postId, trackEmpathy]);
@@ -158,27 +177,28 @@ export default function InlineEmbedCard({
             <iframe src={resolvedEmbedUrl} width="100%" height={kind === 'youtube' ? 315 : 600} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="origin-when-cross-origin" allowFullScreen style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff' }} />
           ) : (
             <div style={{ border: '1px solid var(--line)', borderRadius: 12, background: '#fff', padding: 12 }}>
-              <p style={{ margin: 0, fontSize: 14, color: 'var(--muted)' }}>Embed not supported. Open source link:</p>
-              <p style={{ marginTop: 8 }}><a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a></p>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--muted)' }}>このサイトは埋め込みに対応していません。</p>
+              {excerpt ? <p style={{ marginTop: 8, whiteSpace:'pre-wrap' }}>{excerpt}…</p> : null}
+              <p style={{ marginTop: 8 }}><a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">出典を開く</a></p>
             </div>
           )}
         </div>
         <div className="meta" style={{ marginTop: 8 }}>
-          <span className="handle">by {formatHandle(handle)}</span>
-          <span className="tags">{tags.map((t) => `#${t}`).join('·')}</span>
+          <span className="handle">記録者 {formatHandle(handle)}</span>
+          <span className="tags">{tags.map((t) => `#${t}`).join('・')}</span>
           {createdAt ? <time style={{ marginLeft: 8 }}>{formatDateTime(createdAt)}</time> : null}
         </div>
-        <div className="comment-label">Comment</div>
-        <p className="comment">{comment || '(no comment)'}</p>
+        <div className="comment-label">コメント</div>
+        <p className="comment">{comment || '(コメントなし)'}</p>
         <div className="actions">
-          <button className="btn primary" onClick={onEmpathize}>Empathize <span className="count">{count}</span></button>
-          <button className="btn" onClick={onShare}>Share</button>
-          {showSourceLink && <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">Source</a>}\n          <a className="btn" href={`/post/${postId}`}>詳細</a>
+          <button className="btn primary" onClick={onEmpathy}>共感 <span className="count">{count}</span></button>
+          <button className="btn" onClick={onShare}>シェア</button>
+          {showSourceLink && <a className="btn source-link" href={sourceUrl} target="_blank" rel="noopener noreferrer">ソース</a>}
+          <a className="btn" href={`/post/${postId}`}>詳細</a>
         </div>
         {footerExtras}
       </div>
     </article>
   );
 }
-
 

@@ -1,29 +1,21 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
-interface FeedSource {
+type FeedSource = {
   id: string;
   name: string;
   url: string;
-  type: string;
-  category: string;
-  enabled: number;
-  check_interval_min: number;
-  last_checked_at: number | null;
-  error_count: number;
-  config_json: string | null;
-}
-
-interface FeedLog {
-  id: string;
-  source_id: string;
-  items_found: number;
-  items_new: number;
-  duration_ms: number;
-  error: string | null;
-  created_at: number;
-}
+  type?: string;
+  category?: string;
+  enabled?: number;
+  check_interval_min?: number;
+  last_checked_at?: number | null;
+  error_count?: number;
+  config_json?: string | null;
+};
+type FeedLog = { id:string; source_id:string; items_found?:number; items_new?:number; duration_ms?:number; error?:string|null; created_at:number; source_name?:string };
 
 export default function AdminFeedsPage() {
   const [feeds, setFeeds] = useState<FeedSource[]>([]);
@@ -33,293 +25,186 @@ export default function AdminFeedsPage() {
   const [selectedFeed, setSelectedFeed] = useState<string | null>(null);
   const [stats, setStats] = useState<{ posted: Record<string, number>; collected: Record<string, number> }>({ posted: {}, collected: {} });
 
-  // 繝輔ぅ繝ｼ繝我ｸ隕ｧ蜿門ｾ・
-  const loadFeeds = async () => {
-    try {
-      const res = await fetch('/api/admin/feeds');
-      if (res.ok) {
-        const data = await res.json();
-        \n      try { const s = await fetch('/api/admin/feeds/stats').then(r=>r.json()); if (s?.ok) setStats({ posted: s.posted||{}, collected: s.collected||{} }); } catch {}
-    } catch (error) {
-      console.error('Failed to load feeds:', error);
-    } finally {
+  async function loadFeeds(){
+    try{
+      const r = await fetch('/api/admin/feeds');
+      if(r.ok){
+        const j = await r.json();
+        setFeeds(Array.isArray(j.feeds)? j.feeds: []);
+        try{ const s = await fetch('/api/admin/feeds/stats').then(r=>r.json()); if(s?.ok) setStats({ posted: s.posted||{}, collected: s.collected||{} }); } catch{}
+      }
+    } finally{
       setLoading(false);
     }
-  };
+  }
 
-  // 繝輔ぅ繝ｼ繝峨Ο繧ｰ蜿門ｾ・
-  const loadLogs = async (feedId?: string) => {
-    try {
-      const url = feedId 
-        ? `/api/admin/feeds/logs?source_id=${feedId}`
-        : '/api/admin/feeds/logs';
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.logs || []);
-      }
-    } catch (error) {
-      console.error('Failed to load logs:', error);
-    }
-  };
+  async function loadLogs(feedId?: string){
+    try{
+      const url = feedId ? `/api/admin/feeds/logs?source_id=${feedId}` : '/api/admin/feeds/logs';
+      const r = await fetch(url);
+      if(r.ok){ const j = await r.json(); setLogs(Array.isArray(j.logs)? j.logs: []); }
+    } catch{}
+  }
 
-  useEffect(() => {
-    loadFeeds();
-    loadLogs();
-  }, []);
+  useEffect(()=>{ loadFeeds(); loadLogs(); },[]);
 
-  // 繝輔ぅ繝ｼ繝芽ｿｽ蜉
-  const handleAddFeed = async (e: React.FormEvent) => {
+  async function handleAddFeed(e: React.FormEvent){
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    
-    try {
-      const res = await fetch('/api/admin/feeds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.get('name'),
-          url: formData.get('url'),
-          type: formData.get('type') || 'rss',
-          category: formData.get('category') || 'news',
-          check_interval_min: parseInt(formData.get('interval') as string) || 30,
-        }),
-      });
-      
-      if (res.ok) {
-        await loadFeeds();
-        setShowAddForm(false);
-        form.reset();
-      }
-    } catch (error) {
-      console.error('Failed to add feed:', error);
-      alert('繝輔ぅ繝ｼ繝峨・霑ｽ蜉縺ｫ螟ｱ謨励＠縺ｾ縺励◆');
-    }
-  };
+    const fd = new FormData(form);
+    const body = {
+      name: String(fd.get('name')||''),
+      url: String(fd.get('url')||''),
+      type: String(fd.get('type')||'rss'),
+      category: String(fd.get('category')||'news'),
+      check_interval_min: parseInt(String(fd.get('interval')||'30'))||30,
+    };
+    const r = await fetch('/api/admin/feeds', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) });
+    if(r.ok){ await loadFeeds(); setShowAddForm(false); form.reset(); }
+    else alert('フィードの追加に失敗しました');
+  }
 
-  // 繝輔ぅ繝ｼ繝画怏蜉ｹ/辟｡蜉ｹ蛻・ｊ譖ｿ縺・
-  const toggleFeed = async (feedId: string, enabled: boolean) => {
-    try {
-      const res = await fetch(`/api/admin/feeds/${feedId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),
-      });
-      
-      if (res.ok) {
-        await loadFeeds();
-      }
-    } catch (error) {
-      console.error('Failed to toggle feed:', error);
-    }
-  };
+  async function toggleFeed(feedId: string, enabled: boolean){
+    const r = await fetch(`/api/admin/feeds/${feedId}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ enabled }) });
+    if(r.ok){ await loadFeeds(); }
+  }
 
-  // 繝輔ぅ繝ｼ繝牙炎髯､
-  const deleteFeed = async (feedId: string) => {
-    if (!confirm('縺薙・繝輔ぅ繝ｼ繝峨ｒ蜑企勁縺励∪縺吶°・・)) return;
-    
-    try {
-      const res = await fetch(`/api/admin/feeds/${feedId}`, {
-        method: 'DELETE',
-      });
-      
-      if (res.ok) {
-        await loadFeeds();
-      }
-    } catch (error) {
-      console.error('Failed to delete feed:', error);
-    }
-  };
-
-  // 謇句虚螳溯｡・
-  const runFeedCheck = async () => {
-    if (!confirm('繝輔ぅ繝ｼ繝峨メ繧ｧ繝・け繧呈焔蜍募ｮ溯｡後＠縺ｾ縺吶°・・)) return;
-    
-    try {
-      const res = await fetch('/api/cron/feed-check', { method: 'POST' });
-      if (res.ok) {
-        alert('繝輔ぅ繝ｼ繝峨メ繧ｧ繝・け繧帝幕蟋九＠縺ｾ縺励◆');
-        setTimeout(() => {
-          loadFeeds();
-          loadLogs();
-        }, 3000);
-      }
-    } catch (error) {
-      console.error('Failed to run feed check:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="admin-container">
-        <h1>繝輔ぅ繝ｼ繝臥ｮ｡逅・/h1>
-        <p>隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</p>
-      </div>
-    );
+  async function deleteFeed(feedId: string){
+    if(!confirm('このフィードを削除しますか？')) return;
+    const r = await fetch(`/api/admin/feeds/${feedId}`, { method:'DELETE' });
+    if(r.ok){ await loadFeeds(); if(selectedFeed===feedId){ setSelectedFeed(null); await loadLogs(); } }
   }
 
   return (
-    <div className="admin-container" style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>繝輔ぅ繝ｼ繝臥ｮ｡逅・/h1>
-      
-      
-      {/* YouTubeチャンネル追加（ID/URL対応） */}
-      <form onSubmit={async (e)=>{ e.preventDefault(); const f=e.currentTarget as HTMLFormElement; const fd=new FormData(f); const channel=String(fd.get('channel')||''); const name=String(fd.get('name')||''); const r= await fetch('/api/admin/feeds/youtube',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({ channel, name })}); if(r.ok){ alert('YouTubeチャンネルを登録しました'); f.reset(); await loadFeeds(); } else { alert('追加に失敗しました'); } }} style={{ background:'#f8f9fa', padding:12, borderRadius:8, marginBottom:12 }}>
-        <h3 style={{marginTop:0}}>YouTubeチャンネルを追加</h3>
-        <div style={{display:'grid', gridTemplateColumns:'2fr 2fr auto', gap:8}}>
-          <input name="channel" placeholder="チャンネルURL または ID" required />
-          <input name="name" placeholder="表示名 (任意)" />
-          <button className="btn" type="submit">追加</button>
+    <main className="container" style={{ padding: 12 }}>
+      <header className="card" style={{ padding: 12 }}>
+        <h1 className="title">フィード管理</h1>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8 }}>
+          <Link className="btn" href="/admin/console">コンソール</Link>
+          <Link className="btn" href="/">サイトに戻る</Link>
         </div>
-      </form>
+      </header>
 
-      {showAddForm && (
-        <form onSubmit={handleAddFeed} style={{ background: '#f8f9fa', padding: 20, borderRadius: 8, marginBottom: 20 }}>
-          <h3>譁ｰ隕上ヵ繧｣繝ｼ繝芽ｿｽ蜉</h3>
-          <div style={{ display: 'grid', gap: 10 }}>
-            <input name="name" placeholder="繝輔ぅ繝ｼ繝牙錐" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <input name="url" type="url" placeholder="繝輔ぅ繝ｼ繝蔚RL" required style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <select name="type" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }}>
+      <section className="card" style={{ padding: 12, marginTop: 12 }}>
+        <h2 className="title">新規フィード</h2>
+        <div style={{ marginBottom: 12 }}>
+          <button className="btn" onClick={()=>setShowAddForm(v=>!v)}>{showAddForm? '閉じる':'新規フィード追加'}</button>
+        </div>
+        {showAddForm && (
+          <form onSubmit={handleAddFeed} style={{ display:'grid', gap:8, maxWidth:560 }}>
+            <input name="name" placeholder="名前" required />
+            <input name="url" placeholder="URL" required />
+            <select name="type" defaultValue="rss">
               <option value="rss">RSS</option>
-              <option value="atom">Atom</option>
-              <option value="json">JSON Feed</option>
+              <option value="youtube">YouTube</option>
+              <option value="x">X (Twitter)</option>
             </select>
-            <input name="category" placeholder="繧ｫ繝・ざ繝ｪ繝ｼ" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <input name="interval" type="number" placeholder="繝√ぉ繝・け髢馴囈・亥・・・ defaultValue="30" style={{ padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button type="submit" style={{ padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>霑ｽ蜉</button>
-              <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 4, cursor: 'pointer' }}>繧ｭ繝｣繝ｳ繧ｻ繝ｫ</button>
+            <input name="category" placeholder="カテゴリー" defaultValue="news" />
+            <input name="interval" placeholder="チェック間隔(分)" defaultValue="30" />
+            <div className="modal-actions">
+              <button className="btn primary" type="submit">追加</button>
+            </div>
+          </form>
+        )}
+      </section>
+
+      <section className="card" style={{ padding: 12, marginTop: 12 }}>
+        <h2 className="title">フィード一覧</h2>
+        {loading ? (
+          <div>読み込み中…</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
+            <div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>#</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>名前</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>カテゴリー</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>状態</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>カウント</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>最終チェック</th>
+                    <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {feeds.map((feed, idx) => (
+                    <tr key={feed.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: 10 }}>{idx+1}</td>
+                      <td style={{ padding: 10 }}>
+                        <div>{feed.name}</div>
+                        <small style={{ color: '#6c757d' }}>{feed.url}</small>
+                      </td>
+                      <td style={{ padding: 10 }}>{feed.category || '-'}</td>
+                      <td style={{ padding: 10 }}>
+                        <span style={{ 
+                          padding: '2px 8px', 
+                          borderRadius: 4, 
+                          background: (feed.enabled?1:0) ? '#28a745' : '#dc3545',
+                          color: 'white',
+                          fontSize: 12
+                        }}>
+                          {(feed.enabled?1:0) ? '有効' : '無効'}
+                        </span>
+                      </td>
+                      <td style={{ padding: 10 }}>
+                        <div style={{ fontSize: 12, color: '#333' }}>
+                          posted: {stats.posted[feed.id] || 0} / collected: {stats.collected[feed.id] || 0}
+                        </div>
+                      </td>
+                      <td style={{ padding: 10 }}>
+                        {feed.last_checked_at ? new Date((feed.last_checked_at as number) * 1000).toLocaleString('ja-JP') : '未実行'}
+                      </td>
+                      <td style={{ padding: 10 }}>
+                        <div style={{ display: 'flex', gap: 5 }}>
+                          <button 
+                            onClick={() => toggleFeed(feed.id, !(feed.enabled?1:0))}
+                            style={{ padding: '4px 8px', fontSize: 12 }}
+                          >
+                            {(feed.enabled?1:0) ? '無効にする' : '有効にする'}
+                          </button>
+                          <button 
+                            onClick={() => { setSelectedFeed(feed.id); loadLogs(feed.id); }}
+                            style={{ padding: '4px 8px', fontSize: 12 }}
+                          >
+                            ログ
+                          </button>
+                          <button 
+                            onClick={() => deleteFeed(feed.id)}
+                            style={{ padding: '4px 8px', fontSize: 12, color:'#fff', background:'#dc3545', border:'none', borderRadius:4 }}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h2>最近のログ</h2>
+              <div style={{ maxHeight: 500, overflow: 'auto' }}>
+                {logs.map(log => (
+                  <div key={log.id} style={{ padding: 10, marginBottom: 10, background: log.error ? '#fff3cd' : '#d4edda', borderRadius: 4, border: `1px solid ${log.error ? '#ffc107' : '#28a745'}` }}>
+                    <div style={{ fontSize: 12, color: '#6c757d' }}>
+                      {new Date(log.created_at * 1000).toLocaleString('ja-JP')} {log.source_name? `(${log.source_name})`:''}
+                    </div>
+                    <div>収集 {log.items_found||0}件 / 新規 {log.items_new||0}件</div>
+                    <div style={{ fontSize: 12, color: '#6c757d' }}>所要 {log.duration_ms||0}ms</div>
+                    {log.error && (
+                      <div style={{ color: '#dc3545', fontSize: 12, marginTop: 5 }}>
+                        エラー: {log.error}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </form>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20 }}>
-        <div>
-          <h2>繝輔ぅ繝ｼ繝我ｸ隕ｧ</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f8f9fa' }}>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>蜷榊燕</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>繧ｫ繝・ざ繝ｪ繝ｼ</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>迥ｶ諷・/th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>繧ｨ繝ｩ繝ｼ</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>譛邨ゅメ繧ｧ繝・け</th>
-                <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>謫堺ｽ・/th>
-              </tr>
-            </thead>
-            <tbody>
-              {feeds.map(feed => (
-                <tr key={feed.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: 10 }}>
-                    <div>{feed.name}</div>
-                    <small style={{ color: '#6c757d' }}>{feed.url}</small>
-                  </td>
-                  <td style={{ padding: 10 }}>{feed.category}</td>
-                  <td style={{ padding: 10 }}>
-                    <span style={{ 
-                      padding: '2px 8px', 
-                      borderRadius: 4, 
-                      background: feed.enabled ? '#28a745' : '#dc3545',
-                      color: 'white',
-                      fontSize: 12
-                    }}>
-                      {feed.enabled ? '譛牙柑' : '辟｡蜉ｹ'}
-                    </span>
-                  </td>
-                  <td style={{ padding: 10 }}><div style={{ fontSize: 12, color: '#333' }}>posted: {stats.posted[feed.id] || 0} / collected: {stats.collected[feed.id] || 0}</div></td>
-                  <td style={{ padding: 10 }}>
-                    {feed.last_checked_at 
-                      ? new Date(feed.last_checked_at * 1000).toLocaleString('ja-JP')
-                      : '譛ｪ螳溯｡・}
-                  </td>
-                  <td style={{ padding: 10 }}>
-                    <div style={{ display: 'flex', gap: 5 }}>
-                      <button 
-                        onClick={() => toggleFeed(feed.id, !feed.enabled)}
-                        style={{ 
-                          padding: '4px 8px', 
-                          fontSize: 12,
-                          background: feed.enabled ? '#ffc107' : '#28a745',
-                          color: feed.enabled ? '#000' : '#fff',
-                          border: 'none',
-                          borderRadius: 4,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {feed.enabled ? '辟｡蜉ｹ蛹・ : '譛牙柑蛹・}
-                      </button>
-                      <button 
-                        onClick={() => { setSelectedFeed(feed.id); loadLogs(feed.id); }}
-                        style={{ 
-                          padding: '4px 8px', 
-                          fontSize: 12,
-                          background: '#17a2b8',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 4,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        繝ｭ繧ｰ
-                      </button>
-                      <button 
-                        onClick={() => deleteFeed(feed.id)}
-                        style={{ 
-                          padding: '4px 8px', 
-                          fontSize: 12,
-                          background: '#dc3545',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 4,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        蜑企勁
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div>
-          <h2>譛霑代・繝ｭ繧ｰ</h2>
-          <div style={{ maxHeight: 500, overflow: 'auto' }}>
-            {logs.map(log => (
-              <div key={log.id} style={{ 
-                padding: 10, 
-                marginBottom: 10, 
-                background: log.error ? '#fff3cd' : '#d4edda',
-                borderRadius: 4,
-                border: `1px solid ${log.error ? '#ffc107' : '#28a745'}`
-              }}>
-                <div style={{ fontSize: 12, color: '#6c757d' }}>
-                  {new Date(log.created_at * 1000).toLocaleString('ja-JP')}
-                </div>
-                <div>
-                  蜿門ｾ・ {log.items_found}莉ｶ / 譁ｰ隕・ {log.items_new}莉ｶ
-                </div>
-                <div style={{ fontSize: 12, color: '#6c757d' }}>
-                  蜃ｦ逅・凾髢・ {log.duration_ms}ms
-                </div>
-                {log.error && (
-                  <div style={{ color: '#dc3545', fontSize: 12, marginTop: 5 }}>
-                    繧ｨ繝ｩ繝ｼ: {log.error}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+        )}
+      </section>
+    </main>
   );
 }
-
-
-
 

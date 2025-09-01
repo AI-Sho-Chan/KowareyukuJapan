@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo } from "react";
 import { useEventTracking } from "@/hooks/useEventTracking";
@@ -49,11 +49,11 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
           {embedSrc ? (
             <iframe src={embedSrc} width="100%" height={360} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; web-share" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" style={{ border: "0", borderRadius: 12 }} />
           ) : (
-            <a href={statusUrl} target="_blank" rel="noopener noreferrer">Xで見る</a>
+            <a href={statusUrl} target="_blank" rel="noopener noreferrer">Xで開く</a>
           )}
         </div>
         <div className="meta" style={{ marginTop: 8 }}>
-          <span className="handle">投稿者 {formatHandle(handle)}</span>
+          <span className="handle">記録者 {formatHandle(handle)}</span>
           {Array.isArray(tags) && tags.length ? (<span className="tags">{tags.map(t => `#${t}`).join("・")}</span>) : null}
           {createdAt ? <time style={{ marginLeft: 8 }}>{formatDateTime(createdAt)}</time> : null}
         </div>
@@ -61,10 +61,11 @@ export default function XEmbedCard({ postId, title = "", comment, statusUrl, han
         <p className="comment">{comment || "(コメントなし)"}</p>
         <div className="actions" style={{ marginTop: 8 }}>
           <a className="btn" href={statusUrl} target="_blank" rel="noopener noreferrer">シェア</a>
-          <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">引用元</a>
+          <a className="btn source-link" href={statusUrl} target="_blank" rel="noopener noreferrer">ソース</a>
         </div>
         {footerExtras}
       </div>
     </article>
   );
 }
+

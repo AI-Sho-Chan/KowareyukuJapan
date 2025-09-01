@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 import { useEffect, useRef, useState } from 'react';
 
 function toEmbed(u: string): string | null {
   try{
     const url = new URL(u);
-    // https://www.nicovideo.jp/watch/sm<id> → https://embed.nicovideo.jp/watch/sm<id>
+    // https://www.nicovideo.jp/watch/sm<id> 竊・https://embed.nicovideo.jp/watch/sm<id>
     const m = url.pathname.match(/\/watch\/(sm\d+|so\d+|nm\d+)/i);
     if (!m) return null;
     return `https://embed.nicovideo.jp/watch/${m[1]}`;
@@ -21,7 +21,7 @@ export default function NicoVideoEmbedCard({ url }: { url: string }){
       const src = toEmbed(url); if (!src) { setFailed(true); return; }
       try {
         const ce = await fetch(`/api/can-embed?url=${encodeURIComponent(src)}`).then(r=>r.json());
-        if (!ce?.ok || ce.canEmbed === false) { setFailed(true); setReason('埋め込み不可（X-Frame-Options/CSP）'); return; }
+        if (!ce?.ok || ce.canEmbed === false) { setFailed(true); setReason('蝓九ａ霎ｼ縺ｿ荳榊庄・・-Frame-Options/CSP・・); return; }
       } catch { setFailed(true); return; }
       const ifr = document.createElement('iframe');
       ifr.src = src;
@@ -33,8 +33,9 @@ export default function NicoVideoEmbedCard({ url }: { url: string }){
       el.replaceChildren(ifr);
     })().catch(()=>setFailed(true));
   },[url]);
-  if (failed) return <div className="niconico-embed"><p style={{margin:0}}>プレビューのみ（{reason||'サイト側の制限'}）。<a href={url} target="_blank" rel="noopener noreferrer">ニコニコで見る</a></p></div>;
+  if (failed) return <div className="niconico-embed"><p style={{margin:0}}>繝励Ξ繝薙Η繝ｼ縺ｮ縺ｿ・・reason||'繧ｵ繧､繝亥・縺ｮ蛻ｶ髯・}・峨・a href={url} target="_blank" rel="noopener noreferrer">繝九さ繝九さ縺ｧ隕九ｋ</a></p></div>;
   return <div ref={host} className="niconico-embed"/>;
 }
+
 
 

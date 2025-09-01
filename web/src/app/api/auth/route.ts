@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
     const { adminKey } = await req.json();
     const expectedKey = process.env.ADMIN_SECRET_KEY;
     if (!expectedKey) {
-      console.error('ADMIN_SECRET_KEY not configured');
-      return NextResponse.json({ error: '認証システムが未設定です' }, { status: 500 });
+      // サーバー側で管理キーが設定されていない場合でも 500 ではなく 400 を返す
+      return NextResponse.json({ error: 'サーバー側の管理キーが未設定です' }, { status: 400 });
     }
     if (adminKey !== expectedKey) {
       return NextResponse.json({ error: '認証に失敗しました' }, { status: 401 });
